@@ -59,8 +59,22 @@ class PaystackService
             
             $result = json_decode($response->getBody()->getContents(), true);
             
+            if (!isset($result['data']['reference'])) {
+                Log::error('Paystack initialization missing reference', [
+                    'response' => $result,
+                ]);
+                
+                return [
+                    'success' => false,
+                    'message' => 'Payment reference not found in response'
+                ];
+            }
+            
             return [
                 'success' => true,
+                'reference' => $result['data']['reference'],
+                'authorization_url' => $result['data']['authorization_url'] ?? null,
+                'access_code' => $result['data']['access_code'] ?? null,
                 'data' => $result['data'] ?? [],
                 'message' => $result['message'] ?? 'Transaction initialized successfully'
             ];

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ContactCenterController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\SmsController;
@@ -19,11 +20,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Authentication routes
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
 Route::middleware('auth:sanctum')->group(function () {
     // User profile routes
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+    Route::get('/user', [AuthController::class, 'user']);
+    Route::post('/logout', [AuthController::class, 'logout']);
     
     // SMS routes
     Route::prefix('sms')->group(function () {

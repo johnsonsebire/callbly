@@ -1,0 +1,189 @@
+<?php
+
+namespace App\Services\Sms;
+
+use App\Models\User;
+use App\Services\Currency\CurrencyService;
+use App\Services\SmsService;
+use Illuminate\Support\Facades\Log;
+
+class SmsWithCurrencyService
+{
+    protected SmsService $smsService;
+    protected CurrencyService $currencyService;
+
+    public function __construct(SmsService $smsService, CurrencyService $currencyService)
+    {
+        $this->smsService = $smsService;
+        $this->currencyService = $currencyService;
+    }
+
+    /**
+     * Calculate the cost of sending SMS for a specific user
+     * 
+     * @param User $user
+     * @param int $smsCount Number of messages
+     * @param int $recipientCount Number of recipients
+     * @return array [
+     *     'base_cost' => float (cost in GHS),
+     *     'user_cost' => float (cost in user's currency),
+     *     'formatted_cost' => string (formatted cost with currency symbol),
+     *     'sms_rate' => float (price per SMS in user's currency),
+     *     'total_credits' => int (total SMS credits needed)
+     * ]
+     */
+    public function calculateSmsCost(User $user, int $smsCount = 1, int $recipientCount = 1): array
+    {
+        // Get SMS rate in base currency (GHS)
+        $baseSmsRate = $user->billingTier->price_per_sms;
+        
+        // Calculate total credits needed
+        $totalCredits = $smsCount * $recipientCount;
+        
+        // Calculate cost in base currency
+        $baseCost = $baseSmsRate * $totalCredits;
+        
+        // Convert to user's currency
+        $userCurrency = $user->currency;
+        $userCost = $baseCost * $userCurrency->exchange_rate;
+        
+        // Get SMS rate in user's currency
+        $userSmsRate = $baseSmsRate * $userCurrency->exchange_rate;
+        
+        return [
+            'base_cost' => $baseCost,
+            'user_cost' => $userCost,
+            'formatted_cost' => $userCurrency->format($userCost),
+            'sms_rate' => $userSmsRate,
+            'total_credits' => $totalCredits,
+            'billing_tier' => $user->billingTier->name
+        ];
+    }
+
+    /**
+     * Send SMS with cost calculation and billing tier management
+     * 
+     * @param User $user
+     * @param string|array $recipients
+     * @param string $message
+     * @param string $senderName
+     * @param int|null $campaignId
+     * @return array Response including original SMS service response and cost details
+     */
+    public function sendSms(User $user, $recipients, string $message, string $senderName, ?int $campaignId = null): array
+    {
+        $recipientCount = is_array($recipients) ? count($recipients) : 1;
+        $smsCount = $this->calculateSmsPartsCount($message);
+        
+        // Calculate the cost
+        $costDetails = $this->calculateSmsCost($user, $smsCount, $recipientCount);
+        $baseCost = $costDetails['base_cost'];
+        
+        // Check if user has sufficient balance
+        if ($user->account_balance < $baseCost) {
+            return [
+                'success' => false,
+                'message' => 'Insufficient account balance',
+                'cost_details' => $costDetails
+            ];
+        }
+
+        try {
+            // Send the SMS (using either sendSingle or sendBulk based on recipient type)
+            if (is_array($recipients) && count($recipients) > 1) {
+                $result = $this->smsService->sendBulk($recipients, $message, $senderName, $campaignId ?: 0);
+            } else {
+                $recipient = is_array($recipients) ? $recipients[0] : $recipients;
+                $result = $this->smsService->sendSingle($recipient, $message, $senderName, $campaignId ?: 0);
+            }
+
+            // If sending was successful, deduct the cost from user's balance
+            if ($result['success']) {
+                // Deduct the cost
+                $user->account_balance -= $baseCost;
+                $user->save();
+                
+                // Track the SMS usage
+                $user->sms_credits = ($user->sms_credits ?? 0) + $costDetails['total_credits'];
+                $user->save();
+                
+                // Check if this purchase qualifies the user for a tier upgrade
+                if ($baseCost >= 1500) {
+                    $this->currencyService->updateUserBillingTier($user, $baseCost);
+                }
+                
+                return [
+                    'success' => true,
+                    'message' => 'SMS sent successfully',
+                    'result' => $result,
+                    'cost_details' => $costDetails,
+                    'balance' => $user->account_balance,
+                    'formatted_balance' => $user->formatAmount($user->account_balance)
+                ];
+            }
+            
+            return [
+                'success' => false,
+                'message' => 'Failed to send SMS: ' . ($result['message'] ?? 'Unknown error'),
+                'result' => $result,
+                'cost_details' => $costDetails
+            ];
+            
+        } catch (\Exception $e) {
+            Log::error('SMS sending error with currency service: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'recipients' => $recipients,
+                'error' => $e->getMessage()
+            ]);
+            
+            return [
+                'success' => false,
+                'message' => 'Error processing SMS: ' . $e->getMessage(),
+                'cost_details' => $costDetails
+            ];
+        }
+    }
+    
+    /**
+     * Calculate how many SMS parts would be needed for the message
+     *
+     * @param string $message
+     * @return int
+     */
+    public function calculateSmsPartsCount(string $message): int
+    {
+        $length = mb_strlen($message);
+        
+        // SMS messages have a maximum of 160 characters for single SMS
+        $maxSingleSmsLength = 160;
+        $maxMultipartSmsLength = 153; // Each part of a multipart SMS can hold 153 chars
+        
+        // Calculate number of parts needed
+        if ($length <= $maxSingleSmsLength) {
+            return 1;
+        }
+        
+        return ceil(($length - $maxSingleSmsLength) / $maxMultipartSmsLength) + 1;
+    }
+    
+    /**
+     * Calculate the total number of SMS credits needed
+     *
+     * @param string $message
+     * @param int $recipientCount
+     * @return int
+     */
+    public function calculateCreditsNeeded(string $message, int $recipientCount = 1): int
+    {
+        $smsPartsCount = $this->calculateSmsPartsCount($message);
+        return $smsPartsCount * $recipientCount;
+    }
+    
+    /**
+     * Delegate other methods to the underlying SMS service
+     */
+    public function __call($method, $args)
+    {
+        return call_user_func_array([$this->smsService, $method], $args);
+    }
+}

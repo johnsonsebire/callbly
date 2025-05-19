@@ -13,11 +13,21 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Run the Roles and Permissions seeder first
+        $this->call(RolesAndPermissionsSeeder::class);
+
+        // Setup currencies and billing tiers
+        $this->call(CurrencySeeder::class);
+        $this->call(BillingTierSeeder::class);
+
         // User::factory(10)->create();
 
-        User::factory()->create([
+        $user = User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+        
+        // Assign the Super Admin role to our test user
+        $user->assignRole('super admin');
     }
 }

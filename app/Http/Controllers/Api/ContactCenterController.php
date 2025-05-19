@@ -4,14 +4,29 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\ContactCenterCall;
+use App\Models\User;
+use App\Services\ContactCenter\ContactCenterService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class ContactCenterController extends Controller
 {
+    protected ContactCenterService $contactCenterService;
+
+    /**
+     * Create a new controller instance.
+     * 
+     * @param ContactCenterService $contactCenterService
+     */
+    public function __construct(ContactCenterService $contactCenterService)
+    {
+        $this->contactCenterService = $contactCenterService;
+    }
+
     /**
      * Initiate a new outbound call.
      *
@@ -68,14 +83,44 @@ class ContactCenterController extends Controller
                 ],
             ]);
 
+            // Use the service to initiate the call
+            $callResult = $this->contactCenterService->initiateCall(
+                $request->from_number,
+                $request->to_number,
+                [
+                    'recording' => $request->recording_enabled ?? false,
+                    'timeout' => $request->call_timeout ?? 60,
+                    'referenceId' => $reference
+                ]
+            );
+
+            if (!$callResult['success']) {
+                // If call initiation failed, update the call status
+                $call->update([
+                    'status' => 'failed',
+                    'metadata' => array_merge($call->metadata, [
+                        'failure_reason' => $callResult['message']
+                    ])
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to initiate call: ' . $callResult['message']
+                ], 500);
+            }
+
             // Deduct one credit
             $user->update([
                 'call_credits' => $user->call_credits - 1,
             ]);
-
-            // Queue the call (this would typically connect to a telephony API)
-            // This is a simplified example - in production, we would use a queue and a job
-            // to handle the actual call initiation with a service like Twilio or Vonage
+            
+            // Update call with provider details
+            $call->update([
+                'metadata' => array_merge($call->metadata, [
+                    'provider_call_id' => $callResult['data']['call_id'] ?? null,
+                    'provider_status' => $callResult['data']['status'] ?? 'queued'
+                ])
+            ]);
             
             return response()->json([
                 'success' => true,
@@ -101,111 +146,51 @@ class ContactCenterController extends Controller
     }
 
     /**
-     * Get a list of calls for the authenticated user.
-     *
+     * Get all calls for the authenticated user.
+     * 
      * @param Request $request
      * @return JsonResponse
      */
     public function getCalls(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'direction' => 'nullable|in:inbound,outbound,all',
-            'status' => 'nullable|in:queued,ringing,in-progress,completed,failed,no-answer,busy',
-            'from_date' => 'nullable|date',
-            'to_date' => 'nullable|date|after_or_equal:from_date',
-            'page' => 'nullable|integer|min:1',
-            'limit' => 'nullable|integer|min:1|max:100',
+        $perPage = $request->input('per_page', 15);
+        $user = Auth::user();
+        
+        $calls = ContactCenterCall::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $calls
         ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        try {
-            $user = $request->user();
-            $query = ContactCenterCall::where('user_id', $user->id);
-            
-            // Apply filters
-            if ($request->has('direction') && $request->direction !== 'all') {
-                $query->where('direction', $request->direction);
-            }
-            
-            if ($request->has('status')) {
-                $query->where('status', $request->status);
-            }
-            
-            if ($request->has('from_date')) {
-                $query->where('created_at', '>=', $request->from_date);
-            }
-            
-            if ($request->has('to_date')) {
-                $query->where('created_at', '<=', $request->to_date);
-            }
-            
-            // Order by most recent first
-            $query->orderBy('created_at', 'desc');
-            
-            // Paginate results
-            $limit = $request->limit ?? 15;
-            $calls = $query->paginate($limit);
-            
-            return response()->json([
-                'success' => true,
-                'data' => $calls
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Get calls error: ' . $e->getMessage(), [
-                'exception' => $e
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'An error occurred while retrieving calls'
-            ], 500);
-        }
     }
 
     /**
      * Get details of a specific call.
-     *
-     * @param Request $request
-     * @param int $id
+     * 
+     * @param string $id
      * @return JsonResponse
      */
-    public function getCallDetails(Request $request, int $id): JsonResponse
+    public function getCallDetails(string $id): JsonResponse
     {
-        try {
-            $user = $request->user();
-            $call = ContactCenterCall::where('user_id', $user->id)
-                ->where('id', $id)
-                ->first();
-
-            if (!$call) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Call not found'
-                ], 404);
-            }
-
-            return response()->json([
-                'success' => true,
-                'data' => $call
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Get call details error: ' . $e->getMessage(), [
-                'exception' => $e,
-                'call_id' => $id
-            ]);
-
+        $user = Auth::user();
+        
+        $call = ContactCenterCall::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+        
+        if (!$call) {
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred while retrieving call details'
-            ], 500);
+                'message' => 'Call not found'
+            ], 404);
         }
+        
+        return response()->json([
+            'success' => true,
+            'data' => $call
+        ]);
     }
 
     /**
@@ -230,18 +215,29 @@ class ContactCenterController extends Controller
                 ], 404);
             }
 
-            if (!$call->recording_enabled || !isset($call->metadata['recording_url'])) {
+            if (!$call->recording_enabled || empty($call->metadata['recording_id'] ?? null)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Recording not available for this call'
                 ], 400);
             }
 
+            // Use the service to fetch recording details
+            $recordingResult = $this->contactCenterService->getRecording($call->metadata['recording_id']);
+            
+            if (!$recordingResult['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to retrieve recording: ' . $recordingResult['message']
+                ], 500);
+            }
+
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'recording_url' => $call->metadata['recording_url'],
-                    'duration' => $call->metadata['duration'] ?? null,
+                    'recording_url' => $recordingResult['data']['url'] ?? null,
+                    'duration' => $recordingResult['data']['duration'] ?? null,
+                    'created_at' => $recordingResult['data']['created_at'] ?? null,
                 ]
             ]);
         } catch (\Exception $e) {
@@ -280,6 +276,24 @@ class ContactCenterController extends Controller
                 ], 404);
             }
 
+            // Check if we have a provider call ID to terminate
+            if (empty($call->metadata['provider_call_id'] ?? null)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Provider call ID not available for termination'
+                ], 400);
+            }
+
+            // Use service to terminate the call
+            $terminateResult = $this->contactCenterService->endCall($call->metadata['provider_call_id']);
+            
+            if (!$terminateResult['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to terminate call: ' . $terminateResult['message']
+                ], 500);
+            }
+
             // Update call status
             $call->update([
                 'status' => 'completed',
@@ -288,9 +302,6 @@ class ContactCenterController extends Controller
                     'ended_by' => 'user',
                 ])
             ]);
-
-            // Send termination request to telephony API
-            // This is a placeholder for actual call termination logic
             
             return response()->json([
                 'success' => true,
@@ -327,52 +338,14 @@ class ContactCenterController extends Controller
             // Log the webhook data
             Log::info('Call Status Webhook', $data);
             
-            // Extract call reference from the webhook data
-            $reference = $data['reference_id'] ?? null;
+            // Use the service to process the webhook event
+            $result = $this->contactCenterService->processCallEvent($data);
             
-            if (!$reference) {
+            if (!$result['success']) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Reference ID is required'
+                    'message' => $result['message']
                 ], 400);
-            }
-            
-            // Find the call by reference ID
-            $call = ContactCenterCall::where('reference_id', $reference)->first();
-            
-            if (!$call) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Call not found'
-                ], 404);
-            }
-            
-            // Update the call status and metadata
-            $call->update([
-                'status' => $data['status'] ?? $call->status,
-                'duration' => $data['duration'] ?? $call->duration,
-                'metadata' => array_merge($call->metadata ?? [], [
-                    'provider_call_id' => $data['provider_call_id'] ?? null,
-                    'recording_url' => $data['recording_url'] ?? null,
-                    'call_events' => array_merge($call->metadata['call_events'] ?? [], [
-                        [
-                            'event' => $data['event'] ?? 'status_update',
-                            'timestamp' => now()->toIso8601String(),
-                            'data' => $data
-                        ]
-                    ])
-                ])
-            ]);
-            
-            // If callback URL is set, forward the webhook data
-            if ($call->callback_url) {
-                // In a production environment, this would be handled by a queue job
-                // to ensure reliable delivery and retry logic
-                // For now, we'll just log it
-                Log::info('Forwarding webhook to callback URL', [
-                    'callback_url' => $call->callback_url,
-                    'data' => $data
-                ]);
             }
             
             return response()->json([

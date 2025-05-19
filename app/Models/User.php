@@ -2,17 +2,19 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -23,9 +25,15 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'phone',
         'company_name',
         'role',
         'account_balance',
+        'call_credits',
+        'sms_credits',
+        'ussd_credits',
+        'currency_id',
+        'billing_tier_id',
     ];
 
     /**
@@ -49,6 +57,9 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'account_balance' => 'decimal:2',
+            'call_credits' => 'integer',
+            'sms_credits' => 'integer',
+            'ussd_credits' => 'integer',
         ];
     }
 
@@ -116,5 +127,81 @@ class User extends Authenticatable
     public function affiliateReferrals(): HasMany
     {
         return $this->hasMany(AffiliateReferral::class, 'referrer_id');
+    }
+
+    /**
+     * Get the currency associated with the user
+     */
+    public function currency(): BelongsTo
+    {
+        return $this->belongsTo(Currency::class)->withDefault(function ($currency) {
+            $defaultCurrency = Currency::getDefaultCurrency();
+            return $defaultCurrency ?: new Currency([
+                'name' => 'Ghana Cedi',
+                'code' => 'GHS',
+                'symbol' => '₵',
+                'is_default' => true,
+            ]);
+        });
+    }
+
+    /**
+     * Get the billing tier associated with the user
+     */
+    public function billingTier(): BelongsTo
+    {
+        return $this->belongsTo(BillingTier::class)->withDefault(function ($billingTier) {
+            $defaultTier = BillingTier::getDefaultTier();
+            return $defaultTier ?: new BillingTier([
+                'name' => 'Basic',
+                'price_per_sms' => 0.035,
+                'is_default' => true,
+            ]);
+        });
+    }
+    
+    /**
+     * Format an amount in the user's currency
+     * 
+     * @param float $amount Amount in the base currency (GHS)
+     * @param bool $includeSymbol Whether to include the currency symbol
+     * @return string
+     */
+    public function formatAmount(float $amount, bool $includeSymbol = true): string
+    {
+        $userCurrency = $this->currency;
+        // Convert amount to user's currency
+        $convertedAmount = $amount * $userCurrency->exchange_rate;
+        return $userCurrency->format($convertedAmount, $includeSymbol);
+    }
+    
+    /**
+     * Convert an amount from the user's currency to base currency (GHS)
+     * 
+     * @param float $amount Amount in user's currency
+     * @return float Amount in base currency (GHS)
+     */
+    public function convertToBaseCurrency(float $amount): float
+    {
+        $userCurrency = $this->currency;
+        if ($userCurrency->is_default || $userCurrency->code === 'GHS') {
+            return $amount;
+        }
+        
+        return $amount / $userCurrency->exchange_rate;
+    }
+    
+    /**
+     * Get the SMS rate for this user based on their billing tier
+     * 
+     * @return float Price per SMS in user's currency
+     */
+    public function getSmsRate(): float
+    {
+        $basePricePerSms = $this->billingTier->price_per_sms;
+        $userCurrency = $this->currency;
+        
+        // Convert base price to user's currency
+        return $basePricePerSms * $userCurrency->exchange_rate;
     }
 }
