@@ -59,12 +59,15 @@ class SmsController extends Controller
                 ], 400);
             }
             
-            // Check if user has sufficient balance
-            $smsRate = 0.01; // Example rate per SMS, can be dynamic based on user's plan
-            if ($user->account_balance < $smsRate) {
+            // Calculate SMS parts and required credits
+            $smsCount = $this->calculateSmsPartsCount($request->message);
+            $creditsNeeded = $smsCount; // 1 credit per SMS part
+            
+            // Check if user has sufficient credits - use sms_credits field
+            if ($user->sms_credits < $creditsNeeded) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Insufficient account balance'
+                    'message' => 'Insufficient SMS credits. You need ' . $creditsNeeded . ' credits but have ' . $user->sms_credits
                 ], 400);
             }
 
@@ -94,9 +97,9 @@ class SmsController extends Controller
                     'delivered_count' => 1
                 ]);
 
-                // Deduct user balance
+                // Deduct user credits
                 $user->update([
-                    'account_balance' => $user->account_balance - $smsRate
+                    'sms_credits' => $user->sms_credits - $creditsNeeded
                 ]);
 
                 return response()->json([
@@ -173,14 +176,15 @@ class SmsController extends Controller
                 ], 400);
             }
             
-            // Check if user has sufficient balance
-            $smsRate = 0.01; // Example rate per SMS
-            $totalCost = $smsRate * $recipientsCount;
+            // Calculate SMS parts and required credits
+            $smsCount = $this->calculateSmsPartsCount($request->message);
+            $creditsNeeded = $smsCount * $recipientsCount; // 1 credit per SMS part per recipient
             
-            if ($user->account_balance < $totalCost) {
+            // Check if user has sufficient credits - use sms_credits field
+            if ($user->sms_credits < $creditsNeeded) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Insufficient account balance for bulk SMS'
+                    'message' => 'Insufficient SMS credits. You need ' . $creditsNeeded . ' credits but have ' . $user->sms_credits
                 ], 400);
             }
 
@@ -211,9 +215,9 @@ class SmsController extends Controller
                     'failed_count' => $result['failed_count'] ?? 0,
                 ]);
 
-                // Deduct user balance
+                // Deduct user credits
                 $user->update([
-                    'account_balance' => $user->account_balance - $totalCost
+                    'sms_credits' => $user->sms_credits - $creditsNeeded
                 ]);
 
                 return response()->json([
@@ -223,7 +227,7 @@ class SmsController extends Controller
                         'campaign_id' => $campaign->id,
                         'reference' => $result['reference'],
                         'recipients_count' => $recipientsCount,
-                        'estimated_cost' => $totalCost,
+                        'estimated_cost' => $creditsNeeded,
                     ]
                 ]);
             } else {
@@ -376,5 +380,24 @@ class SmsController extends Controller
             'success' => true,
             'data' => $campaign
         ]);
+    }
+
+    /**
+     * Calculate the number of SMS parts required for a given message.
+     *
+     * @param string $message
+     * @return int
+     */
+    private function calculateSmsPartsCount(string $message): int
+    {
+        $messageLength = strlen($message);
+        $singlePartLimit = 160;
+        $multiPartLimit = 153;
+
+        if ($messageLength <= $singlePartLimit) {
+            return 1;
+        }
+
+        return (int) ceil($messageLength / $multiPartLimit);
     }
 }

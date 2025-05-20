@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SmsCampaign extends Model
 {
@@ -26,6 +27,9 @@ class SmsCampaign extends Model
         'failed_count',
         'scheduled_at',
         'completed_at',
+        'provider_response',
+        'credits_used',
+        'provider_batch_id',
     ];
 
     /**
@@ -36,6 +40,8 @@ class SmsCampaign extends Model
     protected $casts = [
         'scheduled_at' => 'datetime',
         'completed_at' => 'datetime',
+        'provider_response' => 'array',
+        'credits_used' => 'integer',
     ];
 
     /**
@@ -44,5 +50,13 @@ class SmsCampaign extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+    
+    /**
+     * Get the recipients for the SMS campaign.
+     */
+    public function recipients(): HasMany
+    {
+        return $this->hasMany(SmsRecipient::class, 'campaign_id');
     }
 }

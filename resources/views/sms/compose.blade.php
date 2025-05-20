@@ -1,33 +1,24 @@
-<div class="card-title">@extends('layouts.master')
+@extends('layouts.master')
 
 @section('content')
-<div class="container">
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <h2>Compose SMS</h2>
-            <p class="text-muted">Create and send a new SMS campaign</p>
-        </div><div class="card-title"></div><div class="card-title"></div>
-    </div><div class="card-title"></div><div class="card-title"></div>
-
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Message Details</h5>
-                </div><div class="card-title"></div><div class="card-title"></div>
-                <div class="card-body">
-                    @if(session('error'))
-                        <div class="alert alert-danger">
-                            {{ session('error') }}
-                        </div><div class="card-title"></div><div class="card-title"></div>
-                    @endif
-
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <h5 class="mb-0">Compose New SMS</h5>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-lg-8">
                     <form method="POST" action="{{ route('sms.send') }}" id="smsForm">
                         @csrf
-
-                        <div class="form-group">
-                            <label for="sender_id">Sender ID</label>
-                            <select name="sender_id" id="sender_id" class="form-control @error('sender_id') is-invalid @enderror" required>
+                        @if(session('error'))
+                            <div class="alert alert-danger">{{ session('error') }}</div>
+                        @endif
+                        <div class="mb-3">
+                            <label for="sender_id" class="form-label">Sender ID</label>
+                            <select name="sender_id" id="sender_id" class="form-select @error('sender_id') is-invalid @enderror" required>
                                 <option value="">Select a sender ID</option>
                                 @foreach($senderNames as $senderName)
                                     <option value="{{ $senderName->name }}" {{ old('sender_id') == $senderName->name ? 'selected' : '' }}>
@@ -35,94 +26,66 @@
                                     </option>
                                 @endforeach
                             </select>
-                            @error('sender_id')
-                                <span class="invalid-feedback" role="alert">
-                                    <strong>{{ $message }}</strong>
-                                </span>
-                            @enderror
+                            @error('sender_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             @if($senderNames->isEmpty())
-                                <small class="text-danger">
+                                <div class="form-text text-danger">
                                     You need to <a href="{{ route('sms.sender-names') }}">register a sender ID</a> before sending SMS.
-                                </small>
+                                </div>
                             @endif
-                        </div><div class="card-title"></div><div class="card-title"></div>
+                        </div>
 
-                        <div class="form-group">
-                            <label for="message">Message</label>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message</label>
                             <textarea name="message" id="message" rows="6" class="form-control @error('message') is-invalid @enderror" required>{{ old('message') }}</textarea>
                             <div class="d-flex justify-content-between mt-1">
-                                <small class="text-muted" id="characterCount">0 characters</small>
-                                <small class="text-muted" id="messageCount">0 message(s)</small>
-                            </div><div class="card-title"></div><div class="card-title"></div>
-                            @error('message')
-                                <span class="invalid-feedback" role="alert">
-                                    <strong>{{ $message }}</strong>
-                                </span>
-                            @enderror
-                        </div><div class="card-title"></div><div class="card-title"></div>
+                                <small id="characterCount" class="text-muted">0 characters</small>
+                                <small id="messageCount" class="text-muted">0 message(s)</small>
+                            </div>
+                            @error('message')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
 
-                        <div class="form-group">
-                            <label for="recipients">Recipients</label>
+                        <div class="mb-3">
+                            <label for="recipients" class="form-label">Recipients</label>
                             <textarea name="recipients" id="recipients" rows="6" class="form-control @error('recipients') is-invalid @enderror" placeholder="Enter phone numbers separated by commas, new lines, or spaces" required>{{ old('recipients') }}</textarea>
-                            <small class="text-muted">
-                                Example formats: +233244123456, +233244123457 or +233244123456, +233244123457
-                            </small>
-                            <div class="mt-1" id="recipientCount">0 recipient(s)</div><div class="card-title"></div><div class="card-title"></div>
-                            @error('recipients')
-                                <span class="invalid-feedback" role="alert">
-                                    <strong>{{ $message }}</strong>
-                                </span>
-                            @enderror
-                        </div><div class="card-title"></div><div class="card-title"></div>
+                            <div class="form-text">Example: +233244123456, +233244123457</div>
+                            <div id="recipientCount" class="mt-1">0 recipient(s)</div>
+                            @error('recipients')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
 
                         <button type="submit" class="btn btn-primary" id="sendButton" {{ $senderNames->isEmpty() ? 'disabled' : '' }}>
                             Send Message
                         </button>
                     </form>
-                </div><div class="card-title"></div><div class="card-title"></div>
-            </div><div class="card-title"></div><div class="card-title"></div>
-        </div><div class="card-title"></div><div class="card-title"></div>
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Message Summary</h5>
-                </div><div class="card-title"></div><div class="card-title"></div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <strong>Credits Required:</strong>
-                        <span id="creditsNeeded">0</span>
-                    </div><div class="card-title"></div><div class="card-title"></div>
-                    <div class="mb-3">
-                        <strong>Recipient Count:</strong>
-                        <span id="recipientsCount">0</span>
-                    </div><div class="card-title"></div><div class="card-title"></div>
-                    <div>
-                        <strong>Characters:</strong>
-                        <span id="charsCount">0</span>
-                        <small class="text-muted">
-                            (160 chars = 1 message)
-                        </small>
-                    </div><div class="card-title"></div><div class="card-title"></div>
-                </div><div class="card-title"></div><div class="card-title"></div>
-            </div><div class="card-title"></div><div class="card-title"></div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Tips</h5>
-                </div><div class="card-title"></div><div class="card-title"></div>
-                <div class="card-body">
-                    <ul class="pl-3">
-                        <li>Keep your message concise to reduce costs.</li>
-                        <li>Avoid using special characters that might increase message parts.</li>
-                        <li>Make sure all recipient numbers include country code.</li>
-                        <li>Test your message with a small group first.</li>
-                    </ul>
-                </div><div class="card-title"></div><div class="card-title"></div>
-            </div><div class="card-title"></div><div class="card-title"></div>
-        </div><div class="card-title"></div><div class="card-title"></div>
-    </div><div class="card-title"></div><div class="card-title"></div>
-</div><div class="card-title"></div></div>
-
+                </div>
+                <div class="col-lg-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <div class="card-title"><h6 class="mb-0">Message Summary</h6></div>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Credits Required:</strong> <span id="creditsNeeded">0</span></p>
+                            <p><strong>Recipient Count:</strong> <span id="recipientsCount">0</span></p>
+                            <p><strong>Characters:</strong> <span id="charsCount">0</span> <small class="text-muted">(160 chars = 1 message)</small></p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title"><h6 class="mb-0">Tips</h6></div>
+                        </div>
+                        <div class="card-body">
+                            <ul>
+                                <li>Keep your message concise to reduce costs.</li>
+                                <li>Avoid special characters that might increase message parts.</li>
+                                <li>Include country code for all numbers.</li>
+                                <li>Test with a small group first.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')

@@ -1,170 +1,203 @@
-<div class="card-title">@extends('layouts.master')
+@extends('layouts.master')
 
 @section('content')
-<div class="py-12">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-2xl font-semibold">Buy SMS Credits</h1>
-                <div class="text-right">
-                    <p class="text-sm text-gray-600">Current SMS Credits</p>
-                    <p class="text-2xl font-bold">{{ auth()->user()->sms_credits }}</p>
-                </div><div class="card-title"></div><div class="card-title"></div>
-            </div><div class="card-title"></div><div class="card-title"></div>
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2>SMS Credits</h2>
+                    <p class="text-muted">Purchase SMS credits to send messages</p>
+                </div>
+                <div class="text-end">
+                    <p class="text-muted mb-0">Current Balance</p>
+                    <h3 class="mb-0">{{ auth()->user()->sms_credits }} <span class="fs-6">credits</span></h3>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            @if (session('success'))
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                    <span class="block sm:inline">{{ session('success') }}</span>
-                </div><div class="card-title"></div><div class="card-title"></div>
-            @endif
+    @if(session('success'))
+        <div class="alert alert-success mb-4">
+            {{ session('success') }}
+        </div>
+    @endif
 
-            @if (session('error'))
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                    <span class="block sm:inline">{{ session('error') }}</span>
-                </div><div class="card-title"></div><div class="card-title"></div>
-            @endif
+    @if(session('error'))
+        <div class="alert alert-danger mb-4">
+            {{ session('error') }}
+        </div>
+    @endif
 
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0 mt-1">
-                        <svg class="h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div><div class="card-title"></div><div class="card-title"></div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-blue-800">Current Billing Tier: {{ auth()->user()->billingTier->name }}</h3>
-                        <p class="text-sm text-blue-700 mt-1">SMS Rate: {{ auth()->user()->formatAmount(auth()->user()->getSmsRate()) }} per SMS in {{ auth()->user()->currency->code }}</p>
-                        <p class="text-xs text-blue-600 mt-1">Purchase more credits at once to qualify for better pricing tiers. <a href="{{ route('sms.billing-tier') }}" class="underline">View all tiers</a></p>
-                    </div><div class="card-title"></div><div class="card-title"></div>
-                </div><div class="card-title"></div><div class="card-title"></div>
-            </div><div class="card-title"></div><div class="card-title"></div>
+    <div class="alert alert-info mb-4">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <i class="fas fa-info-circle fa-2x"></i>
+            </div>
+            <div class="col">
+                <h5 class="mb-1">Current Billing Tier: {{ auth()->user()->billingTier->name }}</h5>
+                <p class="mb-1">SMS Rate: {{ auth()->user()->formatAmount(auth()->user()->getSmsRate()) }} per SMS in {{ auth()->user()->currency->code }}</p>
+                <p class="mb-0 small">Purchase more credits at once to qualify for better pricing tiers. <a href="{{ route('sms.billing-tier') }}">View all tiers</a></p>
+            </div>
+        </div>
+    </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Basic Package -->
-                <div class="border border-gray-200 rounded-lg p-6 flex flex-col">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium">Basic</h3>
-                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold py-1 px-2 rounded">Popular</span>
-                    </div><div class="card-title"></div><div class="card-title"></div>
-                    <div class="mb-4">
-                        <span class="text-3xl font-bold">{{ auth()->user()->formatAmount(50) }}</span>
-                    </div><div class="card-title"></div><div class="card-title"></div>
-                    <p class="text-gray-600 mb-4 text-sm">This package gives you approximately {{ floor(50 / auth()->user()->getSmsRate()) }} SMS credits at your current rate.</p>
+    <div class="row mb-5">
+        <!-- Basic Package -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Basic</h5>
+                        <span class="badge bg-primary">Popular</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <span class="display-6">{{ auth()->user()->formatAmount(50) }}</span>
+                    </div>
+                    <p class="text-muted mb-4">This package gives you approximately {{ floor(50 / auth()->user()->getSmsRate()) }} SMS credits at your current rate.</p>
                     <form action="{{ route('payment.initiate') }}" method="POST" class="mt-auto">
                         @csrf
                         <input type="hidden" name="amount" value="50">
                         <input type="hidden" name="product_type" value="sms_credits">
-                        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                            Buy Now
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-shopping-cart me-2"></i>Buy Now
                         </button>
                     </form>
-                </div><div class="card-title"></div><div class="card-title"></div>
+                </div>
+            </div>
+        </div>
 
-                <!-- Standard Package -->
-                <div class="border border-gray-200 rounded-lg p-6 flex flex-col relative">
-                    <div class="absolute -top-3 -right-3">
-                        <span class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold py-1 px-3 rounded-full">Best Value</span>
-                    </div><div class="card-title"></div><div class="card-title"></div>
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium">Standard</h3>
-                    </div><div class="card-title"></div><div class="card-title"></div>
-                    <div class="mb-4">
-                        <span class="text-3xl font-bold">{{ auth()->user()->formatAmount(100) }}</span>
-                    </div><div class="card-title"></div><div class="card-title"></div>
-                    <p class="text-gray-600 mb-4 text-sm">This package gives you approximately {{ floor(100 / auth()->user()->getSmsRate()) }} SMS credits at your current rate.</p>
+        <!-- Standard Package -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow position-relative">
+                <div class="position-absolute" style="top: -10px; right: -10px;">
+                    <span class="badge bg-success py-2 px-3">Best Value</span>
+                </div>
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Standard</h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <span class="display-6">{{ auth()->user()->formatAmount(100) }}</span>
+                    </div>
+                    <p class="text-muted mb-4">This package gives you approximately {{ floor(100 / auth()->user()->getSmsRate()) }} SMS credits at your current rate.</p>
                     <form action="{{ route('payment.initiate') }}" method="POST" class="mt-auto">
                         @csrf
                         <input type="hidden" name="amount" value="100">
                         <input type="hidden" name="product_type" value="sms_credits">
-                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-2 px-4 rounded">
-                            Buy Now
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-shopping-cart me-2"></i>Buy Now
                         </button>
                     </form>
-                </div><div class="card-title"></div><div class="card-title"></div>
+                </div>
+            </div>
+        </div>
 
-                <!-- Premium Package -->
-                <div class="border border-gray-200 rounded-lg p-6 flex flex-col">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium">Premium</h3>
-                    </div><div class="card-title"></div><div class="card-title"></div>
-                    <div class="mb-4">
-                        <span class="text-3xl font-bold">{{ auth()->user()->formatAmount(250) }}</span>
-                    </div><div class="card-title"></div><div class="card-title"></div>
-                    <p class="text-gray-600 mb-4 text-sm">This package gives you approximately {{ floor(250 / auth()->user()->getSmsRate()) }} SMS credits at your current rate.</p>
-                    <p class="text-green-600 text-xs mb-4">This purchase may qualify you for a better billing tier!</p>
+        <!-- Premium Package -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Premium</h5>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <span class="display-6">{{ auth()->user()->formatAmount(250) }}</span>
+                    </div>
+                    <p class="text-muted mb-4">This package gives you approximately {{ floor(250 / auth()->user()->getSmsRate()) }} SMS credits at your current rate.</p>
+                    <p class="text-success small mb-4">
+                        <i class="fas fa-arrow-circle-up me-1"></i>
+                        This purchase may qualify you for a better billing tier!
+                    </p>
                     <form action="{{ route('payment.initiate') }}" method="POST" class="mt-auto">
                         @csrf
                         <input type="hidden" name="amount" value="250">
                         <input type="hidden" name="product_type" value="sms_credits">
-                        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                            Buy Now
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-shopping-cart me-2"></i>Buy Now
                         </button>
                     </form>
-                </div><div class="card-title"></div><div class="card-title"></div>
-            </div><div class="card-title"></div><div class="card-title"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <div class="mt-8 border-t border-gray-200 pt-6">
-                <h3 class="text-lg font-medium mb-4">Custom Amount</h3>
-                <form action="{{ route('payment.initiate') }}" method="POST" class="max-w-md">
-                    @csrf
-                    <input type="hidden" name="product_type" value="sms_credits">
-                    <div class="mb-4">
-                        <label for="custom_amount" class="block text-sm font-medium text-gray-700 mb-2">Enter amount in {{ auth()->user()->currency->code }}</label>
-                        <div class="mt-1 relative rounded-md shadow-sm">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 sm:text-sm">{{ auth()->user()->currency->symbol }}</span>
-                            </div><div class="card-title"></div><div class="card-title"></div>
-                            <input type="text" name="amount" id="custom_amount" class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md" placeholder="0.00" required>
-                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 sm:text-sm">{{ auth()->user()->currency->code }}</span>
-                            </div><div class="card-title"></div><div class="card-title"></div>
-                        </div><div class="card-title"></div><div class="card-title"></div>
-                        <p class="mt-2 text-sm text-gray-500" id="estimated-credits">Enter an amount to see estimated credits</p>
-                    </div><div class="card-title"></div><div class="card-title"></div>
-                    <div>
-                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Proceed to Payment
-                        </button>
-                    </div><div class="card-title"></div><div class="card-title"></div>
-                </form>
-            </div><div class="card-title"></div><div class="card-title"></div>
+    <div class="card mb-5 border-0 shadow-sm">
+        <div class="card-header bg-light">
+            <div class="card-title">
+                <h5 class="mb-0">Custom Amount</h5>
+            </div>
+            </div>
+        <div class="card-body">
+            <form action="{{ route('payment.initiate') }}" method="POST" class="row g-3">
+                @csrf
+                <input type="hidden" name="product_type" value="sms_credits">
+                
+                <div class="col-md-6">
+                    <label for="custom_amount" class="form-label">Enter amount in {{ auth()->user()->currency->code }}</label>
+                    <div class="input-group">
+                        <span class="input-group-text">{{ auth()->user()->currency->symbol }}</span>
+                        <input type="text" name="amount" id="custom_amount" class="form-control" 
+                               placeholder="0.00" required>
+                        <span class="input-group-text">{{ auth()->user()->currency->code }}</span>
+                    </div>
+                    <p class="form-text" id="estimated-credits">Enter an amount to see estimated credits</p>
+                </div>
+                
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-credit-card me-2"></i>Proceed to Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-            <div class="mt-8 bg-gray-50 rounded-lg p-6 border border-gray-200">
-                <h3 class="text-lg font-medium mb-2">Payment Information</h3>
-                <ul class="text-sm text-gray-600 space-y-2">
-                    <li class="flex items-start">
-                        <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>Secure payments processed via Paystack</span>
-                    </li>
-                    <li class="flex items-start">
-                        <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>Credits are added to your account instantly after payment confirmation</span>
-                    </li>
-                    <li class="flex items-start">
-                        <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>Larger purchases qualify for better rates automatically</span>
-                    </li>
-                    <li class="flex items-start">
-                        <svg class="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>SMS credits never expire</span>
-                    </li>
-                </ul>
-            </div><div class="card-title"></div><div class="card-title"></div>
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-header bg-light">
+            <div class="card-title">
+            <h5 class="mb-0">Payment Information</h5>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <ul class="list-unstyled">
+                        <li class="mb-3">
+                            <i class="fas fa-lock text-success me-2"></i>
+                            <span>Secure payments processed via Paystack</span>
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-bolt text-success me-2"></i>
+                            <span>Credits are added to your account instantly</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-unstyled">
+                        <li class="mb-3">
+                            <i class="fas fa-chart-line text-success me-2"></i>
+                            <span>Larger purchases qualify for better rates</span>
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-infinity text-success me-2"></i>
+                            <span>SMS credits never expire</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <div class="mt-6 text-center text-sm text-gray-600">
-                <p>Need assistance? <a href="#" class="text-blue-600 hover:underline">Contact our support team</a></p>
-            </div><div class="card-title"></div><div class="card-title"></div>
-        </div><div class="card-title"></div><div class="card-title"></div>
-    </div><div class="card-title"></div><div class="card-title"></div>
-</div><div class="card-title"></div></div>
+    <div class="text-center mb-4">
+        <p class="mb-0">Need assistance? <a href="#" class="text-primary">Contact our support team</a></p>
+    </div>
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -178,6 +211,9 @@
             
             if (amount > 0) {
                 estimatedCreditsText.textContent = `This will give you approximately ${estimatedCredits} SMS credits at your current rate.`;
+                if (amount >= 250) {
+                    estimatedCreditsText.innerHTML += ' <span class="text-success"><i class="fas fa-arrow-circle-up"></i> This purchase may qualify you for a better rate!</span>';
+                }
             } else {
                 estimatedCreditsText.textContent = 'Enter an amount to see estimated credits';
             }

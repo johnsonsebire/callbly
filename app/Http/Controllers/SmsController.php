@@ -149,7 +149,17 @@ class SmsController extends Controller
     {
         $campaign = SmsCampaign::where('user_id', Auth::id())
             ->findOrFail($id);
-        return view('sms.campaign-details', compact('campaign'));
+            
+        // Get recipients with optional status filter
+        $query = $campaign->recipients();
+        
+        if (request()->has('status') && request('status')) {
+            $query->where('status', request('status'));
+        }
+        
+        $recipients = $query->latest()->paginate(15);
+            
+        return view('sms.campaign-details', compact('campaign', 'recipients'));
     }
     
     /**
@@ -378,5 +388,79 @@ class SmsController extends Controller
 
         return redirect()->route('sms.templates')
             ->with('success', 'Template deleted successfully.');
+    }
+
+    /**
+     * Download a report for a specific SMS campaign.
+     *
+     * @param  int  $id
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function downloadReport($id)
+    {
+        // Get the campaign and make sure it belongs to the authenticated user
+        $campaign = SmsCampaign::where('user_id', Auth::id())->findOrFail($id);
+        
+        // Get all recipients for this campaign
+        $recipients = $campaign->recipients()->get();
+        
+        // Create CSV data
+        $csvData = [
+            ['Campaign ID', 'Campaign Name', 'Sender Name', 'Phone Number', 'Status', 'Sent Time', 'Delivered Time', 'Error Message']
+        ];
+        
+        foreach ($recipients as $recipient) {
+            $csvData[] = [
+                $campaign->id,
+                $campaign->name,
+                $campaign->sender_name,
+                $recipient->phone_number,
+                ucfirst($recipient->status),
+                $recipient->created_at ? $recipient->created_at->format('Y-m-d H:i:s') : 'N/A',
+                $recipient->delivered_at ? $recipient->delivered_at->format('Y-m-d H:i:s') : 'N/A',
+                $recipient->error_message ?? 'N/A'
+            ];
+        }
+        
+        // Create a temporary file
+        $fileName = 'sms-campaign-' . $campaign->id . '-' . date('Y-m-d') . '.csv';
+        $tempFile = tempnam(sys_get_temp_dir(), 'sms_report_');
+        $file = fopen($tempFile, 'w');
+        
+        foreach ($csvData as $row) {
+            fputcsv($file, $row);
+        }
+        
+        fclose($file);
+        
+        // Return the file for download
+        return response()->download($tempFile, $fileName, [
+            'Content-Type' => 'text/csv',
+        ])->deleteFileAfterSend(true);
+    }
+    
+    /**
+     * Duplicate an existing SMS campaign.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function duplicateCampaign($id)
+    {
+        // Get the original campaign
+        $original = SmsCampaign::where('user_id', Auth::id())->findOrFail($id);
+        
+        // Create a duplicate campaign
+        $duplicate = $original->replicate();
+        $duplicate->name = $original->name . ' (Copy)';
+        $duplicate->status = 'draft';
+        $duplicate->created_at = now();
+        $duplicate->updated_at = now();
+        $duplicate->provider_batch_id = null;
+        $duplicate->provider_response = null;
+        $duplicate->save();
+        
+        return redirect()->route('sms.campaigns')
+            ->with('success', 'Campaign duplicated successfully. You can now edit and send the duplicated campaign.');
     }
 }

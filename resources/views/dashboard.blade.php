@@ -131,12 +131,11 @@
                             <a href="{{ route('sms.compose') }}" class="btn btn-success">
                                 <i class="fas fa-sms me-2"></i>Send SMS
                             </a>
-                          
-                            <a href="{{ url('contacts.create') }}" class="btn btn-outline-primary">
-                                <i class="fas fa-user-plus me-2"></i>Add Contact
+                            <a href="{{ route('sms.sender-names') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-id-badge me-2"></i>Register Sender Name
                             </a>
-                            <a href="{{ url('credits.purchase') }}" class="btn btn-outline-success">
-                                <i class="fas fa-shopping-cart me-2"></i>Purchase Credits
+                            <a href="{{ route('sms.credits') }}" class="btn btn-outline-success">
+                                <i class="fas fa-shopping-cart me-2"></i>Purchase SMS Credits
                             </a>
                         </div>
                     </div>

@@ -76,6 +76,8 @@ Route::middleware('auth')->group(function () {
         // SMS Campaigns
         Route::get('/sms/campaigns', [SmsController::class, 'campaigns'])->name('sms.campaigns');
         Route::get('/sms/campaigns/{id}', [SmsController::class, 'campaignDetails'])->name('sms.campaign-details');
+        Route::get('/sms/campaigns/{id}/download-report', [SmsController::class, 'downloadReport'])->name('sms.download-report');
+        Route::get('/sms/campaigns/{id}/duplicate', [SmsController::class, 'duplicateCampaign'])->name('sms.duplicate-campaign');
         
         // SMS Sender Names
         Route::get('/sms/sender-names', [SmsController::class, 'senderNames'])->name('sms.sender-names');
@@ -125,5 +127,17 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['verified'])->group(function () {
         Route::post('/payment/initiate', [PaymentController::class, 'initiate'])->name('payment.initiate');
         Route::get('/payment/verify', [PaymentController::class, 'verify'])->name('payment.verify');
+    });
+
+    // Super Admin Sender Name Approval Routes
+    Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('sender-names', [\App\Http\Controllers\Admin\SenderNameApprovalController::class, 'index'])
+            ->name('sender-names.index');
+        Route::put('sender-names/{sender_name}', [\App\Http\Controllers\Admin\SenderNameApprovalController::class, 'update'])
+            ->name('sender-names.update');
+        
+        // User Management for Super Admin
+        Route::get('users', [\App\Http\Controllers\Admin\UserController::class, 'index'])
+            ->name('users.index');
     });
 });
