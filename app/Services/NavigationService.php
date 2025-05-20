@@ -99,6 +99,11 @@ class NavigationService
                     'active' => request()->is('sms*'),
                     'children' => [
                         [
+                            'label' => 'Compose',
+                            'url' => '/sms/compose',
+                            'active' => request()->is('sms/compose*')
+                        ],
+                        [
                             'label' => 'Campaigns',
                             'url' => '/sms/campaigns',
                             'active' => request()->is('sms/campaigns*')
@@ -112,9 +117,60 @@ class NavigationService
                             'label' => 'Templates',
                             'url' => '/sms/templates',
                             'active' => request()->is('sms/templates*')
+                        ],
+                        [
+                            'label' => 'Sender Names',
+                            'url' => '/sms/sender-names',
+                            'active' => request()->is('sms/sender-names*')
                         ]
                     ]
                 ],
+                [
+                    'label' => 'Contacts',
+                    'icon' => 'ki-outline ki-address-book',
+                    'url' => '/contacts',
+                    'active' => request()->is('contacts*') || request()->is('contact-groups*'),
+                    'children' => [
+                        [
+                            'label' => 'Manage Contacts',
+                            'url' => '/contacts',
+                            'active' => request()->is('contacts') || request()->is('contacts/create') || request()->is('contacts/*/edit')
+                        ],
+                        [
+                            'label' => 'Contact Groups',
+                            'url' => '/contact-groups',
+                            'active' => request()->is('contact-groups*')
+                        ],
+                        [
+                            'label' => 'Import Contacts',
+                            'url' => '/contacts-import',
+                            'active' => request()->is('contacts-import*')
+                        ]
+                    ]
+                ],
+                // [
+                //     'label' => 'Contact Center',
+                //     'icon' => 'ki-outline ki-call',
+                //     'url' => '/contact-center',
+                //     'active' => request()->is('contact-center*'),
+                //     'children' => [
+                //         [
+                //             'label' => 'Call History',
+                //             'url' => '/contact-center/calls',
+                //             'active' => request()->is('contact-center/calls*')
+                //         ],
+                //         [
+                //             'label' => 'Virtual Numbers',
+                //             'url' => '/contact-center/virtual-numbers',
+                //             'active' => request()->is('contact-center/virtual-numbers*')
+                //         ],
+                //         [
+                //             'label' => 'Call Settings',
+                //             'url' => '/contact-center/settings',
+                //             'active' => request()->is('contact-center/settings*')
+                //         ]
+                //     ]
+                // ],
                 [
                     'label' => 'USSD',
                     'icon' => 'ki-outline ki-phone',
@@ -133,12 +189,12 @@ class NavigationService
                         ]
                     ]
                 ],
-                [
-                    'label' => 'Virtual Numbers',
-                    'icon' => 'ki-outline ki-call',
-                    'url' => '/virtual-numbers',
-                    'active' => request()->is('virtual-numbers*')
-                ],
+                // [
+                //     'label' => 'Virtual Numbers',
+                //     'icon' => 'ki-outline ki-call',
+                //     'url' => '/virtual-numbers',
+                //     'active' => request()->is('virtual-numbers*')
+                // ],
                 [
                     'label' => 'Settings',
                     'icon' => 'ki-outline ki-setting-2',

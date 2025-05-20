@@ -49,10 +49,29 @@ class SmsController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function compose()
+    public function compose(Request $request)
     {
-        $senderNames = Auth::user()->senderNames()->where('status', 'approved')->get();
-        return view('sms.compose', compact('senderNames'));
+        $user = Auth::user();
+        $senderNames = $user->senderNames()->where('status', 'approved')->get();
+        $contactGroups = $user->contactGroups()->withCount('contacts')->get();
+        $templates = $user->smsTemplates()->latest()->get();
+        $totalContactsCount = $user->contacts()->count();
+        
+        // Handle template selection from templates list
+        $templateContent = null;
+        if ($request->has('template')) {
+            $template = $user->smsTemplates()->find($request->template);
+            if ($template) {
+                $templateContent = $template->content;
+            }
+        }
+        
+        return view('sms.compose', compact(
+            'senderNames', 
+            'contactGroups', 
+            'templates', 
+            'totalContactsCount'
+        ))->with('template_content', $templateContent);
     }
     
     /**
@@ -64,20 +83,64 @@ class SmsController extends Controller
     public function send(Request $request)
     {
         $request->validate([
-            'recipients' => 'required|string',
+            'recipients' => 'nullable|string',
+            'contact_group_ids' => 'nullable|array',
+            'contact_group_ids.*' => 'exists:contact_groups,id',
+            'send_to_all_contacts' => 'nullable|boolean',
             'message' => 'required|string|max:918', // Allow for multi-part SMS
             'sender_id' => 'required|string|exists:sender_names,name',
         ]);
         
+        if (empty($request->recipients) && empty($request->contact_group_ids) && empty($request->send_to_all_contacts)) {
+            return redirect()->back()->withInput()->withErrors([
+                'recipients' => 'You must specify at least one recipient, select contact groups, or choose to send to all contacts'
+            ]);
+        }
+        
         $user = Auth::user();
-        $recipients = array_filter(explode(',', str_replace(["\r\n", "\n", " "], ",", $request->recipients)));
         $message = $request->message;
         $senderId = $request->sender_id;
+        $recipients = [];
+        
+        // Process manual recipients
+        if (!empty($request->recipients)) {
+            $manualRecipients = array_filter(explode(',', str_replace(["\r\n", "\n", " "], ",", $request->recipients)));
+            $manualRecipients = array_map(function($number) {
+                return trim($number);
+            }, $manualRecipients);
+            $recipients = array_merge($recipients, $manualRecipients);
+        }
+        
+        // Process contacts from selected groups
+        if (!empty($request->contact_group_ids)) {
+            foreach ($request->contact_group_ids as $groupId) {
+                $group = $user->contactGroups()->find($groupId);
+                if ($group) {
+                    $contacts = $group->contacts()->pluck('phone_number')->toArray();
+                    $recipients = array_merge($recipients, $contacts);
+                }
+            }
+        }
+        
+        // Process all contacts if selected
+        if ($request->send_to_all_contacts) {
+            $allContacts = $user->contacts()->pluck('phone_number')->toArray();
+            $recipients = array_merge($recipients, $allContacts);
+        }
+        
+        // Remove duplicates and empty values
+        $recipients = array_unique(array_filter($recipients));
+        
+        if (empty($recipients)) {
+            return redirect()->back()->withInput()->withErrors([
+                'recipients' => 'No valid recipients found'
+            ]);
+        }
         
         // Create campaign record
         $campaign = new SmsCampaign();
         $campaign->user_id = $user->id;
-        $campaign->name = Str::limit($message, 30);
+        $campaign->name = $request->campaign_name ?? Str::limit($message, 30);
         $campaign->message = $message;
         $campaign->sender_name = $senderId;
         $campaign->recipients_count = count($recipients);
@@ -85,7 +148,7 @@ class SmsController extends Controller
         $campaign->save();
         
         try {
-            // Use our new currency-aware SMS service
+            // Use our currency-aware SMS service
             $response = $this->smsWithCurrency->sendSms(
                 $user, 
                 $recipients, 
@@ -95,7 +158,7 @@ class SmsController extends Controller
             );
             
             // Update campaign with response
-            $campaign->status = $response['success'] ? 'sent' : 'failed';
+            $campaign->status = $response['success'] ? 'completed' : 'failed';
             $campaign->provider_response = json_encode($response);
             
             if (isset($response['result'])) {
@@ -104,12 +167,13 @@ class SmsController extends Controller
             
             if (isset($response['cost_details'])) {
                 $campaign->credits_used = $response['cost_details']['total_credits'] ?? null;
+                $campaign->delivered_count = $response['success'] ? count($recipients) : 0; 
             }
             
             $campaign->save();
             
             if ($response['success']) {
-                return redirect()->route('sms.campaigns')->with('success', 'SMS campaign has been sent successfully.');
+                return redirect()->route('sms.campaigns')->with('success', 'SMS campaign has been sent successfully to ' . count($recipients) . ' recipients.');
             } else {
                 return redirect()->route('sms.compose')->with('error', 'Failed to send SMS: ' . ($response['message'] ?? 'Unknown error'));
             }
@@ -190,7 +254,7 @@ class SmsController extends Controller
         
         $senderName = new SenderName();
         $senderName->user_id = Auth::id();
-        $senderName->name = strtoupper($request->name);
+        $senderName->name = $request->name; // Preserve the original case
         $senderName->status = config('sms.sender_name.require_approval', true) ? 'pending' : 'approved';
         $senderName->save();
         
@@ -453,7 +517,7 @@ class SmsController extends Controller
         // Create a duplicate campaign
         $duplicate = $original->replicate();
         $duplicate->name = $original->name . ' (Copy)';
-        $duplicate->status = 'draft';
+        $duplicate->status = 'pending'; // Changed from 'draft' to 'pending' to match the allowed ENUM values
         $duplicate->created_at = now();
         $duplicate->updated_at = now();
         $duplicate->provider_batch_id = null;
@@ -462,5 +526,21 @@ class SmsController extends Controller
         
         return redirect()->route('sms.campaigns')
             ->with('success', 'Campaign duplicated successfully. You can now edit and send the duplicated campaign.');
+    }
+
+    /**
+     * Get template content by ID.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getTemplateContent($id)
+    {
+        $template = SmsTemplate::where('user_id', Auth::id())->findOrFail($id);
+        
+        return response()->json([
+            'success' => true,
+            'content' => $template->content
+        ]);
     }
 }

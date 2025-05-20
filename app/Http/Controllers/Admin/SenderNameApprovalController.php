@@ -9,16 +9,33 @@ use Illuminate\Http\Request;
 class SenderNameApprovalController extends Controller
 {
     /**
-     * Display a listing of pending sender names.
+     * Display a listing of sender names with filtering options.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $pending = SenderName::with('user')
-            ->where('status', 'pending')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return view('admin.sender-names.index', compact('pending'));
+        $query = SenderName::with('user');
+        
+        // Apply status filter
+        if ($request->has('status') && !empty($request->status)) {
+            $query->where('status', $request->status);
+        }
+        
+        // Apply search filter
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhereHas('user', function($q) use ($search) {
+                      $q->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%');
+                  });
+            });
+        }
+        
+        // Get results with pagination
+        $senderNames = $query->orderBy('created_at', 'desc')->paginate(10);
+        
+        return view('admin.sender-names.index', compact('senderNames'));
     }
 
     /**
@@ -42,5 +59,17 @@ class SenderNameApprovalController extends Controller
 
         return redirect()->route('admin.sender-names.index')
             ->with('success', 'Sender Name ' . ucfirst($data['status']) . ' successfully.');
+    }
+    
+    /**
+     * Delete a sender name.
+     */
+    public function destroy(SenderName $sender_name)
+    {
+        $name = $sender_name->name;
+        $sender_name->delete();
+        
+        return redirect()->route('admin.sender-names.index')
+            ->with('success', "Sender Name '{$name}' has been deleted successfully.");
     }
 }

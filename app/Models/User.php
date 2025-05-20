@@ -212,4 +212,20 @@ class User extends Authenticatable implements MustVerifyEmail
         // Convert base price to user's currency
         return $basePricePerSms * $userCurrency->exchange_rate;
     }
+
+    /**
+     * Get the contacts for the user
+     */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(Contact::class);
+    }
+
+    /**
+     * Get the contact groups for the user
+     */
+    public function contactGroups(): HasMany
+    {
+        return $this->hasMany(ContactGroup::class);
+    }
 }

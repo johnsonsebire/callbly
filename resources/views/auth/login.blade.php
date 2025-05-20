@@ -1,19 +1,7 @@
 <div class="card-title">@extends('layouts.auth')
 
 @section('content')
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow">
-                <div class="card-header bg-white">
-                    <h4 class="text-center mb-0">{{ __('Login') }}</h4>
-                </div><div class="card-title"></div><div class="card-title"></div>
-                <div class="card-body p-4 p-md-5">
-                    @if (session('status'))
-                        <div class="alert alert-success" role="alert">
-                            {{ session('status') }}
-                        </div><div class="card-title"></div><div class="card-title"></div>
-                    @endif
+
 
                     <form method="POST" action="{{ route('login') }}">
                         @csrf
@@ -74,11 +62,7 @@
                             </p>
                         </div><div class="card-title"></div><div class="card-title"></div>
                     </form>
-                </div><div class="card-title"></div><div class="card-title"></div>
-            </div><div class="card-title"></div><div class="card-title"></div>
-        </div><div class="card-title"></div><div class="card-title"></div>
-    </div><div class="card-title"></div><div class="card-title"></div>
-</div><div class="card-title"></div></div>
+                
 
 <script>
     function togglePasswordVisibility() {

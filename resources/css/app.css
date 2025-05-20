@@ -1,2 +1,64 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
 /* Add your custom styles below this line */
+
+/* Standardized Card Styling */
+.card {
+    border-radius: 0.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+
+.card.shadow-sm {
+    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075) !important;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1rem 1.25rem;
+}
+
+.card-header .card-title {
+    margin-bottom: 0;
+    font-weight: 600;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+}
+
+.card-header.bg-primary, 
+.card-header.bg-success, 
+.card-header.bg-info, 
+.card-header.bg-warning, 
+.card-header.bg-danger {
+    color: #fff;
+}
+
+.card-header i, .card-header svg {
+    margin-right: 0.5rem;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+.text-uppercase.text-muted.small {
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+/* Status badges styling */
+.badge.rounded-pill {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+}
+
+/* Custom color dot styling */
+.color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}

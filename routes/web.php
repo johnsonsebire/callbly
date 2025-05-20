@@ -12,6 +12,8 @@ use App\Http\Controllers\ContactCenterController;
 use App\Http\Controllers\UssdController;
 use App\Http\Controllers\VirtualNumberController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ContactGroupController;
+use App\Http\Controllers\ContactController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -72,6 +74,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/sms/templates/{id}/edit', [SmsController::class, 'editTemplate'])->name('sms.templates.edit');
         Route::put('/sms/templates/{id}', [SmsController::class, 'updateTemplate'])->name('sms.templates.update');
         Route::delete('/sms/templates/{id}', [SmsController::class, 'deleteTemplate'])->name('sms.templates.delete');
+        Route::get('/sms/templates/{id}/content', [SmsController::class, 'getTemplateContent'])->name('sms.templates.content');
         
         // SMS Campaigns
         Route::get('/sms/campaigns', [SmsController::class, 'campaigns'])->name('sms.campaigns');
@@ -88,8 +91,32 @@ Route::middleware('auth')->group(function () {
         
         // SMS Billing Tiers
         Route::get('/sms/billing-tier', [SmsController::class, 'showBillingTier'])->name('sms.billing-tier');
+        
+        // Consolidated Individual Contacts routes
+        Route::get('contacts/manage', [ContactController::class, 'index'])->name('contacts.manage');
+        Route::resource('contacts', ContactController::class);
+        Route::get('contacts-import', [ContactController::class, 'import'])->name('contacts.import');
+        Route::post('contacts-import', [ContactController::class, 'uploadImport'])->name('contacts.upload-import');
+        Route::post('contacts-import-process', [ContactController::class, 'processImport'])->name('contacts.process-import');
+        Route::get('contacts-export', [ContactController::class, 'export'])->name('contacts.export');
+        
+        // Contact Group Routes
+        Route::prefix('contact-groups')->name('contact-groups.')->group(function () {
+            Route::get('/', [App\Http\Controllers\ContactGroupController::class, 'index'])->name('index');
+            Route::get('/create', [App\Http\Controllers\ContactGroupController::class, 'create'])->name('create');
+            Route::post('/', [App\Http\Controllers\ContactGroupController::class, 'store'])->name('store');
+            Route::get('/{contactGroup}', [App\Http\Controllers\ContactGroupController::class, 'show'])->name('show');
+            Route::get('/{contactGroup}/edit', [App\Http\Controllers\ContactGroupController::class, 'edit'])->name('edit');
+            Route::put('/{contactGroup}', [App\Http\Controllers\ContactGroupController::class, 'update'])->name('update');
+            Route::delete('/{contactGroup}', [App\Http\Controllers\ContactGroupController::class, 'destroy'])->name('destroy');
+            
+            // Adding/removing contacts from groups
+            Route::get('/{contactGroup}/add-contacts', [App\Http\Controllers\ContactGroupController::class, 'addContacts'])->name('add-contacts');
+            Route::post('/{contactGroup}/store-contacts', [App\Http\Controllers\ContactGroupController::class, 'storeContacts'])->name('store-contacts');
+            Route::delete('/{contactGroup}/contacts/{contact}', [App\Http\Controllers\ContactGroupController::class, 'removeContact'])->name('remove-contact');
+        });
     });
-    
+
     // USSD Routes
     Route::middleware(['verified'])->prefix('ussd')->name('ussd.')->group(function () {
         Route::get('/', [UssdController::class, 'dashboard'])->name('dashboard');
@@ -135,6 +162,8 @@ Route::middleware('auth')->group(function () {
             ->name('sender-names.index');
         Route::put('sender-names/{sender_name}', [\App\Http\Controllers\Admin\SenderNameApprovalController::class, 'update'])
             ->name('sender-names.update');
+        Route::delete('sender-names/{sender_name}', [\App\Http\Controllers\Admin\SenderNameApprovalController::class, 'destroy'])
+            ->name('sender-names.destroy');
         
         // User Management for Super Admin
         Route::get('users', [\App\Http\Controllers\Admin\UserController::class, 'index'])

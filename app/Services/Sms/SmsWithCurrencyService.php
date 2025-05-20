@@ -78,13 +78,16 @@ class SmsWithCurrencyService
         // Calculate the cost
         $costDetails = $this->calculateSmsCost($user, $smsCount, $recipientCount);
         $baseCost = $costDetails['base_cost'];
+        $totalCreditsNeeded = $costDetails['total_credits'];
         
-        // Check if user has sufficient balance
-        if ($user->account_balance < $baseCost) {
+        // Check if user has sufficient SMS credits instead of checking account_balance
+        if (($user->sms_credits ?? 0) < $totalCreditsNeeded) {
             return [
                 'success' => false,
-                'message' => 'Insufficient account balance',
-                'cost_details' => $costDetails
+                'message' => 'Insufficient SMS credits',
+                'cost_details' => $costDetails,
+                'credits_needed' => $totalCreditsNeeded,
+                'credits_available' => $user->sms_credits ?? 0
             ];
         }
 
@@ -97,14 +100,10 @@ class SmsWithCurrencyService
                 $result = $this->smsService->sendSingle($recipient, $message, $senderName, $campaignId ?: 0);
             }
 
-            // If sending was successful, deduct the cost from user's balance
+            // If sending was successful, deduct the SMS credits
             if ($result['success']) {
-                // Deduct the cost
-                $user->account_balance -= $baseCost;
-                $user->save();
-                
-                // Track the SMS usage
-                $user->sms_credits = ($user->sms_credits ?? 0) + $costDetails['total_credits'];
+                // Deduct the SMS credits
+                $user->sms_credits = ($user->sms_credits ?? 0) - $totalCreditsNeeded;
                 $user->save();
                 
                 // Check if this purchase qualifies the user for a tier upgrade
@@ -117,8 +116,7 @@ class SmsWithCurrencyService
                     'message' => 'SMS sent successfully',
                     'result' => $result,
                     'cost_details' => $costDetails,
-                    'balance' => $user->account_balance,
-                    'formatted_balance' => $user->formatAmount($user->account_balance)
+                    'credits_remaining' => $user->sms_credits
                 ];
             }
             

@@ -51,6 +51,9 @@ class AppServiceProvider extends ServiceProvider
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
 
+        // Use Bootstrap 5 pagination as default
+        \Illuminate\Pagination\Paginator::useBootstrapFive();
+
         view()->share('navigationService', app(NavigationService::class));
     }
 }

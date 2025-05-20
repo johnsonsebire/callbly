@@ -1,14 +1,7 @@
 <div class="card-title">@extends('layouts.auth')
 
 @section('content')
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow">
-                <div class="card-header bg-white">
-                    <h4 class="text-center mb-0">{{ __('Register') }}</h4>
-                </div><div class="card-title"></div><div class="card-title"></div>
-                <div class="card-body p-4">
+
                     <form method="POST" action="{{ route('register') }}">
                         @csrf
 
@@ -104,11 +97,6 @@
                             </p>
                         </div><div class="card-title"></div><div class="card-title"></div>
                     </form>
-                </div><div class="card-title"></div><div class="card-title"></div>
-            </div><div class="card-title"></div><div class="card-title"></div>
-        </div><div class="card-title"></div><div class="card-title"></div>
-    </div><div class="card-title"></div><div class="card-title"></div>
-</div><div class="card-title"></div></div>
 
 <script>
     function togglePasswordVisibility(fieldId) {

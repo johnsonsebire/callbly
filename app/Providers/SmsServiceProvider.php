@@ -27,9 +27,11 @@ class SmsServiceProvider extends ServiceProvider
             };
         });
         
-        // Register the general SmsService
+        // Register the general SmsService with proper dependency injection
         $this->app->singleton(SmsService::class, function ($app) {
-            return new SmsService();
+            return new SmsService(
+                $app->make(SmsProviderInterface::class)
+            );
         });
         
         // Register our currency-aware SMS service

@@ -25,8 +25,11 @@ return [
     'providers' => [
         'nalo' => [
             'api_key' => env('NALO_API_KEY'),
-            'api_url' => env('NALO_API_URL', 'https://api.nalosms.com'),
+            'username' => env('NALO_USERNAME'),
+            'password' => env('NALO_PASSWORD'),
+            'api_url' => env('NALO_API_URL', 'https://sms.nalosolutions.com/smsbackend'),
             'sender_id' => env('NALO_SENDER_ID', 'CALLBLY'),
+            'username_prefix' => env('NALO_USERNAME_PREFIX', 'Resl_Nalo'),
         ],
         
         'africastalking' => [
