@@ -6,6 +6,7 @@ use App\Contracts\SmsProviderInterface;
 use App\Models\SmsCampaign;
 use App\Models\SenderName;
 use App\Models\User;
+use App\Models\SmsTemplate;
 use App\Services\Sms\SmsWithCurrencyService;
 use App\Services\Currency\CurrencyService;
 use Illuminate\Http\Request;
@@ -13,7 +14,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
-use Inertia\Inertia;
 
 class SmsController extends Controller
 {
@@ -37,21 +37,22 @@ class SmsController extends Controller
     /**
      * Display the SMS dashboard.
      *
-     * @return \Inertia\Response
+     * @return \Illuminate\View\View
      */
     public function dashboard()
     {
-        return Inertia::render('Sms/Dashboard');
+        return view('sms.dashboard');
     }
     
     /**
      * Show the form to compose a new SMS.
      *
-     * @return \Inertia\Response
+     * @return \Illuminate\View\View
      */
     public function compose()
     {
-        return Inertia::render('Sms/Compose');
+        $senderNames = Auth::user()->senderNames()->where('status', 'approved')->get();
+        return view('sms.compose', compact('senderNames'));
     }
     
     /**
@@ -130,32 +131,36 @@ class SmsController extends Controller
     /**
      * Show all SMS campaigns for the authenticated user.
      *
-     * @return \Inertia\Response
+     * @return \Illuminate\View\View
      */
     public function campaigns()
     {
-        return Inertia::render('Sms/Campaigns');
+        $campaigns = Auth::user()->smsCampaigns()->latest()->paginate(10);
+        return view('sms.campaigns', compact('campaigns'));
     }
     
     /**
      * Show details of a specific SMS campaign.
      *
      * @param  int  $id
-     * @return \Inertia\Response
+     * @return \Illuminate\View\View
      */
     public function campaignDetails($id)
     {
-        return Inertia::render('Sms/CampaignDetails', ['id' => $id]);
+        $campaign = SmsCampaign::where('user_id', Auth::id())
+            ->findOrFail($id);
+        return view('sms.campaign-details', compact('campaign'));
     }
     
     /**
      * Show sender names management page.
      *
-     * @return \Inertia\Response
+     * @return \Illuminate\View\View
      */
     public function senderNames()
     {
-        return Inertia::render('Sms/SenderNames');
+        $senderNames = Auth::user()->senderNames()->latest()->get();
+        return view('sms.sender-names', compact('senderNames'));
     }
     
     /**
@@ -185,11 +190,13 @@ class SmsController extends Controller
     /**
      * Show credit balance page.
      *
-     * @return \Inertia\Response
+     * @return \Illuminate\View\View
      */
     public function credits()
     {
-        return Inertia::render('Sms/Credits');
+        $user = Auth::user();
+        $billingTier = $user->billingTier;
+        return view('sms.credits', compact('user', 'billingTier'));
     }
     
     /**
@@ -232,10 +239,144 @@ class SmsController extends Controller
     /**
      * Show user's current SMS rate and billing tier
      * 
-     * @return \Inertia\Response
+     * @return \Illuminate\View\View
      */
     public function showBillingTier()
     {
-        return Inertia::render('Sms/BillingTier');
+        $user = Auth::user();
+        $currentTier = $user->billingTier;
+        $userCurrency = $user->currency;
+        
+        // Format SMS rate in user's currency
+        $smsRate = $user->getSmsRate();
+        $formattedSmsRate = $userCurrency->symbol . number_format($smsRate, 3);
+        
+        // Get all billing tiers to display in the table
+        $allTiers = \App\Models\BillingTier::orderBy('price_per_sms', 'desc')->get();
+        
+        return view('sms.billing-tier', compact(
+            'user', 
+            'currentTier', 
+            'userCurrency', 
+            'formattedSmsRate', 
+            'allTiers'
+        ));
+    }
+    
+    /**
+     * Show the SMS messages page.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function messages()
+    {
+        $user = Auth::user();
+        $messages = $user->smsCampaigns()
+            ->with(['recipients' => function ($query) {
+                $query->latest();
+            }])
+            ->latest()
+            ->paginate(15);
+            
+        return view('sms.messages', compact('messages'));
+    }
+
+    /**
+     * Show SMS templates list.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function templates()
+    {
+        $user = Auth::user();
+        $templates = $user->smsTemplates()->latest()->paginate(10);
+        return view('sms.templates.index', compact('templates'));
+    }
+
+    /**
+     * Show form to create a new SMS template.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function createTemplate()
+    {
+        return view('sms.templates.create');
+    }
+
+    /**
+     * Store a new SMS template.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function storeTemplate(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'content' => 'required|string|max:918',
+            'description' => 'nullable|string|max:1000',
+        ]);
+
+        $template = new SmsTemplate();
+        $template->user_id = Auth::id();
+        $template->name = $request->name;
+        $template->content = $request->content;
+        $template->description = $request->description;
+        $template->save();
+
+        return redirect()->route('sms.templates')
+            ->with('success', 'Template created successfully.');
+    }
+
+    /**
+     * Show form to edit an SMS template.
+     *
+     * @param  int  $id
+     * @return \Illuminate\View\View
+     */
+    public function editTemplate($id)
+    {
+        $template = SmsTemplate::where('user_id', Auth::id())->findOrFail($id);
+        return view('sms.templates.edit', compact('template'));
+    }
+
+    /**
+     * Update an SMS template.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updateTemplate(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'content' => 'required|string|max:918',
+            'description' => 'nullable|string|max:1000',
+        ]);
+
+        $template = SmsTemplate::where('user_id', Auth::id())->findOrFail($id);
+        $template->name = $request->name;
+        $template->content = $request->content;
+        $template->description = $request->description;
+        $template->save();
+
+        return redirect()->route('sms.templates')
+            ->with('success', 'Template updated successfully.');
+    }
+
+    /**
+     * Delete an SMS template.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function deleteTemplate($id)
+    {
+        $template = SmsTemplate::where('user_id', Auth::id())->findOrFail($id);
+        $template->delete();
+
+        return redirect()->route('sms.templates')
+            ->with('success', 'Template deleted successfully.');
     }
 }

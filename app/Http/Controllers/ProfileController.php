@@ -9,7 +9,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
-use Inertia\Inertia;
 
 class ProfileController extends Controller
 {
@@ -20,27 +19,29 @@ class ProfileController extends Controller
      */
     public function __construct(CurrencyService $currencyService)
     {
-        // Removed middleware call since it's not available in Laravel 12
-        // Middleware should be defined in routes or route groups instead
         $this->currencyService = $currencyService;
     }
     
     /**
      * Show the user profile page.
-     * 
-     * @return \Inertia\Response
      */
-    public function show()
+    public function show(): View
     {
         $user = auth()->user();
-        return Inertia::render('Profile/Show', compact('user'));
+        return view('profile.show', compact('user'));
+    }
+    
+    /**
+     * Edit the user profile page.
+     */
+    public function edit(): View
+    {
+        $user = auth()->user();
+        return view('profile.edit', compact('user'));
     }
     
     /**
      * Update the user profile.
-     * 
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request): RedirectResponse
     {
@@ -54,24 +55,23 @@ class ProfileController extends Controller
         
         $user->update($validated);
         
-        return redirect()->route('profile')->with('success', 'Profile updated successfully.');
+        return redirect()->route('profile.show')->with('success', 'Profile updated successfully.');
     }
     
     /**
      * Show the currency settings page.
-     * 
-     * @return \Inertia\Response
      */
-    public function showCurrencySettings()
+    public function showCurrencySettings(): View
     {
-        return Inertia::render('Profile/Currency');
+        $user = Auth::user();
+        $currencies = Currency::where('is_active', true)->get();
+        $currentCurrency = $user->currency ?? Currency::getDefaultCurrency();
+        
+        return view('profile.currency', compact('currencies', 'currentCurrency'));
     }
     
     /**
      * Update the user's currency preferences.
-     * 
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function updateCurrency(Request $request): RedirectResponse
     {

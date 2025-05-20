@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Requests\VirtualNumber\ConfigureNumberRequest;
 use App\Http\Requests\VirtualNumber\PurchaseNumberRequest;
 use App\Models\VirtualNumber;
+use App\Models\ServicePlan;
 use App\Services\VirtualNumberService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class VirtualNumberController extends Controller
 {
@@ -25,6 +27,59 @@ class VirtualNumberController extends Controller
     public function __construct(VirtualNumberService $virtualNumberService)
     {
         $this->virtualNumberService = $virtualNumberService;
+    }
+
+    /**
+     * Show the virtual numbers dashboard.
+     */
+    public function index(): View
+    {
+        $user = auth()->user();
+        $activeNumbers = VirtualNumber::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->count();
+        
+        $expiringNumbers = VirtualNumber::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->where('expires_at', '<=', now()->addDays(7))
+            ->count();
+
+        $virtualNumbers = VirtualNumber::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return view('virtual-numbers.index', compact('activeNumbers', 'expiringNumbers', 'virtualNumbers'));
+    }
+
+    /**
+     * Show the browse virtual numbers page.
+     */
+    public function browse(): View
+    {
+        $user = auth()->user();
+        $availableNumbers = VirtualNumber::where('status', 'available')
+            ->orderBy('monthly_fee', 'asc')
+            ->paginate(12);
+        
+        // Fetch active virtual number plans using defined scopes
+        $plans = ServicePlan::ofType('virtual_number')
+            ->active()
+            ->get();
+        
+        return view('virtual-numbers.browse', compact('availableNumbers', 'plans'));
+    }
+
+    /**
+     * Show user's virtual numbers.
+     */
+    public function myNumbers(): View
+    {
+        $user = auth()->user();
+        $numbers = VirtualNumber::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+        
+        return view('virtual-numbers.my-numbers', compact('numbers'));
     }
 
     /**

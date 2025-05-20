@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<div class="card-title">@extends('layouts.master')
 
 @section('content')
 <div class="container">
@@ -6,20 +6,20 @@
         <div class="col-md-10">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">SMS Billing Tier</h5>
-                </div>
+                    <div class="card-title"><h5 class="mb-0">SMS Billing Tier</h5></div><div class="card-title"></div><div class="card-title"></div>
+                </div><div class="card-title"></div><div class="card-title"></div>
                 <div class="card-body">
                     @if(session('success'))
                         <div class="alert alert-success mb-3">
                             {{ session('success') }}
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
                     @endif
 
                     <div class="alert alert-info">
                         <h5>Your Current Tier: <strong>{{ $currentTier->name }}</strong></h5>
                         <p>You are currently on the <strong>{{ $currentTier->name }}</strong> tier with a 
                            price of <strong>{{ $formattedSmsRate }}</strong> per SMS.</p>
-                    </div>
+                    </div><div class="card-title"></div><div class="card-title"></div>
 
                     <h5 class="mt-4 mb-3">Available SMS Billing Tiers</h5>
                     <p>As you purchase more SMS credits, you'll automatically be upgraded to higher tiers with better rates.</p>
@@ -55,14 +55,14 @@
                                 @endforeach
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
+                    </div><div class="card-title"></div><div class="card-title"></div>
+                </div><div class="card-title"></div><div class="card-title"></div>
+            </div><div class="card-title"></div><div class="card-title"></div>
 
             <div class="card mt-4">
                 <div class="card-header">
-                    <h5 class="mb-0">How Billing Tiers Work</h5>
-                </div>
+                    <div class="card-title"><h5 class="mb-0">How Billing Tiers Work</h5></div><div class="card-title"></div><div class="card-title"></div>
+                </div><div class="card-title"></div><div class="card-title"></div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
@@ -73,7 +73,7 @@
                                 <li>Purchasing ₵3,000 - ₵5,999 worth of SMS qualifies you for the Premium tier</li>
                                 <li>Purchases of ₵6,000 or more qualify you for the Gold tier</li>
                             </ul>
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
                         <div class="col-md-6">
                             <h6>Tier Benefits</h6>
                             <ul>
@@ -82,8 +82,8 @@
                                 <li>Once upgraded, you maintain your tier level for future purchases</li>
                                 <li>Tier pricing applies to all your SMS sending</li>
                             </ul>
-                        </div>
-                    </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
+                    </div><div class="card-title"></div><div class="card-title"></div>
                     
                     <div class="alert alert-warning mt-3">
                         <strong>Note:</strong> When making purchases on higher tiers, there are minimum purchase requirements:
@@ -92,10 +92,10 @@
                             <li>Premium tier: Minimum purchase of ₵3,000</li>
                             <li>Gold tier: Minimum purchase of ₵6,000</li>
                         </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                    </div><div class="card-title"></div><div class="card-title"></div>
+                </div><div class="card-title"></div><div class="card-title"></div>
+            </div><div class="card-title"></div><div class="card-title"></div>
+        </div><div class="card-title"></div><div class="card-title"></div>
+    </div><div class="card-title"></div><div class="card-title"></div>
+</div><div class="card-title"></div></div>
 @endsection

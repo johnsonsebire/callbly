@@ -17,13 +17,16 @@ class ContactCenterCall extends Model
      */
     protected $fillable = [
         'user_id',
-        'caller_number',
-        'receiver_number',
+        'from_number',
+        'to_number',
         'duration',
         'status',
-        'notes',
-        'ivr_path',
-        'recording_url',
+        'direction',
+        'reference_id',
+        'recording_enabled',
+        'callback_url',
+        'call_timeout',
+        'metadata',
         'cost',
     ];
 
@@ -34,7 +37,9 @@ class ContactCenterCall extends Model
      */
     protected $casts = [
         'duration' => 'integer',
-        'ivr_path' => 'json',
+        'recording_enabled' => 'boolean',
+        'call_timeout' => 'integer',
+        'metadata' => 'array',
         'cost' => 'decimal:2',
     ];
 

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<div class="card-title">@extends('layouts.master')
 
 @section('content')
 <div class="container">
@@ -6,15 +6,15 @@
         <div class="col-md-12">
             <h2>Sender Names</h2>
             <p class="text-muted">Manage your SMS sender IDs</p>
-        </div>
-    </div>
+        </div><div class="card-title"></div><div class="card-title"></div>
+    </div><div class="card-title"></div><div class="card-title"></div>
 
     <div class="row">
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">Your Sender Names</h5>
-                </div>
+                </div><div class="card-title"></div><div class="card-title"></div>
                 <div class="card-body">
                     @if($senderNames->isEmpty())
                         <p class="text-center my-4">You haven't registered any sender names yet.</p>
@@ -52,26 +52,26 @@
                                     @endforeach
                                 </tbody>
                             </table>
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
                     @endif
-                </div>
-            </div>
-        </div>
+                </div><div class="card-title"></div><div class="card-title"></div>
+            </div><div class="card-title"></div><div class="card-title"></div>
+        </div><div class="card-title"></div><div class="card-title"></div>
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">Register New Sender ID</h5>
-                </div>
+                </div><div class="card-title"></div><div class="card-title"></div>
                 <div class="card-body">
                     @if(session('success'))
                         <div class="alert alert-success mb-3">
                             {{ session('success') }}
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
                     @endif
                     @if(session('error'))
                         <div class="alert alert-danger mb-3">
                             {{ session('error') }}
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
                     @endif
 
                     <form method="POST" action="{{ route('sms.sender-names.store') }}">
@@ -87,16 +87,16 @@
                                     <strong>{{ $message }}</strong>
                                 </span>
                             @enderror
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
                         <button type="submit" class="btn btn-primary">Register Sender ID</button>
                     </form>
-                </div>
-            </div>
+                </div><div class="card-title"></div><div class="card-title"></div>
+            </div><div class="card-title"></div><div class="card-title"></div>
 
             <div class="card mt-4">
                 <div class="card-header">
                     <h5 class="mb-0">Sender ID Guidelines</h5>
-                </div>
+                </div><div class="card-title"></div><div class="card-title"></div>
                 <div class="card-body">
                     <ul class="pl-3">
                         <li>Sender ID must be 3-11 characters long</li>
@@ -106,9 +106,9 @@
                         <li>Brand names should match your registered business name</li>
                         <li>Generic terms like "INFO" or "SMS" may not be approved</li>
                     </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                </div><div class="card-title"></div><div class="card-title"></div>
+            </div><div class="card-title"></div><div class="card-title"></div>
+        </div><div class="card-title"></div><div class="card-title"></div>
+    </div><div class="card-title"></div><div class="card-title"></div>
+</div><div class="card-title"></div></div>
 @endsection

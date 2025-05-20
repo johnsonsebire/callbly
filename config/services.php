@@ -14,6 +14,13 @@ return [
     |
     */
 
+    'mailgun' => [
+        'domain' => env('MAILGUN_DOMAIN'),
+        'secret' => env('MAILGUN_SECRET'),
+        'endpoint' => env('MAILGUN_ENDPOINT', 'api.mailgun.net'),
+        'scheme' => 'https',
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
@@ -48,8 +55,8 @@ return [
     ],
 
     'telephony' => [
+        'base_url' => env('TELEPHONY_API_URL'),
         'api_key' => env('TELEPHONY_API_KEY'),
-        'base_url' => env('TELEPHONY_BASE_URL', 'https://api.telephony-provider.com'),
     ],
 
 ];

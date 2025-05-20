@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<div class="card-title">@extends('layouts.master')
 
 @section('content')
 <div class="container">
@@ -6,7 +6,9 @@
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Currency Settings</h5>
+                    <div class="card-title">
+                        <h5 class="mb-0">Currency Settings</h5>
+                    </div>
                 </div>
                 <div class="card-body">
                     @if(session('success'))
@@ -50,7 +52,9 @@
 
             <div class="card mt-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Current Exchange Rates</h5>
+                    <div class="card-title">
+                        <h5 class="mb-0">Current Exchange Rates</h5>
+                    </div>
                 </div>
                 <div class="card-body">
                     <p>For reference, here are the current exchange rates relative to the Ghanaian Cedi (GHS):</p>

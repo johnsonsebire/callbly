@@ -14,13 +14,16 @@ return new class extends Migration
         Schema::create('contact_center_calls', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('caller_number');
-            $table->string('receiver_number');
+            $table->string('from_number');
+            $table->string('to_number');
             $table->integer('duration')->default(0); // in seconds
-            $table->enum('status', ['initiated', 'connected', 'completed', 'failed', 'missed'])->default('initiated');
-            $table->text('notes')->nullable();
-            $table->json('ivr_path')->nullable(); // Store the IVR menu path taken
-            $table->string('recording_url')->nullable();
+            $table->enum('status', ['queued', 'ringing', 'in-progress', 'completed', 'failed'])->default('queued');
+            $table->string('direction')->default('outbound');
+            $table->string('reference_id')->unique();
+            $table->boolean('recording_enabled')->default(false);
+            $table->string('callback_url')->nullable();
+            $table->integer('call_timeout')->default(60);
+            $table->json('metadata')->nullable();
             $table->decimal('cost', 10, 2)->default(0.00);
             $table->timestamps();
         });

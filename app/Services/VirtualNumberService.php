@@ -16,8 +16,12 @@ class VirtualNumberService
      */
     public function __construct()
     {
-        $this->baseUrl = config('services.telephony.base_url');
-        $this->apiKey = config('services.telephony.api_key');
+        $this->baseUrl = config('services.telephony.base_url') ?? 'https://api.default-telephony.com';
+        $this->apiKey = config('services.telephony.api_key') ?? '';
+        
+        if (empty($this->baseUrl) || empty($this->apiKey)) {
+            \Log::warning('Telephony service not properly configured. Please check TELEPHONY_API_URL and TELEPHONY_API_KEY in .env');
+        }
     }
     
     /**

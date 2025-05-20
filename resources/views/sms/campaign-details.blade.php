@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<div class="card-title">@extends('layouts.master')
 
 @section('content')
 <div class="container">
@@ -9,21 +9,21 @@
             </a>
             <h2>Campaign Details</h2>
             <p class="text-muted">Viewing details for campaign #{{ $campaign->id }}</p>
-        </div>
-    </div>
+        </div><div class="card-title"></div><div class="card-title"></div>
+    </div><div class="card-title"></div><div class="card-title"></div>
 
     <div class="row">
         <div class="col-md-8">
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">Campaign Information</h5>
-                </div>
+                </div><div class="card-title"></div><div class="card-title"></div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <strong>Campaign ID:</strong>
                             <p>{{ $campaign->id }}</p>
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
                         <div class="col-md-6 mb-3">
                             <strong>Status:</strong>
                             <p>
@@ -31,50 +31,50 @@
                                     {{ ucfirst($campaign->status) }}
                                 </span>
                             </p>
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
                         <div class="col-md-6 mb-3">
                             <strong>Sender Name:</strong>
                             <p>{{ $campaign->sender_name }}</p>
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
                         <div class="col-md-6 mb-3">
                             <strong>Created Date:</strong>
                             <p>{{ $campaign->created_at->format('M d, Y H:i:s') }}</p>
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
                         <div class="col-md-6 mb-3">
                             <strong>Recipient Count:</strong>
                             <p>{{ $campaign->recipient_count }} recipients</p>
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
                         <div class="col-md-6 mb-3">
                             <strong>Successful Deliveries:</strong>
                             <p>{{ $campaign->success_count }} ({{ $campaign->recipient_count > 0 ? round(($campaign->success_count / $campaign->recipient_count) * 100) : 0 }}%)</p>
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
                         <div class="col-md-12 mb-3">
                             <strong>Message:</strong>
                             <p class="p-3 bg-light">{{ $campaign->message }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
+                    </div><div class="card-title"></div><div class="card-title"></div>
+                </div><div class="card-title"></div><div class="card-title"></div>
+            </div><div class="card-title"></div><div class="card-title"></div>
 
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">Delivery Statistics</h5>
-                </div>
+                </div><div class="card-title"></div><div class="card-title"></div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4 text-center mb-4">
-                            <div class="h1 text-success">{{ $campaign->success_count }}</div>
-                            <div>Delivered</div>
-                        </div>
+                            <div class="h1 text-success">{{ $campaign->success_count }}</div><div class="card-title"></div><div class="card-title"></div>
+                            <div>Delivered</div><div class="card-title"></div><div class="card-title"></div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
                         <div class="col-md-4 text-center mb-4">
-                            <div class="h1 text-danger">{{ $campaign->failed_count }}</div>
-                            <div>Failed</div>
-                        </div>
+                            <div class="h1 text-danger">{{ $campaign->failed_count }}</div><div class="card-title"></div><div class="card-title"></div>
+                            <div>Failed</div><div class="card-title"></div><div class="card-title"></div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
                         <div class="col-md-4 text-center mb-4">
-                            <div class="h1 text-warning">{{ $campaign->pending_count }}</div>
-                            <div>Pending</div>
-                        </div>
-                    </div>
+                            <div class="h1 text-warning">{{ $campaign->pending_count }}</div><div class="card-title"></div><div class="card-title"></div>
+                            <div>Pending</div><div class="card-title"></div><div class="card-title"></div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
+                    </div><div class="card-title"></div><div class="card-title"></div>
                     
                     <div class="progress">
                         @if($campaign->recipient_count > 0)
@@ -84,21 +84,21 @@
                                 aria-valuemin="0" 
                                 aria-valuemax="100">
                                 {{ round(($campaign->success_count / $campaign->recipient_count) * 100) }}%
-                            </div>
+                            </div><div class="card-title"></div><div class="card-title"></div>
                             <div class="progress-bar bg-warning" role="progressbar" 
                                 style="width: {{ ($campaign->pending_count / $campaign->recipient_count) * 100 }}%" 
                                 aria-valuenow="{{ ($campaign->pending_count / $campaign->recipient_count) * 100 }}" 
                                 aria-valuemin="0" 
                                 aria-valuemax="100">
                                 {{ round(($campaign->pending_count / $campaign->recipient_count) * 100) }}%
-                            </div>
+                            </div><div class="card-title"></div><div class="card-title"></div>
                             <div class="progress-bar bg-danger" role="progressbar" 
                                 style="width: {{ ($campaign->failed_count / $campaign->recipient_count) * 100 }}%" 
                                 aria-valuenow="{{ ($campaign->failed_count / $campaign->recipient_count) * 100 }}" 
                                 aria-valuemin="0" 
                                 aria-valuemax="100">
                                 {{ round(($campaign->failed_count / $campaign->recipient_count) * 100) }}%
-                            </div>
+                            </div><div class="card-title"></div><div class="card-title"></div>
                         @else
                             <div class="progress-bar" role="progressbar" 
                                 style="width: 0%" 
@@ -106,23 +106,23 @@
                                 aria-valuemin="0" 
                                 aria-valuemax="100">
                                 0%
-                            </div>
+                            </div><div class="card-title"></div><div class="card-title"></div>
                         @endif
-                    </div>
-                </div>
-            </div>
-        </div>
+                    </div><div class="card-title"></div><div class="card-title"></div>
+                </div><div class="card-title"></div><div class="card-title"></div>
+            </div><div class="card-title"></div><div class="card-title"></div>
+        </div><div class="card-title"></div><div class="card-title"></div>
 
         <div class="col-md-4">
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">Message Details</h5>
-                </div>
+                </div><div class="card-title"></div><div class="card-title"></div>
                 <div class="card-body">
                     <div class="mb-3">
                         <strong>Character Count:</strong>
                         <p>{{ strlen($campaign->message) }} characters</p>
-                    </div>
+                    </div><div class="card-title"></div><div class="card-title"></div>
                     <div class="mb-3">
                         <strong>Message Parts:</strong>
                         @php
@@ -130,22 +130,22 @@
                             $parts = $charCount <= 160 ? 1 : ceil(($charCount - 160) / 153) + 1;
                         @endphp
                         <p>{{ $parts }} parts</p>
-                    </div>
+                    </div><div class="card-title"></div><div class="card-title"></div>
                     <div class="mb-3">
                         <strong>Cost Per Recipient:</strong>
                         <p>{{ $parts }} credit(s)</p>
-                    </div>
+                    </div><div class="card-title"></div><div class="card-title"></div>
                     <div class="mb-3">
                         <strong>Total Credits Used:</strong>
                         <p>{{ $parts * $campaign->recipient_count }} credits</p>
-                    </div>
-                </div>
-            </div>
+                    </div><div class="card-title"></div><div class="card-title"></div>
+                </div><div class="card-title"></div><div class="card-title"></div>
+            </div><div class="card-title"></div><div class="card-title"></div>
 
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">Actions</h5>
-                </div>
+                </div><div class="card-title"></div><div class="card-title"></div>
                 <div class="card-body">
                     <a href="{{ route('sms.download-report', $campaign->id) }}" class="btn btn-outline-primary btn-block mb-2">
                         <i class="fas fa-download mr-1"></i> Download Report
@@ -153,10 +153,10 @@
                     <a href="{{ route('sms.duplicate-campaign', $campaign->id) }}" class="btn btn-outline-secondary btn-block">
                         <i class="fas fa-copy mr-1"></i> Duplicate Campaign
                     </a>
-                </div>
-            </div>
-        </div>
-    </div>
+                </div><div class="card-title"></div><div class="card-title"></div>
+            </div><div class="card-title"></div><div class="card-title"></div>
+        </div><div class="card-title"></div><div class="card-title"></div>
+    </div><div class="card-title"></div><div class="card-title"></div>
 
     <div class="row mt-4">
         <div class="col-md-12">
@@ -171,10 +171,10 @@
                                 <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Failed</option>
                                 <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                             </select>
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
                         <button type="submit" class="btn btn-outline-primary">Filter</button>
                     </form>
-                </div>
+                </div><div class="card-title"></div><div class="card-title"></div>
                 <div class="card-body">
                     @if($recipients->isEmpty())
                         <p class="text-center my-4">No recipient details available.</p>
@@ -206,15 +206,15 @@
                                     @endforeach
                                 </tbody>
                             </table>
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
 
                         <div class="mt-4">
                             {{ $recipients->links() }}
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
                     @endif
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                </div><div class="card-title"></div><div class="card-title"></div>
+            </div><div class="card-title"></div><div class="card-title"></div>
+        </div><div class="card-title"></div><div class="card-title"></div>
+    </div><div class="card-title"></div><div class="card-title"></div>
+</div><div class="card-title"></div></div>
 @endsection

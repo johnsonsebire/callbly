@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Services\NavigationService;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Routing\Router;
@@ -16,7 +17,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(NavigationService::class, function ($app) {
+            return new NavigationService();
+        });
     }
 
     /**
@@ -47,5 +50,7 @@ class AppServiceProvider extends ServiceProvider
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
+
+        view()->share('navigationService', app(NavigationService::class));
     }
 }

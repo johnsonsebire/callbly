@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<div class="card-title">@extends('layouts.master')
 
 @section('content')
 <div class="container">
@@ -6,20 +6,20 @@
         <div class="col-md-12">
             <h2>Compose SMS</h2>
             <p class="text-muted">Create and send a new SMS campaign</p>
-        </div>
-    </div>
+        </div><div class="card-title"></div><div class="card-title"></div>
+    </div><div class="card-title"></div><div class="card-title"></div>
 
     <div class="row">
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">Message Details</h5>
-                </div>
+                </div><div class="card-title"></div><div class="card-title"></div>
                 <div class="card-body">
                     @if(session('error'))
                         <div class="alert alert-danger">
                             {{ session('error') }}
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
                     @endif
 
                     <form method="POST" action="{{ route('sms.send') }}" id="smsForm">
@@ -45,7 +45,7 @@
                                     You need to <a href="{{ route('sms.sender-names') }}">register a sender ID</a> before sending SMS.
                                 </small>
                             @endif
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
 
                         <div class="form-group">
                             <label for="message">Message</label>
@@ -53,13 +53,13 @@
                             <div class="d-flex justify-content-between mt-1">
                                 <small class="text-muted" id="characterCount">0 characters</small>
                                 <small class="text-muted" id="messageCount">0 message(s)</small>
-                            </div>
+                            </div><div class="card-title"></div><div class="card-title"></div>
                             @error('message')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
                                 </span>
                             @enderror
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
 
                         <div class="form-group">
                             <label for="recipients">Recipients</label>
@@ -67,49 +67,49 @@
                             <small class="text-muted">
                                 Example formats: +233244123456, +233244123457 or +233244123456, +233244123457
                             </small>
-                            <div class="mt-1" id="recipientCount">0 recipient(s)</div>
+                            <div class="mt-1" id="recipientCount">0 recipient(s)</div><div class="card-title"></div><div class="card-title"></div>
                             @error('recipients')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
                                 </span>
                             @enderror
-                        </div>
+                        </div><div class="card-title"></div><div class="card-title"></div>
 
                         <button type="submit" class="btn btn-primary" id="sendButton" {{ $senderNames->isEmpty() ? 'disabled' : '' }}>
                             Send Message
                         </button>
                     </form>
-                </div>
-            </div>
-        </div>
+                </div><div class="card-title"></div><div class="card-title"></div>
+            </div><div class="card-title"></div><div class="card-title"></div>
+        </div><div class="card-title"></div><div class="card-title"></div>
         <div class="col-md-4">
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">Message Summary</h5>
-                </div>
+                </div><div class="card-title"></div><div class="card-title"></div>
                 <div class="card-body">
                     <div class="mb-3">
                         <strong>Credits Required:</strong>
                         <span id="creditsNeeded">0</span>
-                    </div>
+                    </div><div class="card-title"></div><div class="card-title"></div>
                     <div class="mb-3">
                         <strong>Recipient Count:</strong>
                         <span id="recipientsCount">0</span>
-                    </div>
+                    </div><div class="card-title"></div><div class="card-title"></div>
                     <div>
                         <strong>Characters:</strong>
                         <span id="charsCount">0</span>
                         <small class="text-muted">
                             (160 chars = 1 message)
                         </small>
-                    </div>
-                </div>
-            </div>
+                    </div><div class="card-title"></div><div class="card-title"></div>
+                </div><div class="card-title"></div><div class="card-title"></div>
+            </div><div class="card-title"></div><div class="card-title"></div>
 
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">Tips</h5>
-                </div>
+                </div><div class="card-title"></div><div class="card-title"></div>
                 <div class="card-body">
                     <ul class="pl-3">
                         <li>Keep your message concise to reduce costs.</li>
@@ -117,11 +117,11 @@
                         <li>Make sure all recipient numbers include country code.</li>
                         <li>Test your message with a small group first.</li>
                     </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                </div><div class="card-title"></div><div class="card-title"></div>
+            </div><div class="card-title"></div><div class="card-title"></div>
+        </div><div class="card-title"></div><div class="card-title"></div>
+    </div><div class="card-title"></div><div class="card-title"></div>
+</div><div class="card-title"></div></div>
 
 @endsection
 

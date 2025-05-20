@@ -82,6 +82,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get the SMS templates for the user.
+     */
+    public function smsTemplates()
+    {
+        return $this->hasMany(SmsTemplate::class);
+    }
+
+    /**
      * Get the sender names for the user
      */
     public function senderNames(): HasMany

@@ -1,28 +1,29 @@
-@extends('layouts.app')
+<div class="card-title">@extends('layouts.master')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-md mx-auto bg-white p-8 border border-gray-300 rounded-lg shadow-sm">
-        <h2 class="text-2xl font-bold mb-6 text-center">{{ __('Verify Your Email Address') }}</h2>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Verify Your Email Address</h5>
+                </div><div class="card-title"></div><div class="card-title"></div>
+                <div class="card-body p-4">
+                    @if (session('status') == 'verification-link-sent')
+                        <div class="alert alert-success" role="alert">
+                            A new verification link has been sent to your email address.
+                        </div><div class="card-title"></div><div class="card-title"></div>
+                    @endif
 
-        @if (session('status'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-6" role="alert">
-                <span class="block sm:inline">{{ session('status') }}</span>
-            </div>
-        @endif
-
-        <div class="mb-6">
-            <p class="text-gray-700">
-                {{ __('Before proceeding, please check your email for a verification link. If you did not receive the email,') }}
-            </p>
-
-            <form class="mt-4" method="POST" action="{{ route('verification.send') }}">
-                @csrf
-                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                    {{ __('Click here to request another') }}
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
+                    <p>Before proceeding, please check your email for a verification link. If you did not receive the email,</p>
+                    
+                    <form method="POST" action="{{ route('verification.send') }}" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-link p-0 m-0 align-baseline">click here to request another</button>.
+                    </form>
+                </div><div class="card-title"></div><div class="card-title"></div>
+            </div><div class="card-title"></div><div class="card-title"></div>
+        </div><div class="card-title"></div><div class="card-title"></div>
+    </div><div class="card-title"></div><div class="card-title"></div>
+</div><div class="card-title"></div></div>
 @endsection

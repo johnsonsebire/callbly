@@ -1,4 +1,4 @@
-@extends('layouts.app')
+<div class="card-title">@extends('layouts.app')
 
 @section('content')
 <div class="container mx-auto px-4 py-8">
@@ -8,7 +8,7 @@
         @if (session('status'))
             <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-6" role="alert">
                 <span class="block sm:inline">{{ session('status') }}</span>
-            </div>
+            </div><div class="card-title"></div><div class="card-title"></div>
         @endif
 
         <form method="POST" action="{{ route('password.email') }}">
@@ -20,20 +20,20 @@
                 @error('email')
                     <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
                 @enderror
-            </div>
+            </div><div class="card-title"></div><div class="card-title"></div>
 
             <div class="flex items-center justify-between mb-4">
                 <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
                     {{ __('Send Password Reset Link') }}
                 </button>
-            </div>
+            </div><div class="card-title"></div><div class="card-title"></div>
 
             <div class="text-center text-sm">
                 <a class="text-blue-500 hover:text-blue-800" href="{{ route('login') }}">
                     {{ __('Back to Login') }}
                 </a>
-            </div>
+            </div><div class="card-title"></div><div class="card-title"></div>
         </form>
-    </div>
-</div>
+    </div><div class="card-title"></div><div class="card-title"></div>
+</div><div class="card-title"></div></div>
 @endsection
