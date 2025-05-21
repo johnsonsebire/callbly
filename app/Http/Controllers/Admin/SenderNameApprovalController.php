@@ -53,7 +53,7 @@ class SenderNameApprovalController extends Controller
     }
     
     /**
-     * Update the sender name status (approve/reject)
+     * Update the sender name status (approve/reject) or edit the sender name
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
@@ -63,6 +63,49 @@ class SenderNameApprovalController extends Controller
     {
         $senderName = SenderName::findOrFail($id);
         
+        // Check if we're in edit mode (updating the sender name itself)
+        if ($request->has('edit_mode')) {
+            $validated = $request->validate([
+                'name' => [
+                    'required',
+                    'string',
+                    'max:11',
+                    'alpha_num',
+                    Rule::unique('sender_names', 'name')
+                        ->where(function ($query) use ($request, $senderName) {
+                            return $query->where('user_id', $senderName->user_id);
+                        })
+                        ->ignore($senderName->id),
+                ],
+            ]);
+            
+            try {
+                // Update the sender name preserving the case as entered by user
+                $senderName->update([
+                    'name' => $validated['name'], // Preserve case exactly as entered
+                ]);
+                
+                Log::info('Sender name edited', [
+                    'admin_id' => Auth::id(),
+                    'sender_name_id' => $senderName->id,
+                    'user_id' => $senderName->user_id,
+                    'old_name' => $senderName->getOriginal('name'),
+                    'new_name' => $validated['name'],
+                ]);
+                
+                return redirect()->route('admin.sender-names.index')
+                    ->with('success', "Sender name has been updated successfully to '{$validated['name']}'.");
+            } catch (\Exception $e) {
+                Log::error('Error editing sender name', [
+                    'error' => $e->getMessage(),
+                    'sender_name_id' => $id,
+                ]);
+                
+                return back()->with('error', 'An error occurred while updating the sender name.');
+            }
+        }
+        
+        // Regular status update (approve/reject)
         $validated = $request->validate([
             'status' => ['required', Rule::in(['approved', 'rejected'])],
             'rejection_reason' => 'required_if:status,rejected',
@@ -170,11 +213,10 @@ class SenderNameApprovalController extends Controller
             $user = User::findOrFail($validated['user_id']);
             
             $senderName = new SenderName();
-            $senderName->name = strtoupper($validated['name']);
+            $senderName->name = $validated['name']; // Preserve case exactly as entered
             $senderName->user_id = $user->id;
             
             // Auto-approve the sender name if selected
-            // Fix: Check if auto_approve exists in the request rather than using empty()
             if ($request->has('auto_approve')) {
                 $senderName->status = 'approved';
                 $senderName->approved_at = now();

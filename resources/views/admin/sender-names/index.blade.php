@@ -187,15 +187,67 @@
                                                         </button>
                                                     </div>
                                                 @else
-                                                    <button type="button" class="btn btn-icon btn-light-danger btn-sm" 
-                                                            data-bs-toggle="modal" 
-                                                            data-bs-target="#kt_modal_delete_{{ $item->id }}" 
-                                                            data-bs-placement="top" title="Delete">
-                                                        <i class="ki-outline ki-trash fs-2"></i>
-                                                    </button>
+                                                    <div class="d-flex justify-content-end flex-shrink-0">
+                                                        <button type="button" class="btn btn-icon btn-light-primary btn-sm me-1" 
+                                                              data-bs-toggle="modal" 
+                                                              data-bs-target="#kt_modal_edit_{{ $item->id }}" 
+                                                              data-bs-placement="top" title="Edit">
+                                                            <i class="ki-outline ki-pencil fs-2"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-icon btn-light-danger btn-sm" 
+                                                              data-bs-toggle="modal" 
+                                                              data-bs-target="#kt_modal_delete_{{ $item->id }}" 
+                                                              data-bs-placement="top" title="Delete">
+                                                            <i class="ki-outline ki-trash fs-2"></i>
+                                                        </button>
+                                                    </div>
                                                 @endif
                                             </td>
                                         </tr>
+                                        
+                                        <!--begin::Modal - Edit Sender Name-->
+                                        <div class="modal fade" tabindex="-1" id="kt_modal_edit_{{ $item->id }}">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <form method="POST" action="{{ route('admin.sender-names.update', $item->id) }}">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <input type="hidden" name="edit_mode" value="true">
+                                                        
+                                                        <div class="modal-header">
+                                                            <h3 class="modal-title">Edit Sender Name</h3>
+                                                            <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+                                                                <i class="ki-outline ki-cross fs-1"></i>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="modal-body">
+                                                            <div class="mb-5">
+                                                                <p>You are editing the sender name for <strong>{{ $item->user->name }}</strong>.</p>
+                                                            </div>
+                                                            
+                                                            <div class="fv-row mb-5">
+                                                                <label for="edit_sender_name_{{ $item->id }}" class="required form-label">Sender Name</label>
+                                                                <input type="text" class="form-control form-control-solid edit-sender-name" 
+                                                                    id="edit_sender_name_{{ $item->id }}" 
+                                                                    name="name" 
+                                                                    value="{{ $item->name }}" 
+                                                                    required 
+                                                                    placeholder="Enter sender name (max 11 characters)" 
+                                                                    maxlength="11">
+                                                                <div class="form-text">Sender name can be up to 11 characters long, alphanumeric only. Case will be preserved exactly as entered.</div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--end::Modal - Edit Sender Name-->
                                         
                                         <!--begin::Modal - Reject Sender Name-->
                                         <div class="modal fade" tabindex="-1" id="kt_modal_reject_{{ $item->id }}">
@@ -319,7 +371,7 @@
                         <label for="sender_name" class="required form-label">Sender Name</label>
                         <input type="text" class="form-control form-control-solid" id="sender_name" name="name" required 
                             placeholder="Enter sender name (max 11 characters)" maxlength="11">
-                        <div class="form-text">Sender name can be up to 11 characters long, alphanumeric only.</div>
+                        <div class="form-text">Sender name can be up to 11 characters long, alphanumeric only. Case will be preserved exactly as entered.</div>
                     </div>
                     
                     <div class="form-check form-switch form-check-custom form-check-solid mb-5">
@@ -364,9 +416,16 @@
         window.location.href = "{{ route('admin.sender-names.index') }}";
     });
     
-    // Validate sender name input
+    // Validate sender name input for creation and editing
     document.getElementById('sender_name')?.addEventListener('input', function() {
         this.value = this.value.replace(/[^A-Za-z0-9]/g, '').substr(0, 11);
+    });
+    
+    // Validate sender name input for editing
+    document.querySelectorAll('.edit-sender-name').forEach(function(input) {
+        input.addEventListener('input', function() {
+            this.value = this.value.replace(/[^A-Za-z0-9]/g, '').substr(0, 11);
+        });
     });
 </script>
 @endpush
