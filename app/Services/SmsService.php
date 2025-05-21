@@ -27,9 +27,10 @@ class SmsService
      * @param string $message
      * @param string $senderName
      * @param int $campaignId
+     * @param int|null $contactId
      * @return array
      */
-    public function sendSingle(string $recipient, string $message, string $senderName, int $campaignId): array
+    public function sendSingle(string $recipient, string $message, string $senderName, int $campaignId, ?int $contactId = null): array
     {
         try {
             $reference = 'SMS_' . Str::uuid()->toString();
@@ -46,12 +47,13 @@ class SmsService
                 'recipient' => $formattedRecipient,
                 'sender' => $senderName,
                 'reference' => $reference,
+                'contact_id' => $contactId,
                 'provider_response' => $result
             ]);
             
             // Create recipient record if campaign ID is provided
             if ($campaignId > 0) {
-                $this->createSmsRecipient($campaignId, $formattedRecipient, $result);
+                $this->createSmsRecipient($campaignId, $formattedRecipient, $result, $contactId);
             }
             
             return [
@@ -65,6 +67,7 @@ class SmsService
                 'recipient' => $recipient,
                 'sender_name' => $senderName,
                 'campaign_id' => $campaignId,
+                'contact_id' => $contactId,
                 'error' => $e->getMessage(),
             ]);
             
@@ -74,7 +77,7 @@ class SmsService
                     'success' => false,
                     'error' => $e->getMessage(),
                     'status' => 'failed'
-                ]);
+                ], $contactId);
             }
             
             return [
@@ -286,9 +289,10 @@ class SmsService
      * @param int $campaignId
      * @param string $recipient
      * @param array $result
+     * @param int|null $contactId
      * @return void
      */
-    protected function createSmsRecipient(int $campaignId, string $recipient, array $result): void
+    protected function createSmsRecipient(int $campaignId, string $recipient, array $result, ?int $contactId = null): void
     {
         try {
             // Determine recipient status based on the SMS result
@@ -306,6 +310,7 @@ class SmsService
                 'status' => $status,
                 'provider_message_id' => $result['message_id'] ?? $result['batch_id'] ?? null,
                 'error_message' => $result['error'] ?? null,
+                'contact_id' => $contactId,
             ]);
             
             // Save the recipient record

@@ -183,7 +183,7 @@
                                 </div>
 
                                 <!-- Tips Card -->
-                                <div class="card card-bordered">
+                                <div class="card card-bordered mb-5">
                                     <div class="card-header">
                                         <h3 class="card-title align-items-start flex-column">
                                             <span class="card-label fw-bold text-dark">Tips</span>
@@ -200,6 +200,36 @@
                                             <li>Include country code for all numbers (e.g. 233).</li>
                                             <li>Use contact groups for effective campaigns.</li>
                                         </ul>
+                                    </div>
+                                </div>
+                                
+                                <!-- Template Variables Card -->
+                                <div class="card card-bordered">
+                                    <div class="card-header">
+                                        <h3 class="card-title align-items-start flex-column">
+                                            <span class="card-label fw-bold text-dark">Template Variables</span>
+                                            <span class="text-gray-400 mt-1 fw-semibold fs-6">Click to add to your message</span>
+                                        </h3>
+                                        <div class="card-toolbar">
+                                            <i class="ki-outline ki-code fs-2 text-primary"></i>
+                                        </div>
+                                    </div>
+                                    <div class="card-body pt-5">
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <button type="button" class="btn btn-sm btn-light-primary template-variable" data-variable="{name}">
+                                                <i class="ki-outline ki-user fs-7 me-1"></i>Name
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-light-primary template-variable" data-variable="{company}">
+                                                <i class="ki-outline ki-office-building fs-7 me-1"></i>Company
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-light-primary template-variable" data-variable="{date}">
+                                                <i class="ki-outline ki-calendar fs-7 me-1"></i>Date
+                                            </button>
+                                        </div>
+                                        <div class="mt-3 fs-7 text-gray-600">
+                                            <i class="ki-outline ki-information-5 text-info me-1"></i>
+                                            Variables will be replaced with recipient data when message is sent.
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -348,6 +378,37 @@
                 loadTemplateContent(templateId);
             });
         });
+        
+        // Template variables insertion
+        document.querySelectorAll('.template-variable').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const variable = this.getAttribute('data-variable');
+                insertAtCursor(messageField, variable);
+                updateMessageMetrics();
+            });
+        });
+        
+        // Helper function to insert text at cursor position
+        function insertAtCursor(field, text) {
+            // Get cursor position
+            const startPos = field.selectionStart;
+            const endPos = field.selectionEnd;
+            
+            // Get current field value
+            const currentValue = field.value;
+            
+            // Insert text at cursor position
+            field.value = currentValue.substring(0, startPos) + 
+                          text + 
+                          currentValue.substring(endPos);
+            
+            // Set cursor position after inserted text
+            const newPos = startPos + text.length;
+            field.setSelectionRange(newPos, newPos);
+            
+            // Focus back on the field
+            field.focus();
+        }
 
         function loadTemplateContent(templateId) {
             // Show loading state

@@ -116,22 +116,61 @@ class SmsController extends Controller
             foreach ($request->contact_group_ids as $groupId) {
                 $group = $user->contactGroups()->find($groupId);
                 if ($group) {
-                    $contacts = $group->contacts()->pluck('phone_number')->toArray();
-                    $recipients = array_merge($recipients, $contacts);
+                    // Get contacts with properly qualified id column to avoid ambiguity
+                    $contactDetails = $group->contacts()
+                        ->select('contacts.id', 'contacts.first_name', 'contacts.last_name', 'contacts.phone_number')
+                        ->get();
+                    
+                    foreach ($contactDetails as $contact) {
+                        $recipients[] = [
+                            'phone_number' => $contact->phone_number,
+                            'contact_id' => $contact->id,
+                            'name' => trim($contact->first_name . ' ' . $contact->last_name)
+                        ];
+                    }
                 }
             }
         }
         
         // Process all contacts if selected
         if ($request->send_to_all_contacts) {
-            $allContacts = $user->contacts()->pluck('phone_number')->toArray();
-            $recipients = array_merge($recipients, $allContacts);
+            $allContacts = $user->contacts()
+                ->select('contacts.id', 'contacts.first_name', 'contacts.last_name', 'contacts.phone_number')
+                ->get();
+            foreach ($allContacts as $contact) {
+                $recipients[] = [
+                    'phone_number' => $contact->phone_number,
+                    'contact_id' => $contact->id,
+                    'name' => trim($contact->first_name . ' ' . $contact->last_name)
+                ];
+            }
         }
         
-        // Remove duplicates and empty values
-        $recipients = array_unique(array_filter($recipients));
+        // Process formatted recipients to standardize format
+        $formattedRecipients = [];
+        foreach ($recipients as $recipient) {
+            if (is_array($recipient)) {
+                $formattedRecipients[] = $recipient;
+            } else {
+                $formattedRecipients[] = [
+                    'phone_number' => $recipient,
+                    'contact_id' => null,
+                    'name' => '' // Unknown name for manually entered numbers
+                ];
+            }
+        }
         
-        if (empty($recipients)) {
+        // Ensure only unique phone numbers
+        $uniqueRecipients = [];
+        $uniquePhoneNumbers = [];
+        foreach ($formattedRecipients as $recipient) {
+            if (!in_array($recipient['phone_number'], $uniquePhoneNumbers)) {
+                $uniquePhoneNumbers[] = $recipient['phone_number'];
+                $uniqueRecipients[] = $recipient;
+            }
+        }
+        
+        if (empty($uniquePhoneNumbers)) {
             return redirect()->back()->withInput()->withErrors([
                 'recipients' => 'No valid recipients found'
             ]);
@@ -143,16 +182,32 @@ class SmsController extends Controller
         $campaign->name = $request->campaign_name ?? Str::limit($message, 30);
         $campaign->message = $message;
         $campaign->sender_name = $senderId;
-        $campaign->recipients_count = count($recipients);
+        $campaign->recipients_count = count($uniquePhoneNumbers);
         $campaign->status = 'processing';
         $campaign->save();
         
         try {
-            // Use our currency-aware SMS service
-            $response = $this->smsWithCurrency->sendSms(
+            // Setup personalized messages for each recipient with template tags replaced
+            $personalizedMessages = [];
+            
+            foreach ($uniqueRecipients as $recipient) {
+                $personalizedMessage = $this->replaceTemplateVariables($message, [
+                    'name' => $recipient['name'],
+                    'company' => $user->company_name ?? config('app.name'),
+                    'date' => now()->format('F j, Y')
+                ]);
+                
+                $personalizedMessages[] = [
+                    'recipient' => $recipient['phone_number'],
+                    'message' => $personalizedMessage,
+                    'contact_id' => $recipient['contact_id']
+                ];
+            }
+            
+            // Use our currency-aware SMS service with personalized messages
+            $response = $this->smsWithCurrency->sendPersonalizedSms(
                 $user, 
-                $recipients, 
-                $message, 
+                $personalizedMessages, 
                 $senderId,
                 $campaign->id
             );
@@ -167,13 +222,13 @@ class SmsController extends Controller
             
             if (isset($response['cost_details'])) {
                 $campaign->credits_used = $response['cost_details']['total_credits'] ?? null;
-                $campaign->delivered_count = $response['success'] ? count($recipients) : 0; 
+                $campaign->delivered_count = $response['success'] ? count($uniquePhoneNumbers) : 0; 
             }
             
             $campaign->save();
             
             if ($response['success']) {
-                return redirect()->route('sms.campaigns')->with('success', 'SMS campaign has been sent successfully to ' . count($recipients) . ' recipients.');
+                return redirect()->route('sms.campaigns')->with('success', 'SMS campaign has been sent successfully to ' . count($uniquePhoneNumbers) . ' recipients.');
             } else {
                 return redirect()->route('sms.compose')->with('error', 'Failed to send SMS: ' . ($response['message'] ?? 'Unknown error'));
             }
@@ -182,7 +237,7 @@ class SmsController extends Controller
             Log::error('SMS sending error: ' . $e->getMessage(), [
                 'campaign_id' => $campaign->id,
                 'user_id' => $user->id,
-                'recipients_count' => count($recipients),
+                'recipients_count' => count($uniquePhoneNumbers),
             ]);
             
             $campaign->status = 'failed';
@@ -192,6 +247,22 @@ class SmsController extends Controller
         }
     }
     
+    /**
+     * Replace template variables in a message with actual values
+     *
+     * @param string $message The template message with variables
+     * @param array $variables The variables to replace [variable_name => value]
+     * @return string The message with variables replaced
+     */
+    protected function replaceTemplateVariables(string $message, array $variables): string
+    {
+        foreach ($variables as $key => $value) {
+            $message = str_replace('{'.$key.'}', $value, $message);
+        }
+        
+        return $message;
+    }
+
     /**
      * Show all SMS campaigns for the authenticated user.
      *

@@ -22,6 +22,7 @@ class SmsRecipient extends Model
         'delivered_at',
         'error_message',
         'provider_message_id',
+        'contact_id',
     ];
 
     /**
@@ -39,5 +40,13 @@ class SmsRecipient extends Model
     public function campaign(): BelongsTo
     {
         return $this->belongsTo(SmsCampaign::class, 'campaign_id');
+    }
+    
+    /**
+     * Get the contact associated with this recipient.
+     */
+    public function contact(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'contact_id');
     }
 }
