@@ -1,58 +1,135 @@
 @extends('layouts.master')
 
 @section('content')
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">Import Contacts</h5>
-            <a href="{{ route('contacts.index') }}" class="btn btn-sm btn-secondary float-end">Back to Contacts</a>
-        </div>
-        <div class="card-body">
-            @if ($errors->any())
-                <div class="alert alert-danger">
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+<div class="app-main flex-column flex-row-fluid">
+    <!--begin::Content wrapper-->
+    <div class="d-flex flex-column flex-column-fluid">
+        <!--begin::Content-->
+        <div id="kt_app_content" class="app-content flex-column-fluid">
+            <!--begin::Content container-->
+            <div id="kt_app_content_container" class="app-container container-fluid">
+                <!-- Import Contacts Card -->
+                <div class="card mb-5 mb-xl-8">
+                    <div class="card-header pt-5">
+                        <h3 class="card-title align-items-start flex-column">
+                            <span class="card-label fw-bold text-dark">Import Contacts</span>
+                            <span class="text-gray-400 mt-1 fw-semibold fs-6">Upload a CSV file to import multiple contacts</span>
+                        </h3>
+                        <div class="card-toolbar">
+                            <a href="{{ route('contacts.index') }}" class="btn btn-sm btn-light-primary">
+                                <i class="ki-outline ki-arrow-left fs-2 me-2"></i>Back to Contacts
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                <ul class="mb-0">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
 
-            <div class="alert alert-info">
-                <h6 class="alert-heading">CSV Format Guidelines</h6>
-                <p>Your CSV file should include the following columns:</p>
-                <ul>
-                    <li>A column for names (first name, last name or both)</li>
-                    <li>A column for phone numbers</li>
-                    <li>Optional columns: email, company, notes</li>
-                </ul>
-                <p class="mb-0">The first row should contain column headers.</p>
+                        <div class="row">
+                            <div class="col-lg-8">
+                                <form action="{{ route('contacts.upload-import') }}" method="POST" enctype="multipart/form-data" class="mb-5">
+                                    @csrf
+                                    <div class="mb-5">
+                                        <label for="csv_file" class="form-label fs-6 fw-semibold">Choose CSV File</label>
+                                        <input type="file" class="form-control" id="csv_file" name="csv_file" required accept=".csv">
+                                    </div>
+                                    
+                                    @if(count($groups) > 0)
+                                    <div class="mb-5">
+                                        <label for="group_id" class="form-label fs-6 fw-semibold">Add to Group (Optional)</label>
+                                        <select class="form-select form-select-solid" id="group_id" name="group_id">
+                                            <option value="">-- Select a group --</option>
+                                            @foreach($groups as $id => $name)
+                                                <option value="{{ $id }}">{{ $name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    @endif
+                                    
+                                    <div class="d-flex justify-content-end">
+                                        <a href="{{ route('contacts.index') }}" class="btn btn-light me-3">Cancel</a>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="ki-outline ki-upload fs-2 me-2"></i>Upload and Preview
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <div class="col-lg-4">
+                                <div class="card card-bordered bg-light-info">
+                                    <div class="card-header">
+                                        <h3 class="card-title align-items-start flex-column">
+                                            <span class="card-label fw-bold text-dark">CSV Format Guidelines</span>
+                                        </h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-5">
+                                            <p class="text-gray-800 fs-6 fw-semibold mb-2">Your CSV file should include these columns:</p>
+                                            <ul class="ps-4">
+                                                <li>Names (first name, last name or both)</li>
+                                                <li>Phone numbers</li>
+                                                <li>Optional: email, company, notes</li>
+                                            </ul>
+                                        </div>
+                                        <div class="separator my-5"></div>
+                                        <div class="d-flex align-items-center">
+                                            <i class="ki-outline ki-information-5 fs-2 text-info me-3"></i>
+                                            <div class="text-gray-800 fs-6 fw-semibold">The first row should contain column headers</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card card-bordered mt-5">
+                                    <div class="card-header">
+                                        <h3 class="card-title align-items-start flex-column">
+                                            <span class="card-label fw-bold text-dark">Sample Format</span>
+                                        </h3>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-row-bordered table-sm gy-2 gs-2">
+                                                <thead class="border-bottom border-gray-300">
+                                                    <tr class="fs-7 fw-bold text-gray-500">
+                                                        <th>first_name</th>
+                                                        <th>last_name</th>
+                                                        <th>phone</th>
+                                                        <th>email</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="fs-7">
+                                                    <tr>
+                                                        <td>John</td>
+                                                        <td>Doe</td>
+                                                        <td>233501234567</td>
+                                                        <td>john@example.com</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Jane</td>
+                                                        <td>Smith</td>
+                                                        <td>233502345678</td>
+                                                        <td>jane@example.com</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <form action="{{ route('contacts.upload-import') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="mb-3">
-                    <label for="csv_file" class="form-label">Choose CSV File</label>
-                    <input type="file" class="form-control" id="csv_file" name="csv_file" required accept=".csv">
-                </div>
-                
-                @if(count($groups) > 0)
-                <div class="mb-3">
-                    <label for="group_id" class="form-label">Add to Group (Optional)</label>
-                    <select class="form-select" id="group_id" name="group_id">
-                        <option value="">-- Select a group --</option>
-                        @foreach($groups as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                @endif
-                
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary">Upload and Preview</button>
-                </div>
-            </form>
+            <!--end::Content container-->
         </div>
+        <!--end::Content-->
     </div>
+    <!--end::Content wrapper-->
 </div>
 @endsection

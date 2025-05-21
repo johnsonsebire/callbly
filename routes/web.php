@@ -4,6 +4,8 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\VerificationController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SmsController;
 use App\Http\Controllers\ProfileController;
@@ -28,6 +30,12 @@ Route::middleware('guest')->group(function () {
     Route::post('login', [LoginController::class, 'store']);
     Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
     Route::post('register', [RegisterController::class, 'register']);
+    
+    // Password Reset Routes
+    Route::get('forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+    Route::post('forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+    Route::get('reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 });
 
 // Email Verification Routes
@@ -123,6 +131,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/services', [UssdController::class, 'services'])->name('services');
         Route::get('/create', [UssdController::class, 'create'])->name('create');
         Route::post('/store', [UssdController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [UssdController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [UssdController::class, 'update'])->name('update');
+        Route::delete('/{id}', [UssdController::class, 'destroy'])->name('destroy');
         Route::get('/analytics', [UssdController::class, 'analytics'])->name('analytics');
     });
 
@@ -166,7 +177,6 @@ Route::middleware('auth')->group(function () {
             ->name('sender-names.destroy');
         
         // User Management for Super Admin
-        Route::get('users', [\App\Http\Controllers\Admin\UserController::class, 'index'])
-            ->name('users.index');
+        Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
     });
 });

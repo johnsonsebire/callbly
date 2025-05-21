@@ -9,15 +9,39 @@
         <meta name="keywords" content="@yield('meta_keywords', 'callbly, sms, ussd, payments, web app')" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta property="og:locale" content="{{ str_replace('_', '-', app()->getLocale()) }}" />
-		<link rel="canonical" href="http://preview.keenthemes.comlanding.html" />
-		<link rel="shortcut icon" href="{{asset('assets/media/logos/favicon.ico')}}" />
+		<link rel="canonical" href="{{ config('app.url') }}" />
+		<link rel="shortcut icon" href="{{ asset('assets/media/logos/callbly-favicon.png') }}" />
 		<!--begin::Fonts(mandatory for all pages)-->
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
 		<!--end::Fonts-->
 		<!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
-		<link href="assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
-		<link href="assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+		<link href="{{ asset('assets/plugins/global/plugins.bundle.css') }}" rel="stylesheet" type="text/css" />
+		<link href="{{ asset('assets/css/style.bundle.css') }}" rel="stylesheet" type="text/css" />
 		<!--end::Global Stylesheets Bundle-->
+		
+		<!-- Custom CSS for logo switching -->
+		<style>
+			.app-header-logo.scrolled img.logo-default {
+				display: block;
+			}
+			
+			.app-header-logo.scrolled img.logo-white {
+				display: none;
+			}
+			
+			.app-header-logo img.logo-default {
+				display: none;
+			}
+			
+			.app-header-logo img.logo-white {
+				display: block;
+			}
+			
+			.footer-logo span {
+				font-size: 20px;
+			}
+		</style>
+		
 		<script>// Frame-busting to prevent site from being loaded within a frame without permission (click-jacking) if (window.top != window.self) { window.top.location.replace(window.self.location.href); }</script>
 	</head>
 	<!--end::Head-->
@@ -46,11 +70,10 @@
 									</button>
 									<!--end::Mobile menu toggle-->
 									<!--begin::Logo image-->
-									 <a href="/" style="text-decoration: none; font-size:30px;cursor: pointer !important;">
-                                    <span class="logo-text">
-                                        <span style="color: #3ABFF8; font-weight: bold;">Call</span><span style="color: #fff; font-weight: bold;">bly</span>
-                                    </span>
-                                </a>
+									<a href="/" class="app-header-logo">
+										<img alt="Callbly Logo" src="{{ asset('assets/media/logos/callbly-white.png') }}" class="logo-white h-40px" />
+										<img alt="Callbly Logo" src="{{ asset('assets/media/logos/callbly logo.png') }}" class="logo-default h-40px" />
+									</a>
 									<!--end::Logo image-->
 								</div>
 								<!--end::Logo-->
@@ -175,11 +198,9 @@
 						<div class="d-flex flex-column flex-md-row flex-stack py-7 py-lg-10">
 							<!--begin::Copyright-->
 							<div class="d-flex align-items-center order-2 order-md-1">
-								 <a href="/" style="text-decoration: none; font-size:20px;">
-                                <span class="logo-text">
-                                    <span style="color: #3ABFF8; font-weight: bold;">Call</span><span style="color: #fff; font-weight: bold;">bly</span>
-                                </span>
-                            </a>
+								 <a href="/" class="footer-logo">
+                                    <img alt="Callbly Logo" src="{{ asset('assets/media/logos/callbly-white.png') }}" class="h-30px" />
+                                </a>
 							</div>
 							<!--end::Copyright-->
 							<!--begin::Menu-->
@@ -214,16 +235,40 @@
 		<!--begin::Javascript-->
 		<script>var hostUrl = "assets/";</script>
 		<!--begin::Global Javascript Bundle(mandatory for all pages)-->
-		<script src="assets/plugins/global/plugins.bundle.js"></script>
-		<script src="assets/js/scripts.bundle.js"></script>
-		<!--end::Global Javascript Bundle-->
+		<script src="{{ asset('assets/plugins/global/plugins.bundle.js') }}"></script>
+		<script src="{{ asset('assets/js/scripts.bundle.js') }}"></script>
+		
+		<!-- Logo Switch Script -->
+		<script>
+			// Initialize logo switching based on scroll
+			document.addEventListener('DOMContentLoaded', function() {
+				const headerLogo = document.querySelector('.app-header-logo');
+				const landingHeader = document.querySelector('.landing-header');
+				
+				if (headerLogo && landingHeader) {
+					window.addEventListener('scroll', function() {
+						if (window.scrollY > 50 || landingHeader.classList.contains('landing-header-sticky')) {
+							headerLogo.classList.add('scrolled');
+						} else {
+							headerLogo.classList.remove('scrolled');
+						}
+					});
+					
+					// Initial check
+					if (window.scrollY > 50 || landingHeader.classList.contains('landing-header-sticky')) {
+						headerLogo.classList.add('scrolled');
+					}
+				}
+			});
+		</script>
+		
 		<!--begin::Vendors Javascript(used for this page only)-->
-		<script src="assets/plugins/custom/fslightbox/fslightbox.bundle.js"></script>
-		<script src="assets/plugins/custom/typedjs/typedjs.bundle.js"></script>
+		<script src="{{ asset('assets/plugins/custom/fslightbox/fslightbox.bundle.js') }}"></script>
+		<script src="{{ asset('assets/plugins/custom/typedjs/typedjs.bundle.js') }}"></script>
 		<!--end::Vendors Javascript-->
 		<!--begin::Custom Javascript(used for this page only)-->
-		<script src="assets/js/custom/landing.js"></script>
-		<script src="assets/js/custom/pages/pricing/general.js"></script>
+		<script src="{{ asset('assets/js/custom/landing.js') }}"></script>
+		<script src="{{ asset('assets/js/custom/pages/pricing/general.js') }}"></script>
 		<!--end::Custom Javascript-->
 		<!--end::Javascript-->
 	</body>

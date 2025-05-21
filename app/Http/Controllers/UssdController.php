@@ -88,4 +88,60 @@ class UssdController extends Controller
         return redirect()->route('ussd.services')
             ->with('success', 'USSD service created successfully and pending approval');
     }
+
+    /**
+     * Show the edit USSD service page.
+     */
+    public function edit($id): View
+    {
+        $user = auth()->user();
+        $service = UssdService::where('user_id', $user->id)
+            ->findOrFail($id);
+        
+        return view('ussd.edit', compact('service'));
+    }
+
+    /**
+     * Update the USSD service.
+     */
+    public function update(Request $request, $id)
+    {
+        $user = auth()->user();
+        $service = UssdService::where('user_id', $user->id)
+            ->findOrFail($id);
+        
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'shortcode' => 'required|string|max:20|unique:ussd_services,shortcode,' . $id,
+            'menu_structure' => 'required|json',
+            'callback_url' => 'nullable|url'
+        ]);
+
+        $menuStructure = json_decode($validated['menu_structure'], true);
+        
+        $service->update([
+            'name' => $validated['name'],
+            'shortcode' => $validated['shortcode'],
+            'menu_structure' => $menuStructure,
+            'callback_url' => $validated['callback_url']
+        ]);
+
+        return redirect()->route('ussd.services')
+            ->with('success', 'USSD service updated successfully');
+    }
+
+    /**
+     * Delete the USSD service.
+     */
+    public function destroy($id)
+    {
+        $user = auth()->user();
+        $service = UssdService::where('user_id', $user->id)
+            ->findOrFail($id);
+        
+        $service->delete();
+
+        return redirect()->route('ussd.services')
+            ->with('success', 'USSD service deleted successfully');
+    }
 }

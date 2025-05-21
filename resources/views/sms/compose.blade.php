@@ -2,171 +2,216 @@
 @php use Illuminate\Support\Str; @endphp
 
 @section('content')
-<div class="container mt-4">
-    <x-card>
-        <x-slot:header>
-            <div class="card-title">
-                <h5 class="mb-0">Compose New SMS</h5>
-            </div>
-        </x-slot:header>
-        <div class="row">
-            <div class="col-lg-8">
-                <form method="POST" action="{{ route('sms.send') }}" id="smsForm">
-                    @csrf
-                    @if(session('error'))
-                        <div class="alert alert-danger">{{ session('error') }}</div>
-                    @endif
-                    <div class="mb-3">
-                        <label for="sender_id" class="form-label">Sender ID</label>
-                        <select name="sender_id" id="sender_id" class="form-select @error('sender_id') is-invalid @enderror" required>
-                            <option value="">Select a sender ID</option>
-                            @foreach($senderNames as $senderName)
-                                <option value="{{ $senderName->name }}" {{ old('sender_id') == $senderName->name ? 'selected' : '' }}>
-                                    {{ $senderName->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('sender_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        @if($senderNames->isEmpty())
-                            <div class="form-text text-danger">
-                                You need to <a href="{{ route('sms.sender-names') }}">register a sender ID</a> before sending SMS.
-                            </div>
-                        @endif
+<div class="app-main flex-column flex-row-fluid">
+    <!--begin::Content wrapper-->
+    <div class="d-flex flex-column flex-column-fluid">
+        <!--begin::Content-->
+        <div id="kt_app_content" class="app-content flex-column-fluid">
+            <!--begin::Content container-->
+            <div id="kt_app_content_container" class="app-container container-fluid">
+                <!-- Compose SMS Card -->
+                <div class="card mb-5 mb-xl-8">
+                    <div class="card-header pt-5">
+                        <h3 class="card-title align-items-start flex-column">
+                            <span class="card-label fw-bold text-dark">Compose New SMS</span>
+                            <span class="text-gray-400 mt-1 fw-semibold fs-6">Send messages to your contacts</span>
+                        </h3>
                     </div>
-
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label for="message" class="form-label mb-0">Message</label>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#templateModal">Use Template</button>
-                        </div>
-                        <textarea name="message" id="message" rows="6" class="form-control @error('message') is-invalid @enderror" required>{{ request('template_content') ?: old('message') }}</textarea>
-                        <div class="d-flex justify-content-between mt-1">
-                            <small id="characterCount" class="text-muted">0 characters</small>
-                            <small id="messageCount" class="text-muted">0 message(s)</small>
-                        </div>
-                        @error('message')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
-
-                    <x-card title="Recipients" icon="fas fa-users">
-                        <ul class="nav nav-tabs mb-3" id="recipientsTab" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual" type="button" role="tab" aria-controls="manual" aria-selected="true">Enter Numbers</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="groups-tab" data-bs-toggle="tab" data-bs-target="#groups" type="button" role="tab" aria-controls="groups" aria-selected="false">Select Groups</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="all-contacts-tab" data-bs-toggle="tab" data-bs-target="#all-contacts" type="button" role="tab" aria-controls="all-contacts" aria-selected="false">All Contacts</button>
-                            </li>
-                        </ul>
-                        <div class="tab-content" id="recipientsTabContent">
-                            <div class="tab-pane fade show active" id="manual" role="tabpanel" aria-labelledby="manual-tab">
-                                <textarea name="recipients" id="recipients" rows="6" class="form-control @error('recipients') is-invalid @enderror" placeholder="Enter phone numbers separated by commas, new lines, or spaces">{{ old('recipients') }}</textarea>
-                                <div class="form-text">Example: 233244123456, 233244123457 (without + sign)</div>
-                                <div id="recipientCount" class="mt-1 fw-bold">0 recipient(s)</div>
-                                @error('recipients')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            </div>
-                            <div class="tab-pane fade" id="groups" role="tabpanel" aria-labelledby="groups-tab">
-                                @if($contactGroups->count() > 0)
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-8">
+                                <form method="POST" action="{{ route('sms.send') }}" id="smsForm">
+                                    @csrf
+                                    @if(session('error'))
+                                        <div class="alert alert-danger">{{ session('error') }}</div>
+                                    @endif
                                     <div class="mb-3">
-                                        <div class="list-group">
-                                            @foreach($contactGroups as $group)
-                                                <label class="list-group-item">
-                                                    <input class="form-check-input me-1 contact-group-checkbox" type="checkbox" name="contact_group_ids[]" value="{{ $group->id }}" data-contacts="{{ $group->contacts_count }}">
-                                                    {{ $group->name }} <span class="badge bg-secondary">{{ $group->contacts_count }} contacts</span>
-                                                </label>
+                                        <label for="sender_id" class="form-label">Sender ID</label>
+                                        <select name="sender_id" id="sender_id" class="form-select @error('sender_id') is-invalid @enderror" required>
+                                            <option value="">Select a sender ID</option>
+                                            @foreach($senderNames as $senderName)
+                                                <option value="{{ $senderName->name }}" {{ old('sender_id') == $senderName->name ? 'selected' : '' }}>
+                                                    {{ $senderName->name }}
+                                                </option>
                                             @endforeach
+                                        </select>
+                                        @error('sender_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        @if($senderNames->isEmpty())
+                                            <div class="form-text text-danger">
+                                                You need to <a href="{{ route('sms.sender-names') }}">register a sender ID</a> before sending SMS.
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label for="message" class="form-label mb-0">Message</label>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#templateModal">Use Template</button>
                                         </div>
-                                        <div class="mt-2 fw-bold" id="groupRecipientsCount">0 recipient(s) selected</div>
+                                        <textarea name="message" id="message" rows="6" class="form-control @error('message') is-invalid @enderror" required>{{ request('template_content') ?: old('message') }}</textarea>
+                                        <div class="d-flex justify-content-between mt-1">
+                                            <small id="characterCount" class="text-muted">0 characters</small>
+                                            <small id="messageCount" class="text-muted">0 message(s)</small>
+                                        </div>
+                                        @error('message')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
-                                @else
-                                    <div class="alert alert-info">
-                                        You don't have any contact groups yet. <a href="{{ route('contact-groups.create') }}">Create a contact group</a> first.
+
+                                    <!-- Recipients Card -->
+                                    <div class="card card-flush mb-5">
+                                        <div class="card-header pt-5">
+                                            <h3 class="card-title align-items-start flex-column">
+                                                <span class="card-label fw-bold text-dark">Recipients</span>
+                                            </h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="nav nav-tabs mb-3" id="recipientsTab" role="tablist">
+                                                <li class="nav-item" role="presentation">
+                                                    <button class="nav-link active" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual" type="button" role="tab" aria-controls="manual" aria-selected="true">Enter Numbers</button>
+                                                </li>
+                                                <li class="nav-item" role="presentation">
+                                                    <button class="nav-link" id="groups-tab" data-bs-toggle="tab" data-bs-target="#groups" type="button" role="tab" aria-controls="groups" aria-selected="false">Select Groups</button>
+                                                </li>
+                                                <li class="nav-item" role="presentation">
+                                                    <button class="nav-link" id="all-contacts-tab" data-bs-toggle="tab" data-bs-target="#all-contacts" type="button" role="tab" aria-controls="all-contacts" aria-selected="false">All Contacts</button>
+                                                </li>
+                                            </ul>
+                                            <div class="tab-content" id="recipientsTabContent">
+                                                <div class="tab-pane fade show active" id="manual" role="tabpanel" aria-labelledby="manual-tab">
+                                                    <textarea name="recipients" id="recipients" rows="6" class="form-control @error('recipients') is-invalid @enderror" placeholder="Enter phone numbers separated by commas, new lines, or spaces">{{ old('recipients') }}</textarea>
+                                                    <div class="form-text">Example: 233244123456, 233244123457 (without + sign)</div>
+                                                    <div id="recipientCount" class="mt-1 fw-bold">0 recipient(s)</div>
+                                                    @error('recipients')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                                </div>
+                                                <div class="tab-pane fade" id="groups" role="tabpanel" aria-labelledby="groups-tab">
+                                                    @if($contactGroups->count() > 0)
+                                                        <div class="mb-3">
+                                                            <div class="list-group">
+                                                                @foreach($contactGroups as $group)
+                                                                    <label class="list-group-item">
+                                                                        <input class="form-check-input me-1 contact-group-checkbox" type="checkbox" name="contact_group_ids[]" value="{{ $group->id }}" data-contacts="{{ $group->contacts_count }}">
+                                                                        {{ $group->name }} <span class="badge bg-secondary">{{ $group->contacts_count }} contacts</span>
+                                                                    </label>
+                                                                @endforeach
+                                                            </div>
+                                                            <div class="mt-2 fw-bold" id="groupRecipientsCount">0 recipient(s) selected</div>
+                                                        </div>
+                                                    @else
+                                                        <div class="alert alert-info">
+                                                            You don't have any contact groups yet. <a href="{{ route('contact-groups.create') }}">Create a contact group</a> first.
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <div class="tab-pane fade" id="all-contacts" role="tabpanel" aria-labelledby="all-contacts-tab">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" value="1" name="send_to_all_contacts" id="sendToAllContacts">
+                                                        <label class="form-check-label" for="sendToAllContacts">
+                                                            Send to all my contacts
+                                                        </label>
+                                                    </div>
+                                                    <div class="alert alert-warning mt-2">
+                                                        <i class="ki-outline ki-information-5 fs-2 me-2"></i>
+                                                        This will send the message to all contacts in your address book ({{ $totalContactsCount ?? 0 }} contacts).
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                @endif
-                            </div>
-                            <div class="tab-pane fade" id="all-contacts" role="tabpanel" aria-labelledby="all-contacts-tab">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="1" name="send_to_all_contacts" id="sendToAllContacts">
-                                    <label class="form-check-label" for="sendToAllContacts">
-                                        Send to all my contacts
-                                    </label>
+
+                                    <div class="d-grid gap-2 mb-5">
+                                        <button type="submit" class="btn btn-primary btn-lg" id="sendButton" {{ $senderNames->isEmpty() ? 'disabled' : '' }}>
+                                            <i class="ki-outline ki-paper-plane fs-2 me-2"></i>
+                                            Send Message
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <!-- Template Modal -->
+                                <div class="modal fade" id="templateModal" tabindex="-1" aria-labelledby="templateModalLabel" aria-hidden="true">
+                                  <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                      <div class="modal-header">
+                                        <h5 class="modal-title" id="templateModalLabel">Select Template</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                      </div>
+                                      <div class="modal-body">
+                                        @if($templates->count())
+                                           <ul class="list-group">
+                                             @foreach($templates as $template)
+                                               <li class="list-group-item d-flex justify-content-between align-items-start">
+                                                 <div>
+                                                   <div class="fw-bold">{{ $template->name }}</div>
+                                                   <p>{{ Str::limit($template->content, 100) }}</p>
+                                                 </div>
+                                                 <button type="button" class="btn btn-sm btn-primary use-template-btn" data-id="{{ $template->id }}" data-bs-dismiss="modal">Use</button>
+                                               </li>
+                                             @endforeach
+                                           </ul>
+                                        @else
+                                           <p>No templates available. <a href="{{ route('sms.templates') }}">Create one</a>.</p>
+                                        @endif
+                                      </div>
+                                    </div>
+                                  </div>
                                 </div>
-                                <div class="alert alert-warning mt-2">
-                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                    This will send the message to all contacts in your address book ({{ $totalContactsCount ?? 0 }} contacts).
+                            </div>
+                            
+                            <div class="col-lg-4">
+                                <!-- Message Summary Card -->
+                                <div class="card card-bordered mb-5">
+                                    <div class="card-header bg-primary">
+                                        <h3 class="card-title align-items-start flex-column">
+                                            <span class="card-label fw-bold text-white">Message Summary</span>
+                                        </h3>
+                                    </div>
+                                    <div class="card-body pt-5">
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <div><strong>Credits Required:</strong></div>
+                                            <div id="creditsNeeded" class="badge bg-primary">0</div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <div><strong>Recipients:</strong></div>
+                                            <div id="recipientsCount" class="badge bg-secondary">0</div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <div><strong>Characters:</strong></div>
+                                            <div><span id="charsCount">0</span>/160</div>
+                                        </div>
+                                        <div class="alert alert-info mt-2 mb-0" id="messageInfo" style="display: none;">
+                                            <p class="mb-0"><small><i class="ki-outline ki-information-5 me-1"></i> This message will be sent as <span id="messageParts" class="fw-bold">0</span> part(s).</small></p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tips Card -->
+                                <div class="card card-bordered">
+                                    <div class="card-header">
+                                        <h3 class="card-title align-items-start flex-column">
+                                            <span class="card-label fw-bold text-dark">Tips</span>
+                                            <span class="text-gray-400 mt-1 fw-semibold fs-6">For better messaging</span>
+                                        </h3>
+                                        <div class="card-toolbar">
+                                            <i class="ki-outline ki-lightbulb fs-2 text-warning"></i>
+                                        </div>
+                                    </div>
+                                    <div class="card-body pt-5">
+                                        <ul class="mb-0">
+                                            <li>Keep your message concise to reduce costs.</li>
+                                            <li>Avoid special characters that might increase message parts.</li>
+                                            <li>Include country code for all numbers (e.g. 233).</li>
+                                            <li>Use contact groups for effective campaigns.</li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </x-card>
-
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary" id="sendButton" {{ $senderNames->isEmpty() ? 'disabled' : '' }}>
-                            Send Message
-                        </button>
                     </div>
-                </form>
-
-                <!-- Template Modal -->
-                <div class="modal fade" id="templateModal" tabindex="-1" aria-labelledby="templateModalLabel" aria-hidden="true">
-                  <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h5 class="modal-title" id="templateModalLabel">Select Template</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <div class="modal-body">
-                        @if($templates->count())
-                           <ul class="list-group">
-                             @foreach($templates as $template)
-                               <li class="list-group-item d-flex justify-content-between align-items-start">
-                                 <div>
-                                   <div class="fw-bold">{{ $template->name }}</div>
-                                   <p>{{ Str::limit($template->content, 100) }}</p>
-                                 </div>
-                                 <button type="button" class="btn btn-sm btn-primary use-template-btn" data-id="{{ $template->id }}" data-bs-dismiss="modal">Use</button>
-                               </li>
-                             @endforeach
-                           </ul>
-                        @else
-                           <p>No templates available. <a href="{{ route('sms.templates') }}">Create one</a>.</p>
-                        @endif
-                      </div>
-                    </div>
-                  </div>
                 </div>
-
             </div>
-            <div class="col-lg-4">
-                <x-card title="Message Summary" icon="fas fa-chart-bar" headerClass="bg-primary text-white" class="my-5">
-                    <div class="d-flex justify-content-between mb-3">
-                        <div><strong>Credits Required:</strong></div>
-                        <div id="creditsNeeded" class="badge bg-primary">0</div>
-                    </div>
-                    <div class="d-flex justify-content-between mb-3">
-                        <div><strong>Recipients:</strong></div>
-                        <div id="recipientsCount" class="badge bg-secondary">0</div>
-                    </div>
-                    <div class="d-flex justify-content-between mb-3">
-                        <div><strong>Characters:</strong></div>
-                        <div><span id="charsCount">0</span>/160</div>
-                    </div>
-                    <div class="alert alert-info mt-2 mb-0" id="messageInfo" style="display: none;">
-                        <p class="mb-0"><small><i class="bi bi-info-circle me-1"></i> This message will be sent as <span id="messageParts" class="fw-bold">0</span> part(s).</small></p>
-                    </div>
-                </x-card>
-
-                <x-card title="Tips" icon="fas fa-lightbulb">
-                    <ul class="mb-0">
-                        <li>Keep your message concise to reduce costs.</li>
-                        <li>Avoid special characters that might increase message parts.</li>
-                        <li>Include country code for all numbers (e.g. 233).</li>
-                        <li>Test with a small group first.</li>
-                    </ul>
-                </x-card>
-            </div>
+            <!--end::Content container-->
         </div>
-    </x-card>
+        <!--end::Content-->
+    </div>
+    <!--end::Content wrapper-->
 </div>
 @endsection
 

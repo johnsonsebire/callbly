@@ -1,31 +1,21 @@
-<div class="card-title"><!DOCTYPE html>
-<!--
-Author: Keenthemes
-Product Name: MetronicProduct Version: 8.2.6
-Purchase: https://1.envato.market/EA4JP
-Website: http://www.keenthemes.com
-Contact: support@keenthemes.com
-Follow: www.twitter.com/keenthemes
-Dribbble: www.dribbble.com/keenthemes
-Like: www.facebook.com/keenthemes
-License: For each use you must have a valid license purchased only from above link in order to legally use the theme for your project.
--->
+<!DOCTYPE html>
+
 <html lang="en">
 	<!--begin::Head-->
 	<head>
-<base href="{{url('/')}}" />
+		<base href="{{url('/')}}" />
 		<title>{{ config('app.name', 'Callbly') }}</title>
 		<meta charset="utf-8" />
-		<meta name="description" content="The most advanced Tailwind CSS & Bootstrap 5 Admin Theme with 40 unique prebuilt layouts on Themeforest trusted by 100,000 beginners and professionals. Multi-demo, Dark Mode, RTL support and complete React, Angular, Vue, Asp.Net Core, Rails, Spring, Blazor, Django, Express.js, Node.js, Flask, Symfony & Laravel versions. Grab your copy now and get life-time updates for free." />
-		<meta name="keywords" content="tailwind, tailwindcss, metronic, bootstrap, bootstrap 5, angular, VueJs, React, Asp.Net Core, Rails, Spring, Blazor, Django, Express.js, Node.js, Flask, Symfony & Laravel starter kits, admin themes, web design, figma, web development, free templates, free admin themes, bootstrap theme, bootstrap template, bootstrap dashboard, bootstrap dak mode, bootstrap button, bootstrap datepicker, bootstrap timepicker, fullcalendar, datatables, flaticon" />
+		<meta name="description" content="Callbly - Cloud Telephony Services" />
+		<meta name="keywords" content="callbly, sms, ussd, payments, telephony, cloud telephony" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta property="og:locale" content="en_US" />
-		<meta property="og:type" content="article" />
-		<meta property="og:title" content="Metronic - The World's #1 Selling Tailwind CSS & Bootstrap Admin Template by KeenThemes" />
-		<meta property="og:url" content="https://keenthemes.com/metronic" />
-		<meta property="og:site_name" content="Metronic by Keenthemes" />
-		<link rel="canonical" href="http://preview.keenthemes.comauthentication/layouts/corporate/new-password.html" />
-		<link rel="shortcut icon" href="{{ asset('assets/media/logos/favicon.ico') }}" />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content="{{ config('app.name', 'Callbly') }} - Cloud Telephony Services" />
+		<meta property="og:url" content="{{ url('/') }}" />
+		<meta property="og:site_name" content="{{ config('app.name', 'Callbly') }}" />
+		<link rel="canonical" href="{{ url('/') }}" />
+		<link rel="shortcut icon" href="{{ asset('assets/media/logos/callbly-favicon.png') }}" />
 		<!--begin::Fonts(mandatory for all pages)-->
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
 		<!--end::Fonts-->
@@ -39,7 +29,9 @@ License: For each use you must have a valid license purchased only from above li
 	<!--begin::Body-->
 	<body id="kt_body" class="app-blank">
 		<!--begin::Theme mode setup on page load-->
+		<script>var defaultThemeMode = "light"; var themeMode; if ( document.documentElement ) { if ( document.documentElement.hasAttribute("data-bs-theme-mode")) { themeMode = document.documentElement.getAttribute("data-bs-theme-mode"); } else { if ( localStorage.getItem("data-bs-theme") !== null ) { themeMode = localStorage.getItem("data-bs-theme"); } else { themeMode = defaultThemeMode; } } if (themeMode === "system") { themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } document.documentElement.setAttribute("data-bs-theme", themeMode); }</script>
 		<!--end::Theme mode setup on page load-->
+		
 		<!--begin::Root-->
 		<div class="d-flex flex-column flex-root" id="kt_app_root">
 			<!--begin::Authentication - New password -->
@@ -53,11 +45,11 @@ License: For each use you must have a valid license purchased only from above li
 							<!--begin::Form-->
 							@yield('content')
 							<!--end::Form-->
-						</div><div class="card-title"></div><div class="card-title"></div>
+						</div>
 						<!--end::Wrapper-->
 					</div>
-					<div class="card-title"></div><div class="card-title"></div>
 					<!--end::Form-->
+					
 					<!--begin::Footer-->
 					<div class="w-lg-500px d-flex flex-stack px-10 mx-auto">
 						<!--begin::Languages-->
@@ -81,7 +73,7 @@ License: For each use you must have a valid license purchased only from above li
 										</span>
 										<span data-kt-element="lang-name">English</span>
 									</a>
-								</div><div class="card-title"></div><div class="card-title"></div>
+								</div>
 								<!--end::Menu item-->
 								<!--begin::Menu item-->
 								<div class="menu-item px-3">
@@ -91,7 +83,7 @@ License: For each use you must have a valid license purchased only from above li
 										</span>
 										<span data-kt-element="lang-name">Spanish</span>
 									</a>
-								</div><div class="card-title"></div><div class="card-title"></div>
+								</div>
 								<!--end::Menu item-->
 								<!--begin::Menu item-->
 								<div class="menu-item px-3">
@@ -101,7 +93,7 @@ License: For each use you must have a valid license purchased only from above li
 										</span>
 										<span data-kt-element="lang-name">German</span>
 									</a>
-								</div><div class="card-title"></div><div class="card-title"></div>
+								</div>
 								<!--end::Menu item-->
 								<!--begin::Menu item-->
 								<div class="menu-item px-3">
@@ -111,7 +103,7 @@ License: For each use you must have a valid license purchased only from above li
 										</span>
 										<span data-kt-element="lang-name">Japanese</span>
 									</a>
-								</div><div class="card-title"></div><div class="card-title"></div>
+								</div>
 								<!--end::Menu item-->
 								<!--begin::Menu item-->
 								<div class="menu-item px-3">
@@ -121,53 +113,59 @@ License: For each use you must have a valid license purchased only from above li
 										</span>
 										<span data-kt-element="lang-name">French</span>
 									</a>
-								</div><div class="card-title"></div><div class="card-title"></div>
+								</div>
 								<!--end::Menu item-->
-							</div><div class="card-title"></div><div class="card-title"></div>
+							</div>
 							<!--end::Menu-->
-						</div><div class="card-title"></div><div class="card-title"></div>
+						</div>
 						<!--end::Languages-->
+						
 						<!--begin::Links-->
 						<div class="d-flex fw-semibold text-primary fs-base gap-5">
-							<a href="pages/team.html" target="_blank">Terms</a>
-							<a href="pages/pricing/column.html" target="_blank">Plans</a>
-							<a href="pages/contact.html" target="_blank">Contact Us</a>
-						</div><div class="card-title"></div><div class="card-title"></div>
+						@foreach($navigationService->getFooterNavigation() as $item)
+							<a href="{{ $item['url'] }}" target="_blank">{{ $item['label'] }}</a>
+						@endforeach
+							
+						</div>
 						<!--end::Links-->
-					</div><div class="card-title"></div><div class="card-title"></div>
+					</div>
 					<!--end::Footer-->
-				</div><div class="card-title"></div><div class="card-title"></div>
+				</div>
 				<!--end::Body-->
+				
 				<!--begin::Aside-->
 				<div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center order-1 order-lg-2" style="background-image: url({{ asset('assets/media/misc/auth-bg.png') }})">
 					<!--begin::Content-->
 					<div class="d-flex flex-column flex-center py-7 py-lg-15 px-5 px-md-15 w-100">
 						<!--begin::Logo-->
 						<a href="{{ url('/') }}" class="mb-0 mb-lg-12">
-							<span class="fs-1" style="font-size: 20px;"><span class="text-white">Call</span><span class="text-white">bly</span></span>
+							<img alt="Logo" src="{{ asset('assets/media/logos/callbly-white.png') }}" class="h-40px" />
 						</a>
 						<!--end::Logo-->
+						
 						<!--begin::Image-->
 						<img class="d-none d-lg-block mx-auto w-275px w-md-50 w-xl-500px mb-10 mb-lg-20" src="{{ asset('assets/media/misc/auth-screens.png') }}" alt="" />
 						<!--end::Image-->
+						
 						<!--begin::Title-->
 						<h1 class="d-none d-lg-block text-white fs-2qx fw-bolder text-center mb-7">Fast, Efficient and Productive</h1>
 						<!--end::Title-->
+						
 						<!--begin::Text-->
-						<div class="d-none d-lg-block text-white fs-base text-center">In this kind of post, 
-						<a href="#" class="opacity-75-hover text-warning fw-bold me-1">the blogger</a>introduces a person they’ve interviewed 
-						<br />and provides some background information about 
-						<a href="#" class="opacity-75-hover text-warning fw-bold me-1">the interviewee</a>and their 
-						<br />work following this is a transcript of the interview.</div><div class="card-title"></div><div class="card-title"></div>
+						<div class="d-none d-lg-block text-white fs-base text-center">
+							Secure cloud telephony services for your business
+							<br />Reach your customers with SMS, USSD, and voice solutions
+						</div>
 						<!--end::Text-->
-					</div><div class="card-title"></div><div class="card-title"></div>
+					</div>
 					<!--end::Content-->
-				</div><div class="card-title"></div><div class="card-title"></div>
+				</div>
 				<!--end::Aside-->
-			</div><div class="card-title"></div><div class="card-title"></div>
+			</div>
 			<!--end::Authentication - New password-->
-		</div><div class="card-title"></div></div>
+		</div>
 		<!--end::Root-->
+		
 		<!--begin::Javascript-->
 		<script>var hostUrl = "{{ asset('assets/') }}/";</script>
 		<!--begin::Global Javascript Bundle(mandatory for all pages)-->

@@ -2,60 +2,96 @@
 
 @section('content')
 <div class="app-main flex-column flex-row-fluid">
-    <!--begin::Content wrapper-->
     <div class="d-flex flex-column flex-column-fluid">
-        <!--begin::Content-->
         <div id="kt_app_content" class="app-content flex-column-fluid">
-            <!--begin::Content container-->
             <div id="kt_app_content_container" class="app-container container-fluid">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">
-                            <h5 class="mb-0">Manage Users</h5>
+                <div class="card mb-5 mb-xl-8">
+                    <div class="card-header border-0 pt-5">
+                        <h3 class="card-title align-items-start flex-column">
+                            <span class="card-label fw-bold fs-3 mb-1">Users Management</span>
+                            <span class="text-muted mt-1 fw-semibold fs-7">Manage system users</span>
+                        </h3>
+                        <div class="card-toolbar">
+                            <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-primary">
+                                <i class="ki-duotone ki-plus fs-2"></i>New User
+                            </a>
                         </div>
                     </div>
-                    <div class="card-body">
-                        @if($users->isEmpty())
-                            <p class="text-center">No users found.</p>
-                        @else
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Email</th>
-                                            <th>Role(s)</th>
-                                            <th>Joined</th>
-                                            <th class="text-end">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($users as $user)
-                                            <tr>
-                                                <td>{{ $user->name }}</td>
-                                                <td>{{ $user->email }}</td>
-                                                <td>{{ $user->getRoleNames()->join(', ') }}</td>
-                                                <td>{{ $user->created_at->format('M d, Y') }}</td>
-                                                <td class="text-end">
-                                                    <a href="#" class="btn btn-sm btn-outline-primary">View</a>
-                                                    <a href="#" class="btn btn-sm btn-outline-secondary">Edit</a>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="mt-3">
+                    <div class="card-body py-3">
+                        <div class="table-responsive">
+                            <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4">
+                                <thead>
+                                    <tr class="fw-bold text-muted">
+                                        <th class="min-w-150px">Name</th>
+                                        <th class="min-w-150px">Email</th>
+                                        <th class="min-w-100px">Role</th>
+                                        <th class="min-w-100px">Status</th>
+                                        <th class="min-w-100px text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($users as $user)
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="symbol symbol-45px me-5">
+                                                    <img src="{{ $user->profile_photo_url }}" alt="{{ $user->name }}" />
+                                                </div>
+                                                <div class="d-flex justify-content-start flex-column">
+                                                    <a href="{{ route('admin.users.show', $user->id) }}" class="text-dark fw-bold text-hover-primary fs-6">{{ $user->name }}</a>
+                                                    <span class="text-muted fw-semibold text-muted d-block fs-7">Joined {{ $user->created_at->diffForHumans() }}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ $user->email }}</td>
+                                        <td>
+                                            @foreach($user->roles as $role)
+                                                <span class="badge badge-light-primary fs-7 m-1">{{ $role->name }}</span>
+                                            @endforeach
+                                        </td>
+                                        <td>
+                                            @if($user->email_verified_at)
+                                                <span class="badge badge-light-success">Verified</span>
+                                            @else
+                                                <span class="badge badge-light-warning">Pending</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1">
+                                                <i class="ki-duotone ki-pencil fs-2">
+                                                    <span class="path1"></span>
+                                                    <span class="path2"></span>
+                                                </i>
+                                            </a>
+                                            <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm" 
+                                                    onclick="return confirm('Are you sure you want to delete this user?')">
+                                                    <i class="ki-duotone ki-trash fs-2">
+                                                        <span class="path1"></span>
+                                                        <span class="path2"></span>
+                                                        <span class="path3"></span>
+                                                        <span class="path4"></span>
+                                                        <span class="path5"></span>
+                                                    </i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center flex-wrap">
+                            <div class="d-flex flex-wrap py-2 mr-3">
                                 {{ $users->links() }}
                             </div>
-                        @endif
+                        </div>
                     </div>
                 </div>
             </div>
-            <!--end::Content container-->
         </div>
-        <!--end::Content-->
     </div>
-    <!--end::Content wrapper-->
 </div>
 @endsection

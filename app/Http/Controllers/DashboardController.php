@@ -19,7 +19,7 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         
-        return view('dashboard', [
+        return view('dashboard.dashboard', [
             'smsBalance' => $user->sms_credits ?? 0,
             'ussdBalance' => $user->ussd_credits ?? 0,
             // 'activeContacts' => $user->contacts()->count() ?? 0,

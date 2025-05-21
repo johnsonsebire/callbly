@@ -1,68 +1,65 @@
-<div class="card-title">@extends('layouts.auth')
+@extends('layouts.auth')
 
 @section('content')
+<form method="POST" action="{{ route('login') }}">
+    @csrf
 
+    <div class="mb-4">
+        <label for="email" class="form-label fw-bold">
+            {{ __('Email Address') }} <span class="text-danger">*</span>
+        </label>
+        <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
+        @error('email')
+            <div class="invalid-feedback">
+                {{ $message }}
+            </div>
+        @enderror
+    </div>
 
-                    <form method="POST" action="{{ route('login') }}">
-                        @csrf
+    <div class="mb-4">
+        <label for="password" class="form-label fw-bold">
+            {{ __('Password') }} <span class="text-danger">*</span>
+        </label>
+        <div class="input-group">
+            <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
+            <button type="button" class="btn btn-outline-secondary border border-secondary" onclick="togglePasswordVisibility()">
+                <i class="bi bi-eye" id="eye-icon"></i>
+                <i class="bi bi-eye-slash d-none" id="eye-off-icon"></i>
+            </button>
+            @error('password')
+                <div class="invalid-feedback">
+                    {{ $message }}
+                </div>
+            @enderror
+        </div>
+    </div>
 
-                        <div class="mb-4">
-                            <label for="email" class="form-label fw-bold">
-                                {{ __('Email Address') }} <span class="text-danger">*</span>
-                            </label>
-                            <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
-                            @error('email')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
-                                </div><div class="card-title"></div><div class="card-title"></div>
-                            @enderror
-                        </div><div class="card-title"></div><div class="card-title"></div>
+    <div class="mb-4 form-check">
+        <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
+        <label class="form-check-label" for="remember">
+            {{ __('Remember Me') }}
+        </label>
+    </div>
 
-                        <div class="mb-4">
-                            <label for="password" class="form-label fw-bold">
-                                {{ __('Password') }} <span class="text-danger">*</span>
-                            </label>
-                            <div class="input-group">
-                                <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
-                                <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility()">
-                                    <i class="bi bi-eye" id="eye-icon"></i>
-                                    <i class="bi bi-eye-slash d-none" id="eye-off-icon"></i>
-                                </button>
-                                @error('password')
-                                    <div class="invalid-feedback">
-                                        {{ $message }}
-                                    </div><div class="card-title"></div><div class="card-title"></div>
-                                @enderror
-                            </div><div class="card-title"></div><div class="card-title"></div>
-                        </div><div class="card-title"></div><div class="card-title"></div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <button type="submit" class="btn btn-primary">
+            {{ __('Login') }}
+        </button>
 
-                        <div class="mb-4 form-check">
-                            <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
-                            <label class="form-check-label" for="remember">
-                                {{ __('Remember Me') }}
-                            </label>
-                        </div><div class="card-title"></div><div class="card-title"></div>
+        @if (Route::has('password.request'))
+            <a class="text-primary" href="{{ route('password.request') }}">
+                {{ __('Forgot Your Password?') }}
+            </a>
+        @endif
+    </div>
 
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <button type="submit" class="btn btn-primary">
-                                {{ __('Login') }}
-                            </button>
-
-                            @if (Route::has('password.request'))
-                                <a class="text-primary" href="{{ route('password.request') }}">
-                                    {{ __('Forgot Your Password?') }}
-                                </a>
-                            @endif
-                        </div><div class="card-title"></div><div class="card-title"></div>
-
-                        <hr>
-                        <div class="text-center mt-4">
-                            <p>{{ __('Don\'t have an account?') }}
-                                <a href="{{ route('register') }}" class="text-primary fw-bold ms-1">{{ __('Register') }}</a>
-                            </p>
-                        </div><div class="card-title"></div><div class="card-title"></div>
-                    </form>
-                
+    <hr>
+    <div class="text-center mt-4">
+        <p>{{ __('Don\'t have an account?') }}
+            <a href="{{ route('register') }}" class="text-primary fw-bold ms-1">{{ __('Register') }}</a>
+        </p>
+    </div>
+</form>
 
 <script>
     function togglePasswordVisibility() {

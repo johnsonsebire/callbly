@@ -1,41 +1,46 @@
-<div class="card-title"><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Callbly') }}</title>
-    
+
+    <!-- Favicon -->
+    <link rel="icon" href="{{ asset('assets/media/logos/callbly-favicon.png') }}" type="image/png">
+
     <!-- Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
-    
+
     <!-- Vendor CSS -->
     <link href="{{ asset('assets/plugins/global/plugins.bundle.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('assets/css/style.bundle.css') }}" rel="stylesheet" type="text/css" />
-    
+
     <!-- Custom CSS -->
     <style>
-        .logo-text {
-            font-size: 20px;
+        .app-header-logo.scrolled img.logo-default {
+            display: block;
         }
         
-        .logo-text-white {
-            color: #ffffff;
+        .app-header-logo.scrolled img.logo-white {
+            display: none;
         }
         
-        .logo-text-dark {
-            color: #181C32;
+        .app-header-logo img.logo-default {
+            display: none;
+        }
+        
+        .app-header-logo img.logo-white {
+            display: block;
         }
     </style>
 
     @stack('styles')
 </head>
-<body id="kt_app_body" 
-    data-kt-app-header-fixed-mobile="true" 
-    data-kt-app-sidebar-enabled="true" 
-    data-kt-app-sidebar-fixed="true" 
-    data-kt-app-sidebar-hoverable="true" 
-    data-kt-app-sidebar-push-header="true" 
+
+<body id="kt_app_body" data-kt-app-header-fixed-mobile="true" data-kt-app-sidebar-enabled="true"
+    data-kt-app-sidebar-fixed="true" data-kt-app-sidebar-hoverable="true" data-kt-app-sidebar-push-header="true"
     class="app-default">
 
     <!--begin::App-->
@@ -48,16 +53,16 @@
                     <div class="d-flex align-items-center d-lg-none">
                         <div class="btn btn-icon btn-active-color-primary" id="kt_app_sidebar_mobile_toggle">
                             <i class="ki-outline ki-burger-menu-2 fs-1"></i>
-                        </div><div class="card-title"></div><div class="card-title"></div>
+                        </div>
                         <div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0 me-lg-15">
                             <a href="{{ route('dashboard') }}">
-                                <span class="logo-text logo-text-dark">{{ config('app.name', 'Callbly') }}</span>
+                                <img alt="Callbly Logo" src="{{ asset('assets/media/logos/callbly-white.png') }}" class="h-30px" />
                             </a>
-                        </div><div class="card-title"></div><div class="card-title"></div>
-                    </div><div class="card-title"></div><div class="card-title"></div>
+                        </div>
+                    </div>
                     @include('layouts.partials.user-menu')
-                </div><div class="card-title"></div><div class="card-title"></div>
-            </div><div class="card-title"></div><div class="card-title"></div>
+                </div>
+            </div>
             <!--end::Header-->
 
             <!--begin::Wrapper-->
@@ -66,19 +71,7 @@
 
                 <!--begin::Main-->
                 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
-                    <!--begin::Content wrapper-->
-                    <div class="d-flex flex-column flex-column-fluid">
-                        <!--begin::Content-->
-                        <div id="kt_app_content" class="app-content flex-column-fluid">
-                            <!--begin::Content container-->
-                            <div id="kt_app_content_container" class="app-container container-fluid">
-                                @yield('content')
-                            </div><div class="card-title"></div><div class="card-title"></div>
-                            <!--end::Content container-->
-                        </div><div class="card-title"></div><div class="card-title"></div>
-                        <!--end::Content-->
-                    </div><div class="card-title"></div><div class="card-title"></div>
-                    <!--end::Content wrapper-->
+                    @yield('content')
                     
                     <!--begin::Footer-->
                     <div id="kt_app_footer" class="app-footer">
@@ -86,25 +79,49 @@
                             <div class="text-dark order-2 order-md-1">
                                 <span class="text-muted fw-semibold me-1">&copy; {{ date('Y') }}</span>
                                 <a href="{{ config('app.url') }}" class="text-gray-800 text-hover-primary">{{ config('app.name') }}</a>
-                            </div><div class="card-title"></div><div class="card-title"></div>
-                        </div><div class="card-title"></div><div class="card-title"></div>
-                    </div><div class="card-title"></div><div class="card-title"></div>
+                            </div>
+                        </div>
+                    </div>
                     <!--end::Footer-->
-                </div><div class="card-title"></div><div class="card-title"></div>
+                </div>
                 <!--end::Main-->
-            </div><div class="card-title"></div><div class="card-title"></div>
+            </div>
             <!--end::Wrapper-->
-        </div><div class="card-title"></div><div class="card-title"></div>
+        </div>
         <!--end::Page-->
-    </div><div class="card-title"></div></div>
+    </div>
     <!--end::App-->
 
     <!--begin::Javascript-->
     <script src="{{ asset('assets/plugins/global/plugins.bundle.js') }}"></script>
     <script src="{{ asset('assets/js/scripts.bundle.js') }}"></script>
+    
+    <!-- Logo Switch Script -->
+    <script>
+        // Initialize logo switching based on scroll
+        document.addEventListener('DOMContentLoaded', function() {
+            // For frontend pages that have the header logo
+            const headerLogo = document.querySelector('.app-header-logo');
+            if (headerLogo) {
+                window.addEventListener('scroll', function() {
+                    if (window.scrollY > 50) {
+                        headerLogo.classList.add('scrolled');
+                    } else {
+                        headerLogo.classList.remove('scrolled');
+                    }
+                });
+                
+                // Initial check
+                if (window.scrollY > 50) {
+                    headerLogo.classList.add('scrolled');
+                }
+            }
+        });
+    </script>
     <!--end::Javascript-->
 
     @stack('scripts')
 
 </body>
+
 </html>

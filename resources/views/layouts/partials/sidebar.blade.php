@@ -1,13 +1,13 @@
-<div class="card-title"><!--begin::Sidebar-->
+<!--begin::Sidebar-->
 <div id="kt_app_sidebar" class="app-sidebar flex-column" data-kt-drawer="true" data-kt-drawer-name="app-sidebar"
     data-kt-drawer-activate="{default: true, lg: false}" data-kt-drawer-overlay="true" data-kt-drawer-width="100px"
     data-kt-drawer-direction="start" data-kt-drawer-toggle="#kt_app_sidebar_toggle">
     <!--begin::Logo-->
     <div class="app-sidebar-logo d-none d-lg-flex flex-center pt-10 mb-3" id="kt_app_sidebar_logo">
         <a href="{{ route('dashboard') }}">
-            <span class="logo-text logo-text-dark" style="font-size: 15px;">Callbly</span>
+            <img alt="Callbly Logo" src="{{ asset('assets/media/logos/callbly-favicon.png') }}" class="h-40px" />
         </a>
-    </div><div class="card-title"></div><div class="card-title"></div>
+    </div>
     <!--end::Logo-->
     <!--begin::sidebar menu-->
     <div class="app-sidebar-menu d-flex flex-center overflow-hidden flex-column-fluid">
@@ -39,9 +39,9 @@
                                     <!--begin:Menu content-->
                                     <div class="menu-content">
                                         <span class="menu-section fs-5 fw-bolder ps-1 py-1">{{ $item['label'] }}</span>
-                                    </div><div class="card-title"></div><div class="card-title"></div>
+                                    </div>
                                     <!--end:Menu content-->
-                                </div><div class="card-title"></div><div class="card-title"></div>
+                                </div>
                                 <!--end:Menu item-->
                                 @foreach($item['children'] as $child)
                                     <!--begin:Menu item-->
@@ -49,14 +49,15 @@
                                         <!--begin:Menu link-->
                                         <a class="menu-link {{ $child['active'] ? 'active' : '' }}" href="{{ $child['url'] }}">
                                             <span class="menu-bullet">
+                                                <span class="bullet bullet-dot"></span>
                                             </span>
                                             <span class="menu-title">{{ $child['label'] }}</span>
                                         </a>
                                         <!--end:Menu link-->
-                                    </div><div class="card-title"></div><div class="card-title"></div>
+                                    </div>
                                     <!--end:Menu item-->
                                 @endforeach
-                            </div><div class="card-title"></div><div class="card-title"></div>
+                            </div>
                             <!--end:Menu sub-->
                         @else
                             <!--begin:Menu link for items without children-->
@@ -67,14 +68,14 @@
                             </a>
                             <!--end:Menu link-->
                         @endif
-                    </div><div class="card-title"></div><div class="card-title"></div>
+                    </div>
                     <!--end:Menu item-->
                 @endforeach
-            </div><div class="card-title"></div><div class="card-title"></div>
+            </div>
             <!--end::Menu-->
-        </div><div class="card-title"></div><div class="card-title"></div>
+        </div>
         <!--end::Menu wrapper-->
-    </div><div class="card-title"></div><div class="card-title"></div>
+    </div>
     <!--end::sidebar menu-->
     
     <!--begin::Footer-->
@@ -83,7 +84,7 @@
         <div class="cursor-pointer symbol symbol-40px symbol-circle" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" 
             data-kt-attach="parent" data-kt-menu-placement="right-end">
             <img src="{{ auth()->user()->avatar_url ?? asset('assets/media/avatars/blank.png') }}" alt="user" />
-        </div><div class="card-title"></div><div class="card-title"></div>
+        </div>
         <!--begin::User account menu-->
         <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-color fw-semibold py-4 fs-6 w-275px"
             data-kt-menu="true">
@@ -93,31 +94,32 @@
                     <!--begin::Avatar-->
                     <div class="symbol symbol-50px me-5">
                         <img alt="Logo" src="{{ auth()->user()->avatar_url ?? asset('assets/media/avatars/blank.png') }}" />
-                    </div><div class="card-title"></div><div class="card-title"></div>
+                    </div>
                     <!--end::Avatar-->
                     <!--begin::Username-->
                     <div class="d-flex flex-column">
-                        <div class="fw-bold d-flex align-items-center fs-5">{{ auth()->user()->name }}   </div><div class="card-title"></div><div class="card-title"></div>
+                        <div class="fw-bold d-flex align-items-center fs-5">{{ auth()->user()->name }}</div>
                         <a href="#" class="fw-semibold text-muted text-hover-primary fs-7">{{ auth()->user()->email }}</a>
-                        <div><span class="badge badge-light-primary fw-bold fs-8 px-2 py-1 ">
-    {{ auth()->user()->getRoleNames()->first() ?? 'User' }}
-</span>    </div><div class="card-title"></div><div class="card-title"></div>
-
-                    </div><div class="card-title"></div><div class="card-title"></div>
+                        <div>
+                            <span class="badge badge-light-primary fw-bold fs-8 px-2 py-1">
+                                {{ auth()->user()->getRoleNames()->first() ?? 'User' }}
+                            </span>
+                        </div>
+                    </div>
                     <!--end::Username-->
-                </div><div class="card-title"></div><div class="card-title"></div>
-            </div><div class="card-title"></div><div class="card-title"></div>
+                </div>
+            </div>
             <!--end::Menu item-->
             <!--begin::Menu separator-->
-            <div class="separator my-2"></div><div class="card-title"></div><div class="card-title"></div>
+            <div class="separator my-2"></div>
             <!--end::Menu separator-->
             <!--begin::Menu item-->
             <div class="menu-item px-5">
                 <a href="{{ url('profile') }}" class="menu-link px-5">My Profile</a>
-            </div><div class="card-title"></div><div class="card-title"></div>
+            </div>
             <!--end::Menu item-->
             <!--begin::Menu separator-->
-            <div class="separator my-2"></div><div class="card-title"></div><div class="card-title"></div>
+            <div class="separator my-2"></div>
             <!--end::Menu separator-->
             <!--begin::Menu item-->
             <div class="menu-item px-5">
@@ -128,11 +130,11 @@
                         Sign Out
                     </a>
                 </form>
-            </div><div class="card-title"></div><div class="card-title"></div>
+            </div>
             <!--end::Menu item-->
-        </div><div class="card-title"></div><div class="card-title"></div>
+        </div>
         <!--end::User account menu-->
-    </div><div class="card-title"></div><div class="card-title"></div>
+    </div>
     <!--end::Footer-->
-</div><div class="card-title"></div></div>
+</div>
 <!--end::Sidebar-->

@@ -1,43 +1,76 @@
-<div class="card-title">@extends('layouts.app')
+@extends('layouts.auth')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-md mx-auto bg-white p-8 border border-gray-300 rounded-lg shadow-sm">
-        <h2 class="text-2xl font-bold mb-6 text-center">{{ __('Reset Password') }}</h2>
+<div class="text-center mb-10">
+    <h1 class="text-dark fw-bolder mb-3">Reset Password</h1>
+    <div class="text-gray-500 fw-semibold fs-6">Enter your new password below</div>
+</div>
 
-        <form method="POST" action="{{ route('password.update') }}">
-            @csrf
+<form method="POST" action="{{ route('password.update') }}">
+    @csrf
 
-            <input type="hidden" name="token" value="{{ $token }}">
+    <input type="hidden" name="token" value="{{ $token }}">
 
-            <div class="mb-4">
-                <label for="email" class="block text-gray-700 text-sm font-bold mb-2">{{ __('Email Address') }}</label>
-                <input id="email" type="email" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('email') border-red-500 @enderror" name="email" value="{{ $email ?? old('email') }}" required autocomplete="email" autofocus readonly>
-                @error('email')
-                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
-                @enderror
-            </div><div class="card-title"></div><div class="card-title"></div>
+    <div class="mb-4">
+        <label for="email" class="form-label fw-bold">{{ __('Email Address') }}</label>
+        <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ $email ?? old('email') }}" required autocomplete="email" autofocus readonly>
+        @error('email')
+            <div class="invalid-feedback">
+                {{ $message }}
+            </div>
+        @enderror
+    </div>
 
-            <div class="mb-4">
-                <label for="password" class="block text-gray-700 text-sm font-bold mb-2">{{ __('New Password') }}</label>
-                <input id="password" type="password" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('password') border-red-500 @enderror" name="password" required autocomplete="new-password">
-                <p class="text-xs text-gray-600 mt-1">Password must be at least 8 characters and contain letters (both uppercase and lowercase), numbers, and symbols.</p>
-                @error('password')
-                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
-                @enderror
-            </div><div class="card-title"></div><div class="card-title"></div>
+    <div class="mb-4">
+        <label for="password" class="form-label fw-bold">{{ __('New Password') }}</label>
+        <div class="input-group">
+            <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="new-password">
+            <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('password')">
+                <i class="bi bi-eye" id="eye-icon-password"></i>
+                <i class="bi bi-eye-slash d-none" id="eye-off-icon-password"></i>
+            </button>
+            @error('password')
+                <div class="invalid-feedback">
+                    {{ $message }}
+                </div>
+            @enderror
+        </div>
+        <div class="form-text">Password must be at least 8 characters</div>
+    </div>
 
-            <div class="mb-6">
-                <label for="password-confirm" class="block text-gray-700 text-sm font-bold mb-2">{{ __('Confirm New Password') }}</label>
-                <input id="password-confirm" type="password" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" name="password_confirmation" required autocomplete="new-password">
-            </div><div class="card-title"></div><div class="card-title"></div>
+    <div class="mb-6">
+        <label for="password-confirm" class="form-label fw-bold">{{ __('Confirm Password') }}</label>
+        <div class="input-group">
+            <input id="password-confirm" type="password" class="form-control" name="password_confirmation" required autocomplete="new-password">
+            <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('password-confirm')">
+                <i class="bi bi-eye" id="eye-icon-password-confirm"></i>
+                <i class="bi bi-eye-slash d-none" id="eye-off-icon-password-confirm"></i>
+            </button>
+        </div>
+    </div>
 
-            <div class="flex items-center justify-between mb-4">
-                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                    {{ __('Reset Password') }}
-                </button>
-            </div><div class="card-title"></div><div class="card-title"></div>
-        </form>
-    </div><div class="card-title"></div><div class="card-title"></div>
-</div><div class="card-title"></div></div>
+    <div class="d-grid mb-10">
+        <button type="submit" class="btn btn-primary">
+            {{ __('Reset Password') }}
+        </button>
+    </div>
+</form>
+
+<script>
+    function togglePasswordVisibility(fieldId) {
+        const passwordField = document.getElementById(fieldId);
+        const eyeIcon = document.getElementById(`eye-icon-${fieldId}`);
+        const eyeOffIcon = document.getElementById(`eye-off-icon-${fieldId}`);
+        
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            eyeIcon.classList.add('d-none');
+            eyeOffIcon.classList.remove('d-none');
+        } else {
+            passwordField.type = 'password';
+            eyeIcon.classList.remove('d-none');
+            eyeOffIcon.classList.add('d-none');
+        }
+    }
+</script>
 @endsection

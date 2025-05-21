@@ -1,28 +1,31 @@
-@extends('layouts.error')
-@php
-use Illuminate\Support\Facades\Auth;
-@endphp
-@section('content')
-    <!--begin::Title-->
-    <h1 class="fw-bolder fs-2hx text-gray-900 mb-4">Oops!</h1>
-    <!--end::Title-->
-    <!--begin::Text-->
-    <div class="fw-semibold fs-6 text-gray-500 mb-7">You don't have the permission to view this page.</div>
-    <!--end::Text-->
-    <!--begin::Illustration-->
-    <div class="mb-3">
-        <img src="assets/media/auth/404-error.png" class="mw-100 mh-300px theme-light-show" alt="" />
-        <img src="assets/media/auth/404-error-dark.png" class="mw-100 mh-300px theme-dark-show" alt="" />
-    </div>
-    <!--end::Illustration-->
-    <!--begin::Link-->
-    <div class="mb-0">
-    @if(Auth::check())
-        <a href="{{route('dashboard')}}" class="btn btn-sm btn-primary">Return Home</a>
-        @else 
-        <a href="{{route('home')}}" class="btn btn-sm btn-primary">Login</a>
-        @endif
+@extends('layouts.master')
 
+@section('content')
+<div class="app-main flex-column flex-row-fluid">
+    <div class="d-flex flex-column flex-column-fluid">
+        <div id="kt_app_content" class="app-content flex-column-fluid">
+            <div id="kt_app_content_container" class="app-container container-fluid">
+                <div class="card">
+                    <div class="card-body p-12">
+                        <div class="text-center">
+                            <h1 class="text-dark mb-3 fs-1">Access Denied</h1>
+                            
+                            <div class="fw-semibold fs-6 text-gray-500 mb-7">
+                                You do not have permission to access this resource.
+                            </div>
+                            
+                            <div class="mb-11">
+                                <img src="{{ asset('assets/media/illustrations/sketchy-1/18.png') }}" class="mw-100 mh-300px" alt="Error 403">
+                            </div>
+                            
+                            <div class="mb-0">
+                                <a href="{{ route('dashboard') }}" class="btn btn-sm btn-primary">Return to Dashboard</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <!--end::Link-->
+</div>
 @endsection
