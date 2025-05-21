@@ -8,7 +8,7 @@
         <div id="kt_app_content" class="app-content flex-column-fluid">
             <!--begin::Content container-->
             <div id="kt_app_content_container" class="app-container container-fluid">
-                <div class="row g-5 g-xl-10">
+                <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
                     <div class="col-xl-8">
                         <!--begin::Card-->
                         <div class="card card-flush h-xl-100">

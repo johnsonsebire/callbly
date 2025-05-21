@@ -4,7 +4,8 @@ namespace App\Console\Commands;
 
 use App\Models\User;
 use Illuminate\Console\Command;
-use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class MakeSuperAdmin extends Command
 {
@@ -13,45 +14,50 @@ class MakeSuperAdmin extends Command
      *
      * @var string
      */
-    protected $signature = 'user:make-super-admin {email : The email of the user to make super admin}';
+    protected $signature = 'user:make-super-admin {email?}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Make a user a super admin';
+    protected $description = 'Set a specified user as a super admin';
 
     /**
      * Execute the console command.
      */
     public function handle(): int
     {
-        $email = $this->argument('email');
+        $email = $this->argument('email') ?: 'johnson@manifestghana.com';
         
-        // Find the user by email
-        $user = User::where('email', $email)->first();
-        
-        if (!$user) {
-            $this->error("User with email {$email} not found!");
+        try {
+            $user = User::where('email', $email)->first();
+            
+            if (!$user) {
+                $this->error("User with email {$email} not found.");
+                return Command::FAILURE;
+            }
+            
+            DB::transaction(function () use ($user) {
+                // Remove any existing roles
+                $user->roles()->detach();
+                
+                // Assign super admin role
+                $user->assignRole('super admin');
+                
+                // Log the action
+                Log::info("User {$user->email} was assigned the super admin role");
+            });
+            
+            $this->info("User {$email} successfully set as super admin!");
+            return Command::SUCCESS;
+        } catch (\Exception $e) {
+            $this->error("An error occurred: {$e->getMessage()}");
+            Log::error("Failed to set user as super admin: {$e->getMessage()}", [
+                'email' => $email,
+                'exception' => $e,
+            ]);
             return Command::FAILURE;
         }
-        
-        // Check if super-admin role exists, if not create it
-        $superAdminRole = Role::where('name', 'super-admin')->first();
-        if (!$superAdminRole) {
-            $superAdminRole = Role::create(['name' => 'super-admin', 'guard_name' => 'web']);
-            $this->info('Created "super-admin" role');
-        }
-        
-        // Assign super-admin role to the user
-        $user->assignRole('super-admin');
-        
-        // Set role field to 'admin' 
-        $user->role = 'admin';
-        $user->save();
-        
-        $this->info("User {$user->name} ({$email}) has been made a super admin!");
-        return Command::SUCCESS;
     }
 }

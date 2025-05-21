@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\WalletTransaction;
+use App\Notifications\WalletTopupInvoiceNotification;
 use App\Services\Payment\PaymentWithCurrencyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 
@@ -31,7 +34,7 @@ class PaymentController extends Controller
     {
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
-            'product_type' => 'required|string|in:sms_credits,call_credits,ussd_credits,virtual_number',
+            'product_type' => 'required|string|in:sms_credits,call_credits,ussd_credits,virtual_number,wallet_topup',
         ]);
 
         $user = Auth::user();
@@ -54,6 +57,7 @@ class PaymentController extends Controller
             'call_credits' => 'Call Credits',
             'ussd_credits' => 'USSD Credits',
             'virtual_number' => 'Virtual Number',
+            'wallet_topup' => 'Wallet Top-Up',
             default => 'Credits Purchase'
         };
         
@@ -132,21 +136,35 @@ class PaymentController extends Controller
                 $productType = $metadata['product_type'] ?? '';
                 
                 // Handle different product types
-                if ($productType === 'sms_credits') {
-                    $this->processSmsCreditsPayment($user, $verificationResponse);
-                    return redirect()->route('sms.credits')->with('success', 'SMS credits purchase successful!');
-                } elseif ($productType === 'call_credits') {
-                    $this->processCallCreditsPayment($user, $verificationResponse);
-                    return redirect()->route('dashboard')->with('success', 'Call credits purchase successful!');
-                } elseif ($productType === 'ussd_credits') {
-                    $this->processUssdCreditsPayment($user, $verificationResponse);
-                    return redirect()->route('dashboard')->with('success', 'USSD credits purchase successful!');
-                } elseif ($productType === 'virtual_number') {
-                    $this->processVirtualNumberPayment($user, $verificationResponse);
-                    return redirect()->route('dashboard')->with('success', 'Virtual number purchase successful!');
-                } else {
-                    // Generic success for other product types
-                    return redirect()->route('dashboard')->with('success', 'Payment successful!');
+                switch($productType) {
+                    case 'wallet_topup':
+                        $this->processWalletTopup($user, $verificationResponse);
+                        return redirect()->route('wallet.index')
+                            ->with('success', 'Your wallet has been successfully topped up!');
+                    
+                    case 'sms_credits':
+                        $this->processSmsCreditsPayment($user, $verificationResponse);
+                        return redirect()->route('sms.credits')
+                            ->with('success', 'SMS credits purchase successful!');
+                    
+                    case 'call_credits':
+                        $this->processCallCreditsPayment($user, $verificationResponse);
+                        return redirect()->route('dashboard')
+                            ->with('success', 'Call credits purchase successful!');
+                    
+                    case 'ussd_credits':
+                        $this->processUssdCreditsPayment($user, $verificationResponse);
+                        return redirect()->route('dashboard')
+                            ->with('success', 'USSD credits purchase successful!');
+                    
+                    case 'virtual_number':
+                        $this->processVirtualNumberPayment($user, $verificationResponse);
+                        return redirect()->route('dashboard')
+                            ->with('success', 'Virtual number purchase successful!');
+                    
+                    default:
+                        return redirect()->route('dashboard')
+                            ->with('success', 'Payment successful!');
                 }
             } else {
                 // Payment verification failed
@@ -156,8 +174,9 @@ class PaymentController extends Controller
                     'response' => $verificationResponse,
                 ]);
                 
-                return redirect()->route('dashboard')->with('error', 'Payment verification failed: ' . 
-                    ($verificationResponse['message'] ?? 'Unknown error'));
+                return redirect()->route('dashboard')
+                    ->with('error', 'Payment verification failed: ' . 
+                        ($verificationResponse['message'] ?? 'Unknown error'));
             }
         } catch (\Exception $e) {
             Log::error('Payment verification exception', [
@@ -166,7 +185,8 @@ class PaymentController extends Controller
                 'error' => $e->getMessage(),
             ]);
             
-            return redirect()->route('dashboard')->with('error', 'An error occurred while verifying your payment: ' . $e->getMessage());
+            return redirect()->route('dashboard')
+                ->with('error', 'An error occurred while verifying your payment: ' . $e->getMessage());
         }
     }
 
@@ -286,5 +306,47 @@ class PaymentController extends Controller
         ]);
         
         // Implementation would depend on how virtual numbers are managed
+    }
+
+    /**
+     * Process a successful wallet top-up
+     *
+     * @param User $user
+     * @param array $verificationResponse
+     * @return void
+     */
+    protected function processWalletTopup(User $user, array $verificationResponse): void 
+    {
+        $transaction = $verificationResponse['data'];
+        $metadata = $transaction['metadata'] ?? [];
+        $amount = $transaction['amount'] / 100; // Convert from kobo to actual amount
+        
+        // Find the pending wallet transaction
+        $walletTransaction = WalletTransaction::where('metadata->paystack_reference', $transaction['reference'])
+            ->where('status', 'pending')
+            ->first();
+            
+        if (!$walletTransaction) {
+            Log::error('Wallet transaction not found', ['reference' => $transaction['reference']]);
+            throw new \Exception('Wallet transaction not found');
+        }
+        
+        DB::transaction(function () use ($user, $walletTransaction, $transaction, $amount) {
+            // Update wallet balance
+            $wallet = $user->wallet;
+            $wallet->balance += $amount;
+            $wallet->save();
+            
+            // Update transaction status
+            $walletTransaction->status = 'completed';
+            $walletTransaction->metadata = array_merge($walletTransaction->metadata ?? [], [
+                'paystack_transaction_id' => $transaction['id'],
+                'paid_at' => now()->toIso8601String(),
+            ]);
+            $walletTransaction->save();
+            
+            // Send wallet top-up invoice notification
+            $user->notify(new WalletTopupInvoiceNotification($walletTransaction));
+        });
     }
 }

@@ -64,7 +64,7 @@
                     <i class="ki-outline ki-information-5 fs-2tx text-primary me-4"></i>
                     <div class="d-flex flex-column">
                         <h4 class="mb-1 text-primary">Current Billing Tier: {{ auth()->user()->billingTier->name }}</h4>
-                        <span>SMS Rate: <strong>{{ auth()->user()->formatAmount(auth()->user()->getSmsRate()) }}</strong> per SMS in {{ auth()->user()->currency->code }}</span>
+                        <span>SMS Rate: <strong>{{ auth()->user()->currency->symbol }}{{ number_format(auth()->user()->getSmsRate(), 3) }}</strong> per SMS in {{ auth()->user()->currency->code }}</span>
                         <span class="mt-2">Purchase more credits at once to qualify for better pricing tiers. <a href="{{ route('sms.billing-tier') }}" class="fw-bold">View all tiers</a></span>
                     </div>
                 </div>
@@ -86,7 +86,10 @@
                                 <div class="mb-5">
                                     <span class="text-dark fw-bold fs-2hx">{{ auth()->user()->formatAmount(50) }}</span>
                                 </div>
-                                <div class="fs-6 text-muted mb-5">This package gives you approximately <span class="text-dark fw-bold">{{ floor(50 / auth()->user()->getSmsRate()) }}</span> SMS credits at your current rate.</div>
+                                <div class="fs-6 text-muted mb-5">This package gives you approximately 
+                                    <span class="text-dark fw-bold">{{ floor(50 / auth()->user()->getSmsRate()) }}</span> 
+                                    SMS credits at your current rate.
+                                </div>
                                 <div class="d-flex justify-content-center">
                                     <form action="{{ route('payment.initiate') }}" method="POST">
                                         @csrf
@@ -116,7 +119,10 @@
                                 <div class="mb-5">
                                     <span class="text-primary fw-bold fs-2hx">{{ auth()->user()->formatAmount(100) }}</span>
                                 </div>
-                                <div class="fs-6 text-muted mb-5">This package gives you approximately <span class="text-dark fw-bold">{{ floor(100 / auth()->user()->getSmsRate()) }}</span> SMS credits at your current rate.</div>
+                                <div class="fs-6 text-muted mb-5">This package gives you approximately 
+                                    <span class="text-dark fw-bold">{{ floor(100 / auth()->user()->getSmsRate()) }}</span> 
+                                    SMS credits at your current rate.
+                                </div>
                                 <div class="d-flex justify-content-center">
                                     <form action="{{ route('payment.initiate') }}" method="POST">
                                         @csrf
@@ -143,10 +149,13 @@
                                 <div class="mb-5">
                                     <span class="text-dark fw-bold fs-2hx">{{ auth()->user()->formatAmount(250) }}</span>
                                 </div>
-                                <div class="fs-6 text-muted mb-5">This package gives you approximately <span class="text-dark fw-bold">{{ floor(250 / auth()->user()->getSmsRate()) }}</span> SMS credits at your current rate.</div>
+                                <div class="fs-6 text-muted mb-5">This package gives you approximately 
+                                    <span class="text-dark fw-bold">{{ floor(250 / auth()->user()->getSmsRate()) }}</span> 
+                                    SMS credits at your current rate.
+                                </div>
                                 <div class="badge badge-light-success fs-7 fw-semibold mb-5">
                                     <i class="ki-outline ki-arrow-up fs-7 me-1"></i>
-                                    This purchase may qualify you for a better billing tier!
+                                    May qualify for better billing tier!
                                 </div>
                                 <div class="d-flex justify-content-center">
                                     <form action="{{ route('payment.initiate') }}" method="POST">
@@ -199,7 +208,7 @@
                 </div>
 
                 <!-- Payment Information -->
-                <div class="card card-flush h-lg-100 mb-5 mb-xl-10">
+                <div class="card card-flush shadow-sm h-lg-100 mb-5 mb-xl-10">
                     <div class="card-header pt-5">
                         <h3 class="card-title align-items-start flex-column">
                             <span class="card-label fw-bold text-dark">Payment Information</span>
@@ -209,33 +218,59 @@
                     <div class="card-body pt-6">
                         <div class="row g-5">
                             <div class="col-md-6">
-                                <div class="d-flex flex-column mb-5">
-                                    <div class="d-flex align-items-center mb-5">
-                                        <span class="bullet bullet-vertical h-40px bg-success"></span>
-                                        <div class="ms-5">
-                                            <span class="text-dark fw-bold fs-6">Secure payments processed via Paystack</span>
+                                <div class="bg-light-primary rounded p-6 mb-5">
+                                    <div class="d-flex align-items-center mb-4">
+                                        <div class="symbol symbol-45px me-5">
+                                            <span class="symbol-label bg-primary">
+                                                <i class="ki-outline ki-shield-tick fs-2 text-white"></i>
+                                            </span>
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <h4 class="mb-1 text-dark">Secure Transactions</h4>
+                                            <span class="text-muted fw-semibold">Payments securely processed via Paystack</span>
                                         </div>
                                     </div>
+                                </div>
+                                
+                                <div class="bg-light-success rounded p-6">
                                     <div class="d-flex align-items-center">
-                                        <span class="bullet bullet-vertical h-40px bg-success"></span>
-                                        <div class="ms-5">
-                                            <span class="text-dark fw-bold fs-6">Credits are added to your account instantly</span>
+                                        <div class="symbol symbol-45px me-5">
+                                            <span class="symbol-label bg-success">
+                                                <i class="ki-outline ki-timer fs-2 text-white"></i>
+                                            </span>
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <h4 class="mb-1 text-dark">Instant Credit</h4>
+                                            <span class="text-muted fw-semibold">Credits added to your account immediately</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="d-flex flex-column mb-5">
-                                    <div class="d-flex align-items-center mb-5">
-                                        <span class="bullet bullet-vertical h-40px bg-success"></span>
-                                        <div class="ms-5">
-                                            <span class="text-dark fw-bold fs-6">Larger purchases qualify for better rates</span>
+                                <div class="bg-light-info rounded p-6 mb-5">
+                                    <div class="d-flex align-items-center mb-4">
+                                        <div class="symbol symbol-45px me-5">
+                                            <span class="symbol-label bg-info">
+                                                <i class="ki-outline ki-discount fs-2 text-white"></i>
+                                            </span>
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <h4 class="mb-1 text-dark">Volume Discounts</h4>
+                                            <span class="text-muted fw-semibold">Larger purchases qualify for better rates</span>
                                         </div>
                                     </div>
+                                </div>
+                                
+                                <div class="bg-light-warning rounded p-6">
                                     <div class="d-flex align-items-center">
-                                        <span class="bullet bullet-vertical h-40px bg-success"></span>
-                                        <div class="ms-5">
-                                            <span class="text-dark fw-bold fs-6">SMS credits never expire</span>
+                                        <div class="symbol symbol-45px me-5">
+                                            <span class="symbol-label bg-warning">
+                                                <i class="ki-outline ki-calendar-tick fs-2 text-white"></i>
+                                            </span>
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <h4 class="mb-1 text-dark">No Expiration</h4>
+                                            <span class="text-muted fw-semibold">Your SMS credits never expire</span>
                                         </div>
                                     </div>
                                 </div>

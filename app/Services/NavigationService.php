@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+
 class NavigationService
 {
     /**
@@ -61,148 +64,253 @@ class NavigationService
     }
 
     /**
-     * Get the backend dashboard navigation items
+     * Get the backend navigation items.
      *
      * @return array
      */
     public function getBackendNavigation(): array
     {
-        // Begin with Super Admin links if user has that role
-        $navigation = [];
-        if (auth()->user()->getRoleNames()->first() === 'super-admin') {
-            $navigation[] = [
-                'label' => 'Manage Users',
-                'icon' => 'fas fa-users',
-                'url' => '/admin/users',
-                'active' => request()->is('admin/users*')
-            ];
-            $navigation[] = [
-                'label' => 'Approve Sender Names',
-                'icon' => 'fas fa-user-tag',
-                'url' => '/admin/sender-names',
-                'active' => request()->is('admin/sender-names*')
-            ];
-        }
-        return array_merge(
-            $navigation,
+        $user = Auth::user();
+        $currentRouteName = Route::currentRouteName();
+        
+        $navigation = [
             [
-                [
-                    'label' => 'Dashboard',
-                    'icon' => 'ki-outline ki-home',
-                    'url' => '/dashboard',
-                    'active' => request()->is('dashboard')
-                ],
-                [
-                    'label' => 'SMS',
-                    'icon' => 'ki-outline ki-message-text-2',
-                    'url' => '/sms',
-                    'active' => request()->is('sms*'),
-                    'children' => [
-                        [
-                            'label' => 'Compose',
-                            'url' => '/sms/compose',
-                            'active' => request()->is('sms/compose*')
-                        ],
-                        [
-                            'label' => 'Campaigns',
-                            'url' => '/sms/campaigns',
-                            'active' => request()->is('sms/campaigns*')
-                        ],
-                        [
-                            'label' => 'Messages',
-                            'url' => '/sms/messages',
-                            'active' => request()->is('sms/messages*')
-                        ],
-                        [
-                            'label' => 'Templates',
-                            'url' => '/sms/templates',
-                            'active' => request()->is('sms/templates*')
-                        ],
-                        [
-                            'label' => 'Sender Names',
-                            'url' => '/sms/sender-names',
-                            'active' => request()->is('sms/sender-names*')
-                        ]
+                'label' => 'Dashboard',
+                'icon' => 'fas fa-home',
+                'url' => route('dashboard'),
+                'active' => $this->checkRoutePattern($currentRouteName, 'dashboard'),
+                'order' => 1
+            ],
+            [
+                'label' => 'SMS',
+                'icon' => 'fas fa-sms',
+                'active' => $this->checkRoutePattern($currentRouteName, 'sms.*'),
+                'order' => 2,
+                'children' => [
+                    [
+                        'label' => 'Dashboard',
+                        'url' => route('sms.dashboard'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'sms.dashboard')
+                    ],
+                    [
+                        'label' => 'Compose',
+                        'url' => route('sms.compose'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'sms.compose')
+                    ],
+                    [
+                        'label' => 'Campaigns',
+                        'url' => route('sms.campaigns'),
+                        'active' => $this->checkRoutePattern($currentRouteName, ['sms.campaigns', 'sms.campaign-details', 'sms.download-report', 'sms.duplicate-campaign'])
+                    ],
+                    [
+                        'label' => 'Templates',
+                        'url' => route('sms.templates'),
+                        'active' => $this->checkRoutePattern($currentRouteName, [
+                            'sms.templates',
+                            'sms.templates.create',
+                            'sms.templates.edit',
+                            'sms.templates.store',
+                            'sms.templates.update',
+                            'sms.templates.delete',
+                            'sms.templates.content'
+                        ])
+                    ],
+                    [
+                        'label' => 'Sender Names',
+                        'url' => route('sms.sender-names'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'sms.sender-names*')
+                    ],
+                    [
+                        'label' => 'Credits',
+                        'url' => route('sms.credits'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'sms.credits')
                     ]
-                ],
-                [
-                    'label' => 'Contacts',
-                    'icon' => 'ki-outline ki-address-book',
-                    'url' => '/contacts',
-                    'active' => request()->is('contacts*') || request()->is('contact-groups*'),
-                    'children' => [
-                        [
-                            'label' => 'Manage Contacts',
-                            'url' => '/contacts',
-                            'active' => request()->is('contacts') || request()->is('contacts/create') || request()->is('contacts/*/edit')
-                        ],
-                        [
-                            'label' => 'Contact Groups',
-                            'url' => '/contact-groups',
-                            'active' => request()->is('contact-groups*')
-                        ],
-                        [
-                            'label' => 'Import Contacts',
-                            'url' => '/contacts-import',
-                            'active' => request()->is('contacts-import*')
-                        ]
+                ]
+            ],
+            [
+                'label' => 'Contacts',
+                'icon' => 'fas fa-address-book',
+                'active' => $this->checkRoutePattern($currentRouteName, ['contacts.*', 'contact-groups.*']),
+                'order' => 3,
+                'children' => [
+                    [
+                        'label' => 'Manage Contacts',
+                        'url' => route('contacts.index'),
+                        'active' => $this->checkRoutePattern($currentRouteName, ['contacts.index', 'contacts.create', 'contacts.edit', 'contacts.show'])
+                    ],
+                    [
+                        'label' => 'Import Contacts',
+                        'url' => route('contacts.import'),
+                        'active' => $this->checkRoutePattern($currentRouteName, ['contacts.import', 'contacts.upload-import', 'contacts.process-import'])
+                    ],
+                    [
+                        'label' => 'Export Contacts',
+                        'url' => route('contacts.export'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'contacts.export')
+                    ],
+                    [
+                        'label' => 'Contact Groups',
+                        'url' => route('contact-groups.index'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'contact-groups.*')
                     ]
-                ],
-                // [
-                //     'label' => 'Contact Center',
-                //     'icon' => 'ki-outline ki-call',
-                //     'url' => '/contact-center',
-                //     'active' => request()->is('contact-center*'),
-                //     'children' => [
-                //         [
-                //             'label' => 'Call History',
-                //             'url' => '/contact-center/calls',
-                //             'active' => request()->is('contact-center/calls*')
-                //         ],
-                //         [
-                //             'label' => 'Virtual Numbers',
-                //             'url' => '/contact-center/virtual-numbers',
-                //             'active' => request()->is('contact-center/virtual-numbers*')
-                //         ],
-                //         [
-                //             'label' => 'Call Settings',
-                //             'url' => '/contact-center/settings',
-                //             'active' => request()->is('contact-center/settings*')
-                //         ]
-                //     ]
-                // ],
-                [
-                    'label' => 'USSD',
-                    'icon' => 'ki-outline ki-phone',
-                    'url' => '/ussd',
-                    'active' => request()->is('ussd*'),
-                    'children' => [
-                        [
-                            'label' => 'Services',
-                            'url' => '/ussd/services',
-                            'active' => request()->is('ussd/services*')
-                        ],
-                        [
-                            'label' => 'Analytics',
-                            'url' => '/ussd/analytics',
-                            'active' => request()->is('ussd/analytics*')
-                        ]
+                ]
+            ],
+            [
+                'label' => 'USSD Services',
+                'icon' => 'fas fa-phone-square',
+                'active' => $this->checkRoutePattern($currentRouteName, 'ussd.*'),
+                'order' => 4,
+                'children' => [
+                    [
+                        'label' => 'Dashboard',
+                        'url' => route('ussd.dashboard'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'ussd.dashboard')
+                    ],
+                    [
+                        'label' => 'Services',
+                        'url' => route('ussd.services'),
+                        'active' => $this->checkRoutePattern($currentRouteName, ['ussd.services', 'ussd.create', 'ussd.edit'])
+                    ],
+                    [
+                        'label' => 'Analytics',
+                        'url' => route('ussd.analytics'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'ussd.analytics')
                     ]
-                ],
-                // [
-                //     'label' => 'Virtual Numbers',
-                //     'icon' => 'ki-outline ki-call',
-                //     'url' => '/virtual-numbers',
-                //     'active' => request()->is('virtual-numbers*')
-                // ],
-                [
-                    'label' => 'Settings',
-                    'icon' => 'ki-outline ki-setting-2',
-                    'url' => '/settings/currency',
-                    'active' => request()->is('settings*')
+                ]
+            ],
+            [
+                'label' => 'Contact Center',
+                'icon' => 'fas fa-headset',
+                'active' => $this->checkRoutePattern($currentRouteName, 'contact-center.*'),
+                'order' => 5,
+                'children' => [
+                    [
+                        'label' => 'Dashboard',
+                        'url' => route('contact-center.dashboard'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'contact-center.dashboard')
+                    ]
+                ]
+            ],
+            [
+                'label' => 'Virtual Numbers',
+                'icon' => 'fas fa-phone',
+                'active' => $this->checkRoutePattern($currentRouteName, 'virtual-numbers.*'),
+                'order' => 6,
+                'children' => [
+                    [
+                        'label' => 'My Numbers',
+                        'url' => route('virtual-numbers.my-numbers'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'virtual-numbers.my-numbers')
+                    ],
+                    [
+                        'label' => 'Browse Numbers',
+                        'url' => route('virtual-numbers.browse'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'virtual-numbers.browse')
+                    ]
+                ]
+            ],
+            [
+                'label' => 'Wallet',
+                'icon' => 'fas fa-wallet',
+                'active' => $this->checkRoutePattern($currentRouteName, 'wallet.*'),
+                'order' => 7,
+                'children' => [
+                    [
+                        'label' => 'Overview',
+                        'url' => route('wallet.index'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'wallet.index')
+                    ],
+                    [
+                        'label' => 'Top Up',
+                        'url' => route('wallet.topup'),
+                        'active' => $this->checkRoutePattern($currentRouteName, ['wallet.topup', 'wallet.process-topup'])
+                    ],
+                    [
+                        'label' => 'Purchase SMS',
+                        'url' => route('wallet.purchase-sms'),
+                        'active' => $this->checkRoutePattern($currentRouteName, ['wallet.purchase-sms', 'wallet.process-purchase-sms'])
+                    ]
+                ]
+            ],
+            [
+                'label' => 'Profile & Settings',
+                'icon' => 'fas fa-user-cog',
+                'active' => $this->checkRoutePattern($currentRouteName, ['profile.*', 'settings.*']),
+                'order' => 8,
+                'children' => [
+                    [
+                        'label' => 'My Profile',
+                        'url' => route('profile.show'),
+                        'active' => $this->checkRoutePattern($currentRouteName, ['profile.show', 'profile.edit', 'profile.update'])
+                    ],
+                    [
+                        'label' => 'Currency Settings',
+                        'url' => route('settings.currency'),
+                        'active' => $this->checkRoutePattern($currentRouteName, ['settings.currency', 'settings.currency.update'])
+                    ]
                 ]
             ]
-        );
+        ];
+        
+        // Add admin menu items for admin users
+        if ($user->isAdmin()) {
+            $navigation[] = [
+                'label' => 'Admin',
+                'icon' => 'fas fa-shield-alt',
+                'active' => $this->checkRoutePattern($currentRouteName, 'admin.*'),
+                'order' => 9,
+                'children' => [
+                    [
+                        'label' => 'Sender Name Approval',
+                        'url' => route('admin.sender-names.index'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'admin.sender-names.*')
+                    ],
+                    [
+                        'label' => 'User Management',
+                        'url' => route('admin.users.index'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'admin.users.*')
+                    ]
+                ]
+            ];
+        }
+        
+        // Sort navigation items by order
+        usort($navigation, function ($a, $b) {
+            return ($a['order'] ?? 999) - ($b['order'] ?? 999);
+        });
+        
+        return $navigation;
+    }
+    
+    /**
+     * Check if the current route matches the given pattern.
+     *
+     * @param string $currentRoute
+     * @param string|array $patterns
+     * @return bool
+     */
+    private function checkRoutePattern(string $currentRoute, $patterns): bool
+    {
+        if (is_string($patterns)) {
+            $patterns = [$patterns];
+        }
+        
+        foreach ($patterns as $pattern) {
+            // Exact match
+            if ($pattern === $currentRoute) {
+                return true;
+            }
+            
+            // Wildcard match (e.g. 'users.*')
+            if (str_ends_with($pattern, '*')) {
+                $prefix = rtrim($pattern, '*');
+                if (str_starts_with($currentRoute, $prefix)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 
     /**

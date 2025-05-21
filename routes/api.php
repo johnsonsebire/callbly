@@ -39,6 +39,19 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/campaigns/{id}', [SmsController::class, 'getCampaignDetails']);
     });
     
+    // Contacts routes
+    Route::get('/contacts/{id}', function ($id) {
+        $contact = \App\Models\Contact::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->first();
+            
+        if (!$contact) {
+            return response()->json(['error' => 'Contact not found'], 404);
+        }
+        
+        return response()->json($contact);
+    });
+    
     // USSD routes
     Route::prefix('ussd')->group(function () {
         Route::post('/services', [UssdController::class, 'create']);

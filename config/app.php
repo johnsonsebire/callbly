@@ -129,7 +129,8 @@ return [
         /*
          * Package Service Providers...
          */
-
+        Maatwebsite\Excel\ExcelServiceProvider::class,
+        
         /*
          * Application Service Providers...
          */
@@ -141,5 +142,26 @@ return [
         App\Providers\SmsServiceProvider::class,
         App\Providers\ContactCenterServiceProvider::class,
     ])->toArray(),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Class Aliases
+    |--------------------------------------------------------------------------
+    |
+    | This array of class aliases will be registered when this application
+    | is started. However, feel free to register as many as you wish as
+    | the aliases are "lazy" loaded so they don't hinder performance.
+    |
+    */
+
+    'aliases' => [
+        'Auth' => Illuminate\Support\Facades\Auth::class,
+        'DB' => Illuminate\Support\Facades\DB::class,
+        'Excel' => Maatwebsite\Excel\Facades\Excel::class,
+        'Log' => Illuminate\Support\Facades\Log::class,
+        'Route' => Illuminate\Support\Facades\Route::class,
+        'Storage' => Illuminate\Support\Facades\Storage::class,
+        'Validator' => Illuminate\Support\Facades\Validator::class,
+    ],
 
 ];

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ContactGroup;
+use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -137,6 +138,34 @@ class ContactGroupController extends Controller
      * Add contacts to a group.
      */
     public function addContacts(Request $request, ContactGroup $contactGroup)
+    {
+        // Verify ownership
+        if ($contactGroup->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+        
+        $validatedData = $request->validate([
+            'contact_ids' => 'required|array',
+            'contact_ids.*' => 'exists:contacts,id',
+        ]);
+        
+        // Check that all contacts belong to the user
+        $userContactIds = Auth::user()->contacts()
+            ->whereIn('id', $validatedData['contact_ids'])
+            ->pluck('id')
+            ->toArray();
+        
+        // Add contacts to the group
+        $contactGroup->contacts()->syncWithoutDetaching($userContactIds);
+        
+        return redirect()->route('contact-groups.show', $contactGroup->id)
+            ->with('success', count($userContactIds) . ' contacts added to group.');
+    }
+    
+    /**
+     * Store contacts to a group.
+     */
+    public function storeContacts(Request $request, ContactGroup $contactGroup)
     {
         // Verify ownership
         if ($contactGroup->user_id !== Auth::id()) {

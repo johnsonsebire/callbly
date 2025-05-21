@@ -1,146 +1,178 @@
 @extends('layouts.master')
 
 @section('content')
-<div class="container">
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header border-0 pt-6">
-                    <div class="card-title">
-                        <h5 class="mb-0">Browse Virtual Numbers</h5>
-                    </div>
-                    <div class="card-toolbar">
-                        <a href="{{ route('virtual-numbers.index') }}" class="btn btn-light-primary">Back to Dashboard</a>
+<div class="app-main flex-column flex-row-fluid">
+    <!--begin::Content wrapper-->
+    <div class="d-flex flex-column flex-column-fluid">
+        <!--begin::Content-->
+        <div id="kt_app_content" class="app-content flex-column-fluid">
+            <!--begin::Content container-->
+            <div id="kt_app_content_container" class="app-container container-fluid">
+                <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
+                    <div class="col-md-12">
+                        <!--begin::Card-->
+                        <div class="card card-flush">
+                            <!--begin::Card header-->
+                            <div class="card-header border-0">
+                                <div class="card-title d-flex align-items-center">
+                                    <h2 class="fw-bold mb-0">Browse Virtual Numbers</h2>
+                                </div>
+                                <div class="card-toolbar d-flex align-items-center">
+                                    <a href="{{ route('virtual-numbers.index') }}" class="btn btn-light-primary">
+                                        <i class="ki-outline ki-arrow-left me-1"></i>Back to Dashboard
+                                    </a>
+                                </div>
+                            </div>
+                            <!--end::Card header-->
+                        </div>
+                        <!--end::Card-->
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">
-                        <h5 class="mb-0">Available Number Plans</h5>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="row g-4">
-                        @forelse($plans as $plan)
-                        <div class="col-md-4">
-                            <div class="card h-100 shadow-sm">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ $plan->name }}</h5>
-                                    <p class="text-gray-600 mb-4">{{ $plan->description }}</p>
-                                    <div class="d-flex align-items-baseline mb-4">
-                                        <span class="fs-2x fw-bold text-primary">{{ $plan->currency->symbol }}{{ number_format($plan->price, 2) }}</span>
-                                        <span class="text-muted ms-2">/{{ $plan->billing_cycle }}</span>
+                
+                <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
+                    <div class="col-md-12">
+                        <!--begin::Card-->
+                        <div class="card card-flush">
+                            <!--begin::Card header-->
+                            <div class="card-header border-0 pt-6">
+                                <div class="card-title">
+                                    <h2 class="fw-bold">Available Number Plans</h2>
+                                </div>
+                            </div>
+                            <!--end::Card header-->
+                            
+                            <!--begin::Card body-->
+                            <div class="card-body py-5">
+                                <div class="row g-4">
+                                    @forelse($plans as $plan)
+                                    <div class="col-md-4">
+                                        <div class="card h-100 shadow-sm">
+                                            <div class="card-body">
+                                                <h5 class="card-title">{{ $plan->name }}</h5>
+                                                <p class="text-gray-600 mb-4">{{ $plan->description }}</p>
+                                                <div class="d-flex align-items-baseline mb-4">
+                                                    <span class="fs-2x fw-bold text-primary">{{ $plan->currency->symbol }}{{ number_format($plan->price, 2) }}</span>
+                                                    <span class="text-muted ms-2">/{{ $plan->billing_cycle }}</span>
+                                                </div>
+                                                <ul class="list-unstyled mb-4">
+                                                    @foreach(json_decode($plan->features) as $feature)
+                                                    <li class="d-flex align-items-center mb-2">
+                                                        <i class="ki-outline ki-check-circle fs-6 text-success me-2"></i>
+                                                        <span>{{ $feature }}</span>
+                                                    </li>
+                                                    @endforeach
+                                                </ul>
+                                                <div class="text-center">
+                                                    <button class="btn btn-primary select-plan" data-plan-id="{{ $plan->id }}">
+                                                        Select Plan
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <ul class="list-unstyled mb-4">
-                                        @foreach(json_decode($plan->features) as $feature)
-                                        <li class="d-flex align-items-center mb-2">
-                                            <i class="ki-outline ki-check-circle fs-6 text-success me-2"></i>
-                                            <span>{{ $feature }}</span>
-                                        </li>
-                                        @endforeach
-                                    </ul>
-                                    <div class="text-center">
-                                        <button class="btn btn-primary select-plan" data-plan-id="{{ $plan->id }}">
-                                            Select Plan
-                                        </button>
+                                    @empty
+                                    <div class="col-md-12">
+                                        <div class="alert alert-info">
+                                            No plans are currently available. Please check back later.
+                                        </div>
+                                    </div>
+                                    @endforelse
+                                </div>
+                            </div>
+                            <!--end::Card body-->
+                        </div>
+                        <!--end::Card-->
+                    </div>
+                </div>
+
+                <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
+                    <div class="col-md-12">
+                        <!--begin::Card-->
+                        <div class="card card-flush">
+                            <!--begin::Card header-->
+                            <div class="card-header border-0 pt-6">
+                                <div class="card-title">
+                                    <h2 class="fw-bold">Available Numbers</h2>
+                                </div>
+                                <div class="card-toolbar">
+                                    <div class="d-flex flex-row">
+                                        <select class="form-select form-select-sm me-2" id="country-filter">
+                                            <option value="">All Countries</option>
+                                            <option value="US">United States</option>
+                                            <option value="CA">Canada</option>
+                                            <option value="GB">United Kingdom</option>
+                                            <option value="NG">Nigeria</option>
+                                        </select>
+                                        <select class="form-select form-select-sm" id="type-filter">
+                                            <option value="">All Types</option>
+                                            <option value="local">Local</option>
+                                            <option value="tollfree">Toll-Free</option>
+                                            <option value="mobile">Mobile</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        @empty
-                        <div class="col-md-12">
-                            <div class="alert alert-info">
-                                No plans are currently available. Please check back later.
+                            <!--end::Card header-->
+                            
+                            <!--begin::Card body-->
+                            <div class="card-body py-5">
+                                <div class="table-responsive">
+                                    <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4">
+                                        <thead>
+                                            <tr class="fw-bold text-muted">
+                                                <th>Number</th>
+                                                <th>Country</th>
+                                                <th>Type</th>
+                                                <th>Monthly Fee</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="fw-6 fw-semibold text-gray-600">
+                                            @forelse($availableNumbers as $number)
+                                            <tr>
+                                                <td>{{ $number->number }}</td>
+                                                <td>{{ $number->country_code }}</td>
+                                                <td>{{ ucfirst($number->number_type) }}</td>
+                                                <td>{{ $number->currency->symbol }}{{ number_format($number->monthly_fee, 2) }}</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-primary purchase-number" 
+                                                        data-number="{{ $number->number }}"
+                                                        data-country="{{ $number->country_code }}"
+                                                        data-type="{{ $number->number_type }}"
+                                                        data-fee="{{ $number->monthly_fee }}">
+                                                        Purchase
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            @empty
+                                            <tr>
+                                                <td colspan="5" class="text-center py-4">
+                                                    <div class="text-gray-500">No available numbers found</div>
+                                                </td>
+                                            </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center flex-wrap mt-5">
+                                    <div class="text-muted">
+                                        Showing {{ $availableNumbers->firstItem() ?? 0 }} to {{ $availableNumbers->lastItem() ?? 0 }} of {{ $availableNumbers->total() }} entries
+                                    </div>
+                                    {{ $availableNumbers->links() }}
+                                </div>
                             </div>
+                            <!--end::Card body-->
                         </div>
-                        @endforelse
+                        <!--end::Card-->
                     </div>
                 </div>
             </div>
+            <!--end::Content container-->
         </div>
+        <!--end::Content-->
     </div>
-
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header border-0 pt-6">
-                    <div class="card-title">
-                        <h5 class="mb-0">Available Numbers</h5>
-                    </div>
-                    <div class="card-toolbar">
-                        <div class="d-flex flex-row">
-                            <select class="form-select form-select-sm me-2" id="country-filter">
-                                <option value="">All Countries</option>
-                                <option value="US">United States</option>
-                                <option value="CA">Canada</option>
-                                <option value="GB">United Kingdom</option>
-                                <option value="NG">Nigeria</option>
-                            </select>
-                            <select class="form-select form-select-sm" id="type-filter">
-                                <option value="">All Types</option>
-                                <option value="local">Local</option>
-                                <option value="tollfree">Toll-Free</option>
-                                <option value="mobile">Mobile</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table align-middle table-row-bordered table-row-solid gy-4 gs-9">
-                            <thead class="border-gray-200 fs-5 fw-semibold bg-lighten">
-                                <tr>
-                                    <th>Number</th>
-                                    <th>Country</th>
-                                    <th>Type</th>
-                                    <th>Monthly Fee</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="fw-6 fw-semibold text-gray-600">
-                                @forelse($availableNumbers as $number)
-                                <tr>
-                                    <td>{{ $number->number }}</td>
-                                    <td>{{ $number->country_code }}</td>
-                                    <td>{{ ucfirst($number->number_type) }}</td>
-                                    <td>{{ $number->currency->symbol }}{{ number_format($number->monthly_fee, 2) }}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary purchase-number" 
-                                            data-number="{{ $number->number }}"
-                                            data-country="{{ $number->country_code }}"
-                                            data-type="{{ $number->number_type }}"
-                                            data-fee="{{ $number->monthly_fee }}">
-                                            Purchase
-                                        </button>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="5" class="text-center py-4">
-                                        <div class="text-gray-500">No available numbers found</div>
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center flex-wrap mt-5">
-                        <div class="text-muted">
-                            Showing {{ $availableNumbers->firstItem() ?? 0 }} to {{ $availableNumbers->lastItem() ?? 0 }} of {{ $availableNumbers->total() }} entries
-                        </div>
-                        {{ $availableNumbers->links() }}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!--end::Content wrapper-->
 </div>
 
 <!-- Purchase Number Modal -->

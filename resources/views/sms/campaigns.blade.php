@@ -1,4 +1,8 @@
 @extends('layouts.master')
+@php 
+use Illuminate\Support\Str;
+
+@endphp 
 
 @section('content')
 <div class="app-main flex-column flex-row-fluid">

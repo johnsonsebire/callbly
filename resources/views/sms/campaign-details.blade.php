@@ -1,5 +1,8 @@
 @extends('layouts.master')
+@php 
+use Illuminate\Support\Str;
 
+@endphp 
 @section('content')
 <div class="container py-4">
     <div class="row mb-4">
@@ -57,14 +60,14 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="text-muted small text-uppercase">Recipient Count</label>
-                            <p class="fs-5 fw-semibold">{{ number_format($campaign->recipient_count) }} recipients</p>
+                            <p class="fs-5 fw-semibold">{{ number_format($recipients->total() ?? 0) }} recipients</p>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="text-muted small text-uppercase">Successful Deliveries</label>
                             <p class="fs-5 fw-semibold">
-                                {{ number_format($campaign->success_count) }} 
+                                {{ number_format($deliveredCount ?? 0) }} 
                                 <span class="text-muted fs-6">
-                                    ({{ $campaign->recipient_count > 0 ? round(($campaign->success_count / $campaign->recipient_count) * 100) : 0 }}%)
+                                    ({{ $recipients->total() > 0 ? round(($deliveredCount / $recipients->total()) * 100) : 0 }}%)
                                 </span>
                             </p>
                         </div>
@@ -88,46 +91,46 @@
                     <div class="row mb-4">
                         <div class="col-md-4 text-center mb-4 mb-md-0">
                             <div class="d-inline-block p-3 rounded-circle bg-success bg-opacity-10 mb-2">
-                                <h1 class="text-success mb-0">{{ number_format($campaign->success_count) }}</h1>
+                                <h1 class="text-success mb-0">{{ number_format($deliveredCount ?? 0) }}</h1>
                             </div>
                             <div class="text-muted">Delivered</div>
                         </div>
                         <div class="col-md-4 text-center mb-4 mb-md-0">
                             <div class="d-inline-block p-3 rounded-circle bg-danger bg-opacity-10 mb-2">
-                                <h1 class="text-danger mb-0">{{ number_format($campaign->failed_count) }}</h1>
+                                <h1 class="text-danger mb-0">{{ number_format($failedCount ?? 0) }}</h1>
                             </div>
                             <div class="text-muted">Failed</div>
                         </div>
                         <div class="col-md-4 text-center">
                             <div class="d-inline-block p-3 rounded-circle bg-warning bg-opacity-10 mb-2">
-                                <h1 class="text-warning mb-0">{{ number_format($campaign->pending_count) }}</h1>
+                                <h1 class="text-warning mb-0">{{ number_format($pendingCount ?? 0) }}</h1>
                             </div>
                             <div class="text-muted">Pending</div>
                         </div>
                     </div>
                     
                     <div class="progress" style="height: 25px;">
-                        @if($campaign->recipient_count > 0)
+                        @if($recipients->total() > 0)
                             <div class="progress-bar bg-success" role="progressbar" 
-                                style="width: {{ ($campaign->success_count / $campaign->recipient_count) * 100 }}%" 
-                                aria-valuenow="{{ ($campaign->success_count / $campaign->recipient_count) * 100 }}" 
+                                style="width: {{ ($deliveredCount / $recipients->total()) * 100 }}%" 
+                                aria-valuenow="{{ ($deliveredCount / $recipients->total()) * 100 }}" 
                                 aria-valuemin="0" 
                                 aria-valuemax="100">
-                                {{ round(($campaign->success_count / $campaign->recipient_count) * 100) }}%
+                                {{ round(($deliveredCount / $recipients->total()) * 100) }}%
                             </div>
                             <div class="progress-bar bg-warning" role="progressbar" 
-                                style="width: {{ ($campaign->pending_count / $campaign->recipient_count) * 100 }}%" 
-                                aria-valuenow="{{ ($campaign->pending_count / $campaign->recipient_count) * 100 }}" 
+                                style="width: {{ ($pendingCount / $recipients->total()) * 100 }}%" 
+                                aria-valuenow="{{ ($pendingCount / $recipients->total()) * 100 }}" 
                                 aria-valuemin="0" 
                                 aria-valuemax="100">
-                                {{ round(($campaign->pending_count / $campaign->recipient_count) * 100) }}%
+                                {{ round(($pendingCount / $recipients->total()) * 100) }}%
                             </div>
                             <div class="progress-bar bg-danger" role="progressbar" 
-                                style="width: {{ ($campaign->failed_count / $campaign->recipient_count) * 100 }}%" 
-                                aria-valuenow="{{ ($campaign->failed_count / $campaign->recipient_count) * 100 }}" 
+                                style="width: {{ ($failedCount / $recipients->total()) * 100 }}%" 
+                                aria-valuenow="{{ ($failedCount / $recipients->total()) * 100 }}" 
                                 aria-valuemin="0" 
                                 aria-valuemax="100">
-                                {{ round(($campaign->failed_count / $campaign->recipient_count) * 100) }}%
+                                {{ round(($failedCount / $recipients->total()) * 100) }}%
                             </div>
                         @else
                             <div class="progress-bar" role="progressbar" 
@@ -144,19 +147,19 @@
                         <div class="col-md-4">
                             <div class="d-flex align-items-center">
                                 <div class="color-dot bg-success mr-2"></div>
-                                <small>Delivered: {{ $campaign->recipient_count > 0 ? round(($campaign->success_count / $campaign->recipient_count) * 100) : 0 }}%</small>
+                                <small>Delivered: {{ $recipients->total() > 0 ? round(($deliveredCount / $recipients->total()) * 100) : 0 }}%</small>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="d-flex align-items-center">
                                 <div class="color-dot bg-warning mr-2"></div>
-                                <small>Pending: {{ $campaign->recipient_count > 0 ? round(($campaign->pending_count / $campaign->recipient_count) * 100) : 0 }}%</small>
+                                <small>Pending: {{ $recipients->total() > 0 ? round(($pendingCount / $recipients->total()) * 100) : 0 }}%</small>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="d-flex align-items-center">
                                 <div class="color-dot bg-danger mr-2"></div>
-                                <small>Failed: {{ $campaign->recipient_count > 0 ? round(($campaign->failed_count / $campaign->recipient_count) * 100) : 0 }}%</small>
+                                <small>Failed: {{ $recipients->total() > 0 ? round(($failedCount / $recipients->total()) * 100) : 0 }}%</small>
                             </div>
                         </div>
                     </div>
@@ -190,7 +193,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="text-muted small text-uppercase">Total Credits Used</label>
-                        <p class="fs-5 fw-semibold">{{ number_format($parts * $campaign->recipient_count) }} credits</p>
+                        <p class="fs-5 fw-semibold">{{ number_format($parts * $recipients->total()) }} credits</p>
                     </div>
                 </div>
             </div>

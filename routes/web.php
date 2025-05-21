@@ -16,6 +16,7 @@ use App\Http\Controllers\VirtualNumberController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ContactGroupController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\WalletController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -125,6 +126,28 @@ Route::middleware('auth')->group(function () {
         });
     });
 
+    // Contact routes
+    Route::middleware(['auth'])->group(function () {
+        // Special route to fetch contact phone for SMS compose
+        Route::post('/fetch-contact-phone', function (Illuminate\Http\Request $request) {
+            $contactId = $request->input('contact_id');
+            $contact = App\Models\Contact::where('id', $contactId)
+                ->where('user_id', auth()->id())
+                ->first();
+                
+            if (!$contact) {
+                return response()->json(['error' => 'Contact not found'], 404);
+            }
+            
+            return response()->json([
+                'id' => $contact->id,
+                'phone_number' => $contact->phone_number,
+                'first_name' => $contact->first_name,
+                'last_name' => $contact->last_name
+            ]);
+        })->name('contacts.fetch-phone');
+    });
+
     // USSD Routes
     Route::middleware(['verified'])->prefix('ussd')->name('ussd.')->group(function () {
         Route::get('/', [UssdController::class, 'dashboard'])->name('dashboard');
@@ -142,6 +165,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [VirtualNumberController::class, 'index'])->name('index');
         Route::get('/browse', [VirtualNumberController::class, 'browse'])->name('browse');
         Route::get('/my-numbers', [VirtualNumberController::class, 'myNumbers'])->name('my-numbers');
+        Route::post('/purchase', [VirtualNumberController::class, 'purchaseNumber'])->name('purchase');
+        Route::get('/{virtualNumber}/usage', [VirtualNumberController::class, 'showUsage'])->name('usage');
+        Route::put('/{virtualNumber}/configure', [VirtualNumberController::class, 'configureNumber'])->name('configure');
     });
 
     // Contact Center Routes
@@ -165,6 +191,15 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['verified'])->group(function () {
         Route::post('/payment/initiate', [PaymentController::class, 'initiate'])->name('payment.initiate');
         Route::get('/payment/verify', [PaymentController::class, 'verify'])->name('payment.verify');
+    });
+
+    // Wallet Routes
+    Route::middleware(['verified'])->prefix('wallet')->name('wallet.')->group(function () {
+        Route::get('/', [WalletController::class, 'index'])->name('index');
+        Route::get('/topup', [WalletController::class, 'showTopupForm'])->name('topup');
+        Route::post('/topup', [WalletController::class, 'processTopup'])->name('process-topup');
+        Route::get('/purchase-sms', [WalletController::class, 'showPurchaseSmsForm'])->name('purchase-sms');
+        Route::post('/purchase-sms', [WalletController::class, 'processPurchaseSms'])->name('process-purchase-sms');
     });
 
     // Super Admin Sender Name Approval Routes

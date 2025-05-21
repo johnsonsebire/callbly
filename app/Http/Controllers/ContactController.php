@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\ContactsImport;
 use App\Models\Contact;
 use App\Models\ContactGroup;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use League\Csv\Reader;
 use League\Csv\Writer;
+use Maatwebsite\Excel\Facades\Excel;
 use SplTempFileObject;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ContactController extends Controller
 {
@@ -165,111 +169,199 @@ class ContactController extends Controller
      */
     public function uploadImport(Request $request)
     {
-        $request->validate([
-            'csv_file' => 'required|file|mimes:csv,txt|max:10240',
-            'group_id' => 'nullable|exists:contact_groups,id'
-        ]);
+        // Add direct debug logging at the start of the method
+        Log::info('uploadImport method called', ['has_file' => $request->hasFile('excel_file')]);
         
-        if ($request->hasFile('csv_file')) {
-            $path = $request->file('csv_file')->store('temp');
-            
-            // Parse the CSV file to preview the data
-            $csv = Reader::createFromPath(storage_path('app/' . $path), 'r');
-            $csv->setHeaderOffset(0);
-            
-            $records = collect($csv->getRecords())->take(5);
-            $headers = $csv->getHeader();
-            
-            return view('contacts.import_preview', [
-                'records' => $records,
-                'headers' => $headers,
-                'path' => $path,
-                'group_id' => $request->group_id,
-                'total_records' => iterator_count($csv->getRecords()),
+        try {
+            $request->validate([
+                'excel_file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+                'group_id' => 'nullable|exists:contact_groups,id'
             ]);
+            
+            Log::info('File upload validation passed');
+            
+            if ($request->hasFile('excel_file')) {
+                try {
+                    // Create the temp directory if it doesn't exist
+                    $tempPath = storage_path('app/temp');
+                    if (!file_exists($tempPath)) {
+                        mkdir($tempPath, 0755, true);
+                        Log::info('Created temp directory: ' . $tempPath);
+                    }
+                    
+                    // Store the file using Laravel Storage facade
+                    $file = $request->file('excel_file');
+                    $extension = $file->getClientOriginalExtension();
+                    $fileName = time() . '.' . $extension;
+                    
+                    // Store the file using Laravel's Storage facade
+                    $path = Storage::putFileAs('temp', $file, $fileName);
+                    Log::info('File stored at path: ' . $path);
+                    
+                    // Check if file was stored properly
+                    if (!Storage::exists($path)) {
+                        Log::error('File not found after storage with Storage facade: ' . $path);
+                        return redirect()->back()->with('error', 'Failed to upload file: File not found after storage.');
+                    }
+                    
+                    // Get the absolute file path for debugging
+                    $filePath = Storage::path($path);
+                    Log::info('Absolute file path: ' . $filePath);
+                    
+                    // Double check file exists using PHP's file_exists
+                    if (!file_exists($filePath)) {
+                        Log::error('File not found at absolute path: ' . $filePath);
+                        return redirect()->back()->with('error', 'Failed to upload file: File not found at absolute path.');
+                    }
+                    
+                    Log::info('About to process Excel file: ' . $filePath);
+                    
+                    // Use Laravel Excel to load the file by using Storage disk path
+                    $collection = Excel::toCollection(null, $path, 'local');
+                    Log::info('Excel collection created', ['collection_empty' => $collection->isEmpty()]);
+                    
+                    if ($collection->isEmpty() || $collection[0]->isEmpty()) {
+                        Log::warning('The uploaded file does not contain any data');
+                        return redirect()->back()->with('error', 'The uploaded file does not contain any data.');
+                    }
+                    
+                    // Get the headers (first row)
+                    $headers = $collection[0][0]->keys()->toArray();
+                    Log::info('Headers found', ['headers' => $headers]);
+                    
+                    if (empty($headers)) {
+                        Log::warning('No headers found in the file');
+                        return redirect()->back()->with('error', 'The file does not contain any headers. Please ensure the first row contains column names.');
+                    }
+                    
+                    // Preview the first 5 rows
+                    $records = $collection[0]->take(5);
+                    $totalRecords = count($collection[0]) - 1; // Excluding header row
+                    Log::info('Preview data prepared', [
+                        'preview_records' => count($records),
+                        'total_records' => $totalRecords
+                    ]);
+                    
+                    return view('contacts.import_preview', [
+                        'records' => $records,
+                        'headers' => $headers,
+                        'path' => $path,
+                        'group_id' => $request->group_id,
+                        'total_records' => $totalRecords,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Exception in file processing: ' . $e->getMessage());
+                    Log::error($e->getTraceAsString());
+                    return redirect()->back()->with('error', 'Failed to process file: ' . $e->getMessage());
+                }
+            } else {
+                Log::warning('No file was found in the request');
+                return redirect()->back()->with('error', 'No file was selected or the upload failed.');
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation exception: ', $e->errors());
+            return back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            Log::error('Unexpected exception: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            return redirect()->back()->with('error', 'An error occurred: ' . $e->getMessage());
         }
-        
-        return redirect()->back()->with('error', 'Failed to upload file.');
     }
 
     /**
-     * Process the imported CSV
+     * Process the imported Excel/CSV file
      */
     public function processImport(Request $request)
     {
-        $request->validate([
-            'path' => 'required',
-            'name_column' => 'required',
-            'phone_column' => 'required',
-            'email_column' => 'nullable',
-            'company_column' => 'nullable',
-            'group_id' => 'nullable|exists:contact_groups,id'
-        ]);
-        
         try {
-            $path = storage_path('app/' . $request->path);
+            // Log the incoming request data for debugging
+            Log::info('Import process started with data:', $request->all());
             
-            // Check if file exists
-            if (!file_exists($path)) {
-                return redirect()->route('contacts.import')
-                    ->with('error', 'The uploaded file could not be found. Please try uploading again.');
+            $validated = $request->validate([
+                'path' => 'required|string',
+                'first_name_column' => 'required|string',
+                'last_name_column' => 'required|string',
+                'phone_column' => 'required|string',
+                'email_column' => 'nullable|string',
+                'company_column' => 'nullable|string',
+                'group_id' => 'nullable|exists:contact_groups,id'
+            ]);
+
+            Log::info('Validation passed with data:', $validated);
+
+            // Check if file exists using Storage facade
+            if (!Storage::exists($validated['path'])) {
+                Log::error('Import file not found using Storage: ' . $validated['path']);
+                return redirect()->route('contacts.import')->with('error', 'Import file not found. Please upload again.');
             }
             
-            $csv = Reader::createFromPath($path, 'r');
-            $csv->setHeaderOffset(0);
+            // Get the absolute file path for additional verification
+            $filePath = Storage::path($validated['path']);
+            Log::info('Absolute file path for import: ' . $filePath);
             
-            $user = Auth::user();
-            $counter = 0;
-            $errors = [];
-            
-            foreach ($csv as $index => $record) {
-                if (!isset($record[$request->phone_column]) || empty($record[$request->phone_column])) {
-                    $errors[] = "Row #" . ($index + 2) . ": Missing phone number";
-                    continue;
+            try {
+                // Create column mapping
+                $columnMapping = [
+                    'first_name' => $validated['first_name_column'],
+                    'last_name' => $validated['last_name_column'],
+                    'phone' => $validated['phone_column'],
+                ];
+                
+                // Log the column mapping for debugging
+                Log::info('Column mapping:', $columnMapping);
+                
+                if (!empty($validated['email_column'])) {
+                    $columnMapping['email'] = $validated['email_column'];
                 }
                 
-                try {
-                    // Split the name into first and last name
-                    $fullName = $record[$request->name_column] ?? 'Unknown';
-                    $nameParts = explode(' ', $fullName, 2);
-                    $firstName = $nameParts[0];
-                    $lastName = isset($nameParts[1]) ? $nameParts[1] : '';
-                    
-                    $contact = Contact::updateOrCreate(
-                        [
-                            'user_id' => $user->id,
-                            'phone_number' => $record[$request->phone_column]
-                        ],
-                        [
-                            'first_name' => $firstName,
-                            'last_name' => $lastName,
-                            'email' => isset($request->email_column) && isset($record[$request->email_column]) 
-                                ? $record[$request->email_column] : null,
-                            'company' => isset($request->company_column) && isset($record[$request->company_column])
-                                ? $record[$request->company_column] : null,
-                        ]
-                    );
-                    
-                    if ($request->group_id) {
-                        $contact->groups()->syncWithoutDetaching([$request->group_id]);
-                    }
-                    
-                    $counter++;
-                } catch (\Exception $e) {
-                    $errors[] = "Row #" . ($index + 2) . ": " . $e->getMessage();
+                if (!empty($validated['company_column'])) {
+                    $columnMapping['company'] = $validated['company_column'];
                 }
+                
+                // Start import transaction
+                DB::beginTransaction();
+                
+                // Create new import instance
+                $groupId = !empty($validated['group_id']) ? (int)$validated['group_id'] : null;
+                $import = new ContactsImport($columnMapping, $groupId);
+                
+                // Import the file using Storage facade path
+                Log::info('Starting Excel import for file: ' . $validated['path']);
+                try {
+                    Excel::import($import, $validated['path'], 'local');
+                    Log::info('Excel import completed successfully');
+                } catch (\Exception $e) {
+                    Log::error('Excel import threw exception: ' . $e->getMessage());
+                    Log::error($e->getTraceAsString());
+                    throw $e; // Rethrow to be caught by the outer catch
+                }
+                
+                // Get results
+                $results = $import->getResults();
+                Log::info('Import results:', $results);
+                
+                DB::commit();
+                
+                // Cleanup temporary file
+                Storage::delete($validated['path']);
+                Log::info('Temporary file deleted: ' . $validated['path']);
+                
+                return redirect()->route('contacts.index')->with('success', 
+                    "Import complete: {$results['imported']} contacts imported, {$results['duplicates']} duplicates skipped, {$results['errors']} errors encountered.");
+                
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('Exception during import process: ' . $e->getMessage());
+                Log::error($e->getTraceAsString());
+                return redirect()->route('contacts.import')->with('error', 'Import failed: ' . $e->getMessage());
             }
-            
-            // Clean up the temporary file
-            @unlink($path);
-            
-            return redirect()->route('contacts.index')->with([
-                'success' => "{$counter} contacts imported successfully",
-                'errors' => $errors
-            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation failed:', $e->errors());
+            return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            return redirect()->route('contacts.import')
-                ->with('error', 'Error processing file: ' . $e->getMessage());
+            Log::error('Exception during request processing: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            return redirect()->route('contacts.import')->with('error', 'Import failed: ' . $e->getMessage());
         }
     }
 

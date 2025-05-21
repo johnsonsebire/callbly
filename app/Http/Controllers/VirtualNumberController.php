@@ -291,4 +291,34 @@ class VirtualNumberController extends Controller
             'data' => $numbers,
         ]);
     }
+
+    /**
+     * Show the usage statistics for a virtual number.
+     *
+     * @param VirtualNumber $virtualNumber
+     * @return \Illuminate\View\View
+     */
+    public function showUsage(VirtualNumber $virtualNumber): View
+    {
+        if ($virtualNumber->user_id !== auth()->id()) {
+            abort(403, 'You do not have permission to view this number\'s usage');
+        }
+        
+        // Get usage statistics for the last 30 days by default
+        $startDate = now()->subDays(30);
+        $endDate = now();
+        
+        $usageStats = $this->virtualNumberService->getNumberUsageLogs(
+            $virtualNumber->provider_number_id,
+            $startDate->format('Y-m-d'),
+            $endDate->format('Y-m-d')
+        );
+        
+        return view('virtual-numbers.usage', [
+            'number' => $virtualNumber,
+            'usageStats' => $usageStats['data'] ?? [],
+            'startDate' => $startDate,
+            'endDate' => $endDate
+        ]);
+    }
 }

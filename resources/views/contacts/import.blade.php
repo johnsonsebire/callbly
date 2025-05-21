@@ -13,7 +13,7 @@
                     <div class="card-header pt-5">
                         <h3 class="card-title align-items-start flex-column">
                             <span class="card-label fw-bold text-dark">Import Contacts</span>
-                            <span class="text-gray-400 mt-1 fw-semibold fs-6">Upload a CSV file to import multiple contacts</span>
+                            <span class="text-gray-400 mt-1 fw-semibold fs-6">Upload an Excel or CSV file to import multiple contacts</span>
                         </h3>
                         <div class="card-toolbar">
                             <a href="{{ route('contacts.index') }}" class="btn btn-sm btn-light-primary">
@@ -37,8 +37,9 @@
                                 <form action="{{ route('contacts.upload-import') }}" method="POST" enctype="multipart/form-data" class="mb-5">
                                     @csrf
                                     <div class="mb-5">
-                                        <label for="csv_file" class="form-label fs-6 fw-semibold">Choose CSV File</label>
-                                        <input type="file" class="form-control" id="csv_file" name="csv_file" required accept=".csv">
+                                        <label for="excel_file" class="form-label fs-6 fw-semibold">Choose File</label>
+                                        <input type="file" class="form-control" id="excel_file" name="excel_file" required accept=".xlsx,.xls,.csv">
+                                        <div class="form-text">Supported formats: Excel (.xlsx, .xls), CSV (.csv)</div>
                                     </div>
                                     
                                     @if(count($groups) > 0)
@@ -66,12 +67,12 @@
                                 <div class="card card-bordered bg-light-info">
                                     <div class="card-header">
                                         <h3 class="card-title align-items-start flex-column">
-                                            <span class="card-label fw-bold text-dark">CSV Format Guidelines</span>
+                                            <span class="card-label fw-bold text-dark">File Format Guidelines</span>
                                         </h3>
                                     </div>
                                     <div class="card-body">
                                         <div class="mb-5">
-                                            <p class="text-gray-800 fs-6 fw-semibold mb-2">Your CSV file should include these columns:</p>
+                                            <p class="text-gray-800 fs-6 fw-semibold mb-2">Your file should include these columns:</p>
                                             <ul class="ps-4">
                                                 <li>Names (first name, last name or both)</li>
                                                 <li>Phone numbers</li>

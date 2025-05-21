@@ -10,6 +10,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use App\Notifications\CustomResetPasswordNotification;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -214,6 +215,17 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new CustomResetPasswordNotification($token));
+    }
+
+    /**
      * Get the contacts for the user
      */
     public function contacts(): HasMany
@@ -227,5 +239,28 @@ class User extends Authenticatable implements MustVerifyEmail
     public function contactGroups(): HasMany
     {
         return $this->hasMany(ContactGroup::class);
+    }
+
+    /**
+     * Get the wallet transactions for the user
+     */
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(WalletTransaction::class);
+    }
+
+    /**
+     * Get the wallet for the user
+     */
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class)->withDefault(function ($wallet, $user) {
+            // Create a default wallet if none exists
+            return Wallet::create([
+                'user_id' => $user->id,
+                'currency_id' => $user->currency_id,
+                'balance' => 0.00,
+            ]);
+        });
     }
 }

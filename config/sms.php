@@ -64,6 +64,22 @@ return [
     
     /*
     |--------------------------------------------------------------------------
+    | SMS Credits Rate (Per Tier)
+    |--------------------------------------------------------------------------
+    |
+    | Cost per SMS credit for each user tier
+    |
+    */
+    'rate' => [
+        'basic' => 0.035,    // Basic tier rate
+        'plus' => 0.032,     // Plus tier rate
+        'premium' => 0.029,  // Premium tier rate
+        'gold' => 0.025,     // Gold tier rate
+        'default' => 0.035,  // Default rate if tier is not specified
+    ],
+    
+    /*
+    |--------------------------------------------------------------------------
     | SMS Credits
     |--------------------------------------------------------------------------
     |

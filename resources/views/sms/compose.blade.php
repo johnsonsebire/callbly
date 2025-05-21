@@ -88,7 +88,7 @@
                                                             <div class="list-group">
                                                                 @foreach($contactGroups as $group)
                                                                     <label class="list-group-item">
-                                                                        <input class="form-check-input me-1 contact-group-checkbox" type="checkbox" name="contact_group_ids[]" value="{{ $group->id }}" data-contacts="{{ $group->contacts_count }}">
+                                                                        <input class="form-check-input me-1 contact-group-checkbox" type="checkbox" name="contact_group_ids[]" value="{{ $group->id }}" data-contacts="{{ $group->contacts_count }}" {{ (request()->has('group_id') && request('group_id') == $group->id) ? 'checked' : '' }}>
                                                                         {{ $group->name }} <span class="badge bg-secondary">{{ $group->contacts_count }} contacts</span>
                                                                     </label>
                                                                 @endforeach
@@ -232,8 +232,76 @@
         const groupCheckboxes = document.querySelectorAll('.contact-group-checkbox');
         const sendToAllContactsCheckbox = document.getElementById('sendToAllContacts');
         const groupRecipientsCount = document.getElementById('groupRecipientsCount');
+        const groupsTab = document.getElementById('groups-tab');
+        const manualTab = document.getElementById('manual-tab');
         
         let activeTab = 'manual'; // Track which tab is active
+
+        // Process URL parameters for groups or contacts
+        const urlParams = new URLSearchParams(window.location.search);
+        const groupId = urlParams.get('group_id');
+        const contactId = urlParams.get('contact_id');
+        
+        // Handle group_id parameter
+        if (groupId) {
+            // Activate groups tab
+            const groupsTabEl = new bootstrap.Tab(groupsTab);
+            groupsTabEl.show();
+            activeTab = 'groups';
+            
+            // Check the appropriate group checkbox
+            const groupCheckbox = document.querySelector(`.contact-group-checkbox[value="${groupId}"]`);
+            if (groupCheckbox) {
+                groupCheckbox.checked = true;
+            }
+            
+            // Update counts after a short delay to ensure DOM is updated
+            setTimeout(updateRecipientCounts, 100);
+        }
+        
+        // Handle contact_id parameter
+        if (contactId) {
+            // Activate manual tab
+            const manualTabEl = new bootstrap.Tab(manualTab);
+            manualTabEl.show();
+            activeTab = 'manual';
+            
+            // CSRF token for API request
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            // Fetch contact details directly from backend using a POST request
+            fetch('/fetch-contact-phone', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ contact_id: contactId })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.phone_number) {
+                    // Add the contact to the recipients field
+                    recipientsField.value = data.phone_number;
+                    
+                    // Update counts
+                    updateRecipientCounts();
+                    console.log('Contact loaded successfully:', data);
+                } else {
+                    console.error('No phone number returned for contact');
+                    recipientsField.value = 'Error loading phone number';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching contact:', error);
+                recipientsField.value = 'Error loading phone number';
+            });
+        }
 
         // Tab handling
         document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tab => {
@@ -244,7 +312,6 @@
         });
         
         // Handle initial URL params for template
-        const urlParams = new URLSearchParams(window.location.search);
         const templateId = urlParams.get('template');
         if (templateId) {
             loadTemplateContent(templateId);

@@ -35,7 +35,13 @@
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="symbol symbol-45px me-5">
-                                                    <img src="{{ $user->profile_photo_url }}" alt="{{ $user->name }}" />
+                                                    @if($user->profile_photo_url)
+                                                        <img src="{{ $user->profile_photo_url }}" alt="{{ $user->name }}" />
+                                                    @else
+                                                        <div class="symbol-label fs-3 bg-light-primary text-primary">
+                                                            {{ substr($user->name, 0, 1) }}
+                                                        </div>
+                                                    @endif
                                                 </div>
                                                 <div class="d-flex justify-content-start flex-column">
                                                     <a href="{{ route('admin.users.show', $user->id) }}" class="text-dark fw-bold text-hover-primary fs-6">{{ $user->name }}</a>

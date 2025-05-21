@@ -222,8 +222,19 @@ class SmsController extends Controller
         }
         
         $recipients = $query->latest()->paginate(15);
+        
+        // Calculate delivery statistics
+        $deliveredCount = $campaign->recipients()->where('status', 'delivered')->count();
+        $failedCount = $campaign->recipients()->where('status', 'failed')->count();
+        $pendingCount = $campaign->recipients()->where('status', 'pending')->count();
             
-        return view('sms.campaign-details', compact('campaign', 'recipients'));
+        return view('sms.campaign-details', compact(
+            'campaign', 
+            'recipients',
+            'deliveredCount',
+            'failedCount',
+            'pendingCount'
+        ));
     }
     
     /**

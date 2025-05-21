@@ -11,7 +11,7 @@
                 <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
                     <div class="col-xl-8">
                         <!--begin::Card-->
-                        <div class="card card-flush h-xl-100">
+                        <div class="card card-flush  ">
                             <!--begin::Card header-->
                             <div class="card-header border-0 pt-6">
                                 <div class="card-title">
@@ -171,7 +171,7 @@
                     
                     <div class="col-xl-4">
                         <!--begin::Card-->
-                        <div class="card card-flush h-xl-100">
+                        <div class="card card-flush  ">
                             <!--begin::Card header-->
                             <div class="card-header pt-7">
                                 <!--begin::Card title-->
@@ -211,7 +211,7 @@
                         <!--end::Card-->
                         
                         <!--begin::Card-->
-                        <div class="card card-flush h-xl-100 mt-5">
+                        <div class="card card-flush   mt-5">
                             <!--begin::Card header-->
                             <div class="card-header pt-7">
                                 <!--begin::Card title-->
