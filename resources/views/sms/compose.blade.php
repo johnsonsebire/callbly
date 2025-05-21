@@ -354,8 +354,8 @@
             messageField.disabled = true;
             messageField.value = 'Loading template...';
             
-            // Fetch template content from server
-            fetch(`{{ url('sms/templates') }}/${templateId}/content`)
+            // Fetch template content from server - use secure URL with location.protocol
+            fetch(`${location.protocol}//${location.host}/sms/templates/${templateId}/content`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
