@@ -18,8 +18,11 @@ class UserController extends Controller
     {
         // Retrieve all users with pagination
         $users = User::orderBy('created_at', 'desc')->paginate(20);
+        
+        // Get all roles for the role assignment functionality
+        $roles = \Spatie\Permission\Models\Role::all();
 
-        return view('admin.users.index', compact('users'));
+        return view('admin.users.index', compact('users', 'roles'));
     }
 
     /**
@@ -144,5 +147,83 @@ class UserController extends Controller
         return redirect()
             ->route('admin.users.index')
             ->with('success', 'User deleted successfully.');
+    }
+
+    /**
+     * Update user roles directly.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updateRole(Request $request, User $user)
+    {
+        $request->validate([
+            'roles' => 'required|array',
+            'roles.*' => 'exists:roles,id',
+        ]);
+
+        // Get the role models based on the IDs to access their names
+        $roleModels = Role::whereIn('id', $request->roles)->get();
+        
+        // Extract the role names from the models
+        $roleNames = $roleModels->pluck('name')->toArray();
+        
+        // Sync the user's roles with the selected ones (using names, not IDs)
+        $user->syncRoles($roleNames);
+
+        return redirect()
+            ->route('admin.users.index')
+            ->with('success', "Roles for {$user->name} updated successfully.");
+    }
+
+    /**
+     * Add SMS credits to a user's account.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function addCredits(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'credits' => 'required|integer|min:1',
+            'note' => 'nullable|string|max:500',
+        ]);
+
+        // Begin transaction
+        \DB::beginTransaction();
+
+        try {
+            // Get current credits or set to 0 if null
+            $currentCredits = $user->sms_credits ?? 0;
+            
+            // Add the new credits to the user's account
+            $user->sms_credits = $currentCredits + $validated['credits'];
+            $user->save();
+
+            // Log the credit addition for tracking
+            \DB::table('sms_credit_logs')->insert([
+                'user_id' => $user->id,
+                'admin_id' => auth()->id(),
+                'credits' => $validated['credits'],
+                'note' => $validated['note'] ?? null,
+                'type' => 'admin_topup',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            \DB::commit();
+
+            return redirect()
+                ->route('admin.users.index')
+                ->with('success', "{$validated['credits']} SMS credits have been added to {$user->name}'s account.");
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            
+            return redirect()
+                ->route('admin.users.index')
+                ->with('error', "Failed to add credits: {$e->getMessage()}");
+        }
     }
 }

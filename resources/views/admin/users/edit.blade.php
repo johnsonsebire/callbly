@@ -183,28 +183,39 @@
                             <!--end::Card header-->
                             <!--begin::Card body-->
                             <div class="card-body pt-5">
-                                <div class="d-flex flex-column">
-                                    <div class="notice d-flex bg-light-primary rounded border-primary border border-dashed mb-9 p-6">
-                                        <i class="ki-outline ki-information-5 fs-2tx text-primary me-4"></i>
-                                        <div class="d-flex flex-stack flex-grow-1">
-                                            <div class="fw-semibold">
-                                                <h4 class="text-gray-900 fw-bold">Note</h4>
-                                                <div class="fs-6 text-gray-700">Modify user roles to control what they can access in the system.</div>
+                                <form method="POST" action="{{ route('admin.users.update-role', $user->id) }}" id="role-form">
+                                    @csrf
+                                    @method('PUT')
+                                    
+                                    <div class="d-flex flex-column">
+                                        <div class="notice d-flex bg-light-primary rounded border-primary border border-dashed mb-9 p-6">
+                                            <i class="ki-outline ki-information-5 fs-2tx text-primary me-4"></i>
+                                            <div class="d-flex flex-stack flex-grow-1">
+                                                <div class="fw-semibold">
+                                                    <h4 class="text-gray-900 fw-bold">Note</h4>
+                                                    <div class="fs-6 text-gray-700">Modify user roles to control what they can access in the system.</div>
+                                                </div>
                                             </div>
                                         </div>
+                                        
+                                        <div class="mb-10">
+                                            @foreach($roles as $role)
+                                                <div class="form-check form-check-custom form-check-solid mb-5">
+                                                    <input class="form-check-input" type="checkbox" name="roles[]" value="{{ $role->id }}" id="role_{{ $role->id }}" {{ in_array($role->id, old('roles', $userRoles)) ? 'checked' : '' }} />
+                                                    <label class="form-check-label" for="role_{{ $role->id }}">
+                                                        {{ $role->name }}
+                                                    </label>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                        
+                                        <div class="d-flex justify-content-end">
+                                            <button type="submit" class="btn btn-primary">
+                                                <span class="indicator-label">Update Roles</span>
+                                            </button>
+                                        </div>
                                     </div>
-                                    
-                                    <div class="mb-10">
-                                        @foreach($roles as $role)
-                                            <div class="form-check form-check-custom form-check-solid mb-5">
-                                                <input class="form-check-input" form="role-form" type="checkbox" name="roles[]" value="{{ $role->id }}" id="role_{{ $role->id }}" {{ in_array($role->id, old('roles', $userRoles)) ? 'checked' : '' }} />
-                                                <label class="form-check-label" for="role_{{ $role->id }}">
-                                                    {{ $role->name }}
-                                                </label>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
+                                </form>
                             </div>
                             <!--end::Card body-->
                         </div>

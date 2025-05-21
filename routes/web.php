@@ -216,5 +216,11 @@ Route::middleware('auth')->group(function () {
         
         // User Management for Super Admin
         Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
+        
+        // New routes for role assignment and SMS credit additions
+        Route::put('users/{user}/update-role', [\App\Http\Controllers\Admin\UserController::class, 'updateRole'])
+            ->name('users.update-role');
+        Route::post('users/{user}/add-credits', [\App\Http\Controllers\Admin\UserController::class, 'addCredits'])
+            ->name('users.add-credits');
     });
 });
