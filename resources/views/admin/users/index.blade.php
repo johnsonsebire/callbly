@@ -101,6 +101,10 @@
                                         </td>
                                         <td class="text-end">
                                             <div class="d-flex justify-content-end flex-shrink-0">
+                                                <a href="{{ route('admin.impersonate', $user->id) }}" class="btn btn-icon btn-light-warning btn-sm me-1" 
+                                                   data-bs-toggle="tooltip" title="Impersonate User">
+                                                    <i class="ki-outline ki-eye fs-2"></i>
+                                                </a>
                                                 <button type="button" class="btn btn-icon btn-light-primary btn-sm me-1" 
                                                       data-bs-toggle="modal" 
                                                       data-bs-target="#kt_modal_assign_role_{{ $user->id }}">

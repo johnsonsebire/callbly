@@ -222,5 +222,14 @@ Route::middleware('auth')->group(function () {
             ->name('users.update-role');
         Route::post('users/{user}/add-credits', [\App\Http\Controllers\Admin\UserController::class, 'addCredits'])
             ->name('users.add-credits');
+            
+        // User Impersonation routes
+        Route::get('impersonate/{user}', [\App\Http\Controllers\Admin\ImpersonationController::class, 'impersonate'])
+            ->name('impersonate');
     });
+    
+    // Route accessible to all users for stopping impersonation
+    Route::get('stop-impersonating', [\App\Http\Controllers\Admin\ImpersonationController::class, 'stopImpersonating'])
+        ->name('stop-impersonating')
+        ->middleware('auth');
 });

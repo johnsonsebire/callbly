@@ -47,6 +47,8 @@
     <div class="d-flex flex-column flex-root app-root" id="kt_app_root">
         <!--begin::Page-->
         <div class="app-page flex-column flex-column-fluid" id="kt_app_page">
+           
+            
             <!--begin::Header-->
             <div id="kt_app_header" class="app-header d-flex d-lg-none">
                 <div class="app-container container-fluid d-flex align-items-stretch justify-content-between">
@@ -71,6 +73,21 @@
 
                 <!--begin::Main-->
                 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+                    <div class="container mt-5">
+                           @if(session()->has('admin_user_id'))
+            <!--begin::Impersonation Banner-->
+            <div class="alert alert-warning py-3 mb-0 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <i class="ki-outline ki-eye fs-2 me-2"></i>
+                    <span class="fw-bold">You are currently viewing the site as {{ Auth::user()->name }}. This is an impersonation session.</span>
+                </div>
+                <a href="{{ route('stop-impersonating') }}" class="btn btn-sm btn-light-primary">
+                    Stop Impersonating
+                </a>
+            </div>
+            <!--end::Impersonation Banner-->
+            @endif
+                    </div> 
                     @yield('content')
                     
                     <!--begin::Footer-->
