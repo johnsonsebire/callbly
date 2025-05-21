@@ -12,8 +12,14 @@
                             <div class="card-title">
                                 <h2 class="fw-bold">Sender Name Management</h2>
                             </div>
-                            <div class="card-toolbar">
+                            <div class="card-toolbar ms-auto">
                                 <div class="d-flex align-items-center gap-2">
+                                    <!-- Add Sender Name Button for Users -->
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_add_user_sender_name">
+                                        <i class="ki-outline ki-plus fs-2"></i>
+                                        Add Sender Name for User
+                                    </button>
+                                    
                                     <!--begin::Filter-->
                                     <button type="button" class="btn btn-light-primary" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
                                         <i class="ki-outline ki-filter fs-2"></i>
@@ -263,6 +269,70 @@
     </div>
 </div>
 
+<!--begin::Modal - Add Sender Name for User-->
+<div class="modal fade" tabindex="-1" id="kt_modal_add_user_sender_name">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ route('admin.sender-names.create-for-user') }}">
+                @csrf
+                
+                <div class="modal-header">
+                    <h3 class="modal-title">Add Sender Name for User</h3>
+                    <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="ki-outline ki-cross fs-1"></i>
+                    </div>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="mb-5">
+                        <p>Create a new sender name on behalf of a user. This sender name will be automatically approved.</p>
+                    </div>
+                    
+                    <div class="fv-row mb-5">
+                        <label for="user_id" class="required form-label">Select User</label>
+                        <select class="form-select form-select-solid" id="user_id" name="user_id" required data-control="select2" data-placeholder="Select a user" data-dropdown-parent="#kt_modal_add_user_sender_name">
+                            <option></option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <div class="fv-row mb-5">
+                        <label for="sender_name" class="required form-label">Sender Name</label>
+                        <input type="text" class="form-control form-control-solid" id="sender_name" name="name" required 
+                            placeholder="Enter sender name (max 11 characters)" maxlength="11">
+                        <div class="form-text">Sender name can be up to 11 characters long, alphanumeric only.</div>
+                    </div>
+                    
+                    <div class="form-check form-switch form-check-custom form-check-solid mb-5">
+                        <input class="form-check-input" type="checkbox" id="auto_approve" name="auto_approve" value="1" checked/>
+                        <label class="form-check-label" for="auto_approve">
+                            Automatically approve this sender name
+                        </label>
+                    </div>
+                    
+                    <div class="notice d-flex bg-light-primary rounded border-primary border border-dashed p-6">
+                        <i class="ki-outline ki-information-5 fs-2tx text-primary me-4"></i>
+                        <div class="d-flex flex-stack flex-grow-1">
+                            <div class="fw-semibold">
+                                <h4 class="text-gray-900 fw-bold">Note</h4>
+                                <div class="fs-6 text-gray-700">This sender name will be added to the selected user's account and will be immediately available for them to use if auto-approved.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Sender Name</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!--end::Modal - Add Sender Name for User-->
+
 @push('scripts')
 <script>
     // Initialize tooltips
@@ -275,6 +345,11 @@
     document.querySelector('[data-kt-user-table-filter="reset"]')?.addEventListener('click', function() {
         document.querySelector('#filter-form').reset();
         window.location.href = "{{ route('admin.sender-names.index') }}";
+    });
+    
+    // Validate sender name input
+    document.getElementById('sender_name')?.addEventListener('input', function() {
+        this.value = this.value.replace(/[^A-Za-z0-9]/g, '').substr(0, 11);
     });
 </script>
 @endpush

@@ -210,6 +210,9 @@ Route::middleware('auth')->group(function () {
             ->name('sender-names.update');
         Route::delete('sender-names/{sender_name}', [\App\Http\Controllers\Admin\SenderNameApprovalController::class, 'destroy'])
             ->name('sender-names.destroy');
+        // Add new route for creating sender names for users
+        Route::post('sender-names/create-for-user', [\App\Http\Controllers\Admin\SenderNameApprovalController::class, 'createForUser'])
+            ->name('sender-names.create-for-user');
         
         // User Management for Super Admin
         Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
