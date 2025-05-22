@@ -97,6 +97,7 @@ Route::middleware('auth')->group(function () {
         
         // SMS Credits
         Route::get('/sms/credits', [SmsController::class, 'credits'])->name('sms.credits');
+        Route::post('/sms/buy-credits', [SmsController::class, 'buyCredits'])->name('sms.buy-credits');
         
         // SMS Billing Tiers
         Route::get('/sms/billing-tier', [SmsController::class, 'showBillingTier'])->name('sms.billing-tier');

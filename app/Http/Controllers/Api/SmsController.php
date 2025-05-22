@@ -206,6 +206,7 @@ class SmsController extends Controller
                 $campaign->update([
                     'status' => 'processing',
                     'recipients_count' => $recipientsCount,
+                    'scheduled_at' => $request->scheduled_at ? date('Y-m-d H:i:s', strtotime($request->scheduled_at)) : $campaign->scheduled_at,
                 ]);
             } else {
                 // Create new SMS campaign

@@ -177,7 +177,24 @@ class SmsController extends Controller
         $message = $request->input('message');
         $senderName = $request->input('sender_name');
         $recipientsType = $request->input('recipients_type');
-        $scheduledAt = $request->filled('scheduled_at') ? new \DateTime($request->input('scheduled_at')) : null;
+        
+        // Fix the scheduled_at date parsing
+        $scheduledAt = null;
+        if ($request->filled('scheduled_at')) {
+            try {
+                // Parse the datetime from the form
+                $scheduledAt = new \DateTime($request->input('scheduled_at'));
+                \Illuminate\Support\Facades\Log::info('Scheduling SMS for: ' . $scheduledAt->format('Y-m-d H:i:s'));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to parse scheduled date', [
+                    'input' => $request->input('scheduled_at'),
+                    'error' => $e->getMessage()
+                ]);
+                return redirect()->back()->withInput()->withErrors([
+                    'scheduled_at' => 'Invalid date format for scheduling'
+                ]);
+            }
+        }
         
         \Illuminate\Support\Facades\Log::info('SMS Processing', [
             'user_id' => $user->id,
@@ -338,7 +355,7 @@ class SmsController extends Controller
                 'name' => $campaignName,
                 'message' => $message,
                 'sender_name' => $senderName,
-                'status' => $scheduledAt && $scheduledAt > now() ? 'scheduled' : 'pending',
+                'status' => 'pending', // Always use pending status, even for scheduled messages
                 'recipients_count' => count($recipients),
                 'delivered_count' => 0,
                 'failed_count' => 0,
@@ -607,5 +624,116 @@ class SmsController extends Controller
         
         return redirect()->route('sms.sender-names')
             ->with('success', 'Sender name submitted for approval. You will be notified once it is approved.');
+    }
+
+    /**
+     * Process the purchase of SMS credits.
+     *
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function buyCredits(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'credit_amount' => 'required|integer|min:100',
+            'payment_method' => 'required|in:card,bank,ussd',
+        ]);
+        
+        $user = Auth::user();
+        $creditAmount = $request->input('credit_amount');
+        $paymentMethod = $request->input('payment_method');
+        $currency = $user->currency ?? $this->currencyService->getDefaultCurrency();
+        
+        // Calculate price based on credit amount
+        $rate = $creditAmount >= 10000 ? 0.009 : 0.01; // Discounted rate for larger purchases
+        $price = $creditAmount * $rate * ($currency->conversion_rate ?? 1);
+        
+        // Log purchase attempt
+        Log::info('SMS Credit Purchase Initiated', [
+            'user_id' => $user->id,
+            'credits' => $creditAmount,
+            'amount' => $price,
+            'currency' => $currency->code,
+            'payment_method' => $paymentMethod
+        ]);
+        
+        try {
+            // Create a payment record
+            $paymentReference = 'SMS' . strtoupper(Str::random(8));
+            
+            // Create credit purchase record
+            $purchase = $user->creditPurchases()->create([
+                'credits' => $creditAmount,
+                'amount' => $price,
+                'currency_id' => $currency->id,
+                'payment_method' => $paymentMethod,
+                'reference' => $paymentReference,
+                'status' => 'pending'
+            ]);
+            
+            // Redirect to payment page
+            return redirect()->route('payment.initiate', [
+                'reference' => $paymentReference,
+                'amount' => $price,
+                'currency' => $currency->code,
+                'description' => "Purchase of {$creditAmount} SMS credits",
+                'return_url' => route('sms.credits'),
+                'payment_method' => $paymentMethod,
+                'purchase_type' => 'sms_credits'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to process SMS credit purchase', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return redirect()->route('sms.credits')
+                ->withErrors(['error' => 'Failed to process payment: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Show the SMS billing tier information.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function showBillingTier(): \Illuminate\View\View
+    {
+        $user = Auth::user();
+        $currentTier = $user->billingTier;
+        $userCurrency = $user->currency;
+        
+        // Format SMS rate in user's currency
+        $smsRate = $user->getSmsRate();
+        $formattedSmsRate = $userCurrency->symbol . number_format($smsRate, 3);
+        
+        // Get all billing tiers to display in the table
+        $allTiers = \App\Models\BillingTier::orderBy('price_per_sms', 'desc')->get();
+        
+        return view('sms.billing-tier', compact(
+            'user', 
+            'currentTier', 
+            'userCurrency', 
+            'formattedSmsRate', 
+            'allTiers'
+        ));
+    }
+
+    /**
+     * Get template content by ID.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getTemplateContent($id): JsonResponse
+    {
+        $template = SmsTemplate::where('user_id', Auth::id())->findOrFail($id);
+        
+        return response()->json([
+            'success' => true,
+            'content' => $template->content
+        ]);
     }
 }
