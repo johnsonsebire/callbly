@@ -20,27 +20,33 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-lg-8">
-                                <form method="POST" action="{{ route('sms.send') }}" id="smsForm">
+                                <form method="POST" action="{{ route('sms.send') }}" id="smsForm" enctype="multipart/form-data">
                                     @csrf
                                     @if(session('error'))
                                         <div class="alert alert-danger">{{ session('error') }}</div>
                                     @endif
                                     <div class="mb-3">
-                                        <label for="sender_id" class="form-label">Sender ID</label>
-                                        <select name="sender_id" id="sender_id" class="form-select @error('sender_id') is-invalid @enderror" required>
+                                        <label for="sender_name" class="form-label">Sender ID</label>
+                                        <select name="sender_name" id="sender_name" class="form-select @error('sender_name') is-invalid @enderror" required>
                                             <option value="">Select a sender ID</option>
                                             @foreach($senderNames as $senderName)
-                                                <option value="{{ $senderName->name }}" {{ old('sender_id') == $senderName->name ? 'selected' : '' }}>
+                                                <option value="{{ $senderName->name }}" {{ old('sender_name') == $senderName->name ? 'selected' : '' }}>
                                                     {{ $senderName->name }}
                                                 </option>
                                             @endforeach
                                         </select>
-                                        @error('sender_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        @error('sender_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         @if($senderNames->isEmpty())
                                             <div class="form-text text-danger">
                                                 You need to <a href="{{ route('sms.sender-names') }}">register a sender ID</a> before sending SMS.
                                             </div>
                                         @endif
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="campaign_name" class="form-label">Campaign Name (Optional)</label>
+                                        <input type="text" name="campaign_name" id="campaign_name" class="form-control @error('campaign_name') is-invalid @enderror" value="{{ old('campaign_name') }}" placeholder="Campaign name for tracking">
+                                        @error('campaign_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
 
                                     <div class="mb-4">
@@ -56,6 +62,9 @@
                                         @error('message')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
 
+                                    <!-- Hidden field for recipients_type - Will be set via JavaScript based on active tab -->
+                                    <input type="hidden" name="recipients_type" id="recipients_type" value="single">
+
                                     <!-- Recipients Card -->
                                     <div class="card card-flush mb-5">
                                         <div class="card-header pt-5">
@@ -66,13 +75,19 @@
                                         <div class="card-body">
                                             <ul class="nav nav-tabs mb-3" id="recipientsTab" role="tablist">
                                                 <li class="nav-item" role="presentation">
-                                                    <button class="nav-link active" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual" type="button" role="tab" aria-controls="manual" aria-selected="true">Enter Numbers</button>
+                                                    <button class="nav-link active" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual" type="button" role="tab" aria-controls="manual" aria-selected="true" data-recipient-type="multiple">Enter Numbers</button>
                                                 </li>
                                                 <li class="nav-item" role="presentation">
-                                                    <button class="nav-link" id="groups-tab" data-bs-toggle="tab" data-bs-target="#groups" type="button" role="tab" aria-controls="groups" aria-selected="false">Select Groups</button>
+                                                    <button class="nav-link" id="select-contacts-tab" data-bs-toggle="tab" data-bs-target="#select-contacts" type="button" role="tab" aria-controls="select-contacts" aria-selected="false" data-recipient-type="contacts">Select Contacts</button>
                                                 </li>
                                                 <li class="nav-item" role="presentation">
-                                                    <button class="nav-link" id="all-contacts-tab" data-bs-toggle="tab" data-bs-target="#all-contacts" type="button" role="tab" aria-controls="all-contacts" aria-selected="false">All Contacts</button>
+                                                    <button class="nav-link" id="groups-tab" data-bs-toggle="tab" data-bs-target="#groups" type="button" role="tab" aria-controls="groups" aria-selected="false" data-recipient-type="group">Select Groups</button>
+                                                </li>
+                                                <li class="nav-item" role="presentation">
+                                                    <button class="nav-link" id="all-contacts-tab" data-bs-toggle="tab" data-bs-target="#all-contacts" type="button" role="tab" aria-controls="all-contacts" aria-selected="false" data-recipient-type="all">All Contacts</button>
+                                                </li>
+                                                <li class="nav-item" role="presentation">
+                                                    <button class="nav-link" id="file-tab" data-bs-toggle="tab" data-bs-target="#file-upload" type="button" role="tab" aria-controls="file-upload" aria-selected="false" data-recipient-type="file">Upload File</button>
                                                 </li>
                                             </ul>
                                             <div class="tab-content" id="recipientsTabContent">
@@ -81,6 +96,40 @@
                                                     <div class="form-text">Example: 233244123456, 233244123457 (without + sign)</div>
                                                     <div id="recipientCount" class="mt-1 fw-bold">0 recipient(s)</div>
                                                     @error('recipients')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                                </div>
+                                                <div class="tab-pane fade" id="select-contacts" role="tabpanel" aria-labelledby="select-contacts-tab">
+                                                    @php
+                                                        $contacts = auth()->user()->contacts()->orderBy('first_name')->get();
+                                                    @endphp
+                                                    
+                                                    @if($contacts->count() > 0)
+                                                        <div class="mb-3">
+                                                            <div class="input-group mb-3">
+                                                                <input type="text" id="contactSearchInput" class="form-control" placeholder="Search contacts..." aria-label="Search contacts">
+                                                                <button class="btn btn-outline-secondary" type="button" id="clearContactSearch">Clear</button>
+                                                            </div>
+                                                            
+                                                            <div class="contact-list-container border rounded p-2" style="max-height: 300px; overflow-y: auto;">
+                                                                <div class="list-group">
+                                                                    @foreach($contacts as $contact)
+                                                                        <label class="list-group-item contact-item">
+                                                                            <input class="form-check-input me-1 contact-checkbox" type="checkbox" name="contact_ids[]" value="{{ $contact->id }}" data-phone="{{ $contact->phone_number }}">
+                                                                            <span class="contact-name">{{ $contact->first_name }} {{ $contact->last_name }}</span>
+                                                                            <span class="contact-phone text-muted ms-2">{{ $contact->phone_number }}</span>
+                                                                        </label>
+                                                                    @endforeach
+                                                                </div>
+                                                            </div>
+                                                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                                                <div id="selectedContactsCount" class="fw-bold">0 contact(s) selected</div>
+                                                                <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllContacts">Select All</button>
+                                                            </div>
+                                                        </div>
+                                                    @else
+                                                        <div class="alert alert-info">
+                                                            You don't have any contacts yet. <a href="{{ route('contacts.create') }}">Add contacts</a> first.
+                                                        </div>
+                                                    @endif
                                                 </div>
                                                 <div class="tab-pane fade" id="groups" role="tabpanel" aria-labelledby="groups-tab">
                                                     @if($contactGroups->count() > 0)
@@ -113,7 +162,28 @@
                                                         This will send the message to all contacts in your address book ({{ $totalContactsCount ?? 0 }} contacts).
                                                     </div>
                                                 </div>
+                                                <div class="tab-pane fade" id="file-upload" role="tabpanel" aria-labelledby="file-tab">
+                                                    <div class="mb-3">
+                                                        <label for="recipients_file" class="form-label">Upload Recipients File</label>
+                                                        <input type="file" name="recipients_file" id="recipients_file" class="form-control @error('recipients_file') is-invalid @enderror">
+                                                        <div class="form-text">Upload a CSV or TXT file with one phone number per line</div>
+                                                        @error('recipients_file')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                                    </div>
+                                                </div>
                                             </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Optional scheduling -->
+                                    <div class="mb-4">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="scheduleSwitch">
+                                            <label class="form-check-label" for="scheduleSwitch">Schedule for later</label>
+                                        </div>
+                                        <div id="scheduleContainer" class="mt-3" style="display: none;">
+                                            <label for="scheduled_at" class="form-label">Schedule Date & Time</label>
+                                            <input type="datetime-local" name="scheduled_at" id="scheduled_at" class="form-control @error('scheduled_at') is-invalid @enderror" value="{{ old('scheduled_at') }}">
+                                            @error('scheduled_at')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
                                     </div>
 
@@ -262,11 +332,27 @@
         const groupCheckboxes = document.querySelectorAll('.contact-group-checkbox');
         const sendToAllContactsCheckbox = document.getElementById('sendToAllContacts');
         const groupRecipientsCount = document.getElementById('groupRecipientsCount');
-        const groupsTab = document.getElementById('groups-tab');
-        const manualTab = document.getElementById('manual-tab');
+        const recipientsTypeField = document.getElementById('recipients_type');
+        const scheduleSwitch = document.getElementById('scheduleSwitch');
+        const scheduleContainer = document.getElementById('scheduleContainer');
+        const contactCheckboxes = document.querySelectorAll('.contact-checkbox');
+        const selectedContactsCount = document.getElementById('selectedContactsCount');
+        const contactSearchInput = document.getElementById('contactSearchInput');
+        const clearContactSearch = document.getElementById('clearContactSearch');
+        const selectAllContactsButton = document.getElementById('selectAllContacts');
         
         let activeTab = 'manual'; // Track which tab is active
 
+        // Set initial recipients type
+        recipientsTypeField.value = 'multiple';
+
+        // Initialize scheduling switch
+        if (scheduleSwitch) {
+            scheduleSwitch.addEventListener('change', function() {
+                scheduleContainer.style.display = this.checked ? 'block' : 'none';
+            });
+        }
+        
         // Process URL parameters for groups or contacts
         const urlParams = new URLSearchParams(window.location.search);
         const groupId = urlParams.get('group_id');
@@ -275,9 +361,10 @@
         // Handle group_id parameter
         if (groupId) {
             // Activate groups tab
-            const groupsTabEl = new bootstrap.Tab(groupsTab);
+            const groupsTabEl = new bootstrap.Tab(document.getElementById('groups-tab'));
             groupsTabEl.show();
             activeTab = 'groups';
+            recipientsTypeField.value = 'group';
             
             // Check the appropriate group checkbox
             const groupCheckbox = document.querySelector(`.contact-group-checkbox[value="${groupId}"]`);
@@ -292,9 +379,10 @@
         // Handle contact_id parameter
         if (contactId) {
             // Activate manual tab
-            const manualTabEl = new bootstrap.Tab(manualTab);
+            const manualTabEl = new bootstrap.Tab(document.getElementById('manual-tab'));
             manualTabEl.show();
             activeTab = 'manual';
+            recipientsTypeField.value = 'single';
             
             // CSRF token for API request
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -333,12 +421,94 @@
             });
         }
 
-        // Tab handling
+        // Tab handling - update recipients_type based on the active tab
         document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tab => {
             tab.addEventListener('shown.bs.tab', function(e) {
                 activeTab = e.target.getAttribute('aria-controls');
+                // Set the recipient type based on the tab
+                if (activeTab === 'manual') {
+                    recipientsTypeField.value = 'multiple';
+                } else if (activeTab === 'select-contacts') {
+                    recipientsTypeField.value = 'contacts';
+                } else if (activeTab === 'groups') {
+                    recipientsTypeField.value = 'group';
+                } else if (activeTab === 'all-contacts') {
+                    recipientsTypeField.value = 'all';
+                } else if (activeTab === 'file-upload') {
+                    recipientsTypeField.value = 'file';
+                }
+                
+                console.log('Set recipients_type to:', recipientsTypeField.value);
                 updateRecipientCounts();
             });
+        });
+        
+        // Validate form before submission
+        document.getElementById('smsForm').addEventListener('submit', function(e) {
+            let isValid = true;
+            let errorMessage = '';
+            
+            // Check if sender name is selected
+            const senderName = document.getElementById('sender_name').value;
+            if (!senderName) {
+                isValid = false;
+                errorMessage = 'Please select a sender ID';
+            }
+            
+            // Check if message is entered
+            if (!messageField.value.trim()) {
+                isValid = false;
+                errorMessage = 'Please enter a message';
+            }
+            
+            // Check recipients based on the active tab
+            if (activeTab === 'manual' && (!recipientsField.value.trim() || getRecipientCount(recipientsField.value) === 0)) {
+                isValid = false;
+                errorMessage = 'Please enter at least one recipient phone number';
+            } else if (activeTab === 'select-contacts' && document.querySelectorAll('.contact-checkbox:checked').length === 0) {
+                isValid = false;
+                errorMessage = 'Please select at least one contact';
+            } else if (activeTab === 'groups' && document.querySelectorAll('.contact-group-checkbox:checked').length === 0) {
+                isValid = false;
+                errorMessage = 'Please select at least one contact group';
+            } else if (activeTab === 'all-contacts' && !sendToAllContactsCheckbox.checked) {
+                isValid = false;
+                errorMessage = 'Please confirm sending to all contacts';
+            } else if (activeTab === 'file-upload' && !document.getElementById('recipients_file').files.length) {
+                isValid = false;
+                errorMessage = 'Please upload a file with recipient phone numbers';
+            }
+            
+            // Check scheduled time if scheduling is enabled
+            if (scheduleSwitch && scheduleSwitch.checked) {
+                const scheduledAt = document.getElementById('scheduled_at').value;
+                if (!scheduledAt) {
+                    isValid = false;
+                    errorMessage = 'Please select a date and time for scheduling';
+                } else {
+                    // Check if the selected time is in the future
+                    const scheduledTime = new Date(scheduledAt);
+                    const now = new Date();
+                    if (scheduledTime <= now) {
+                        isValid = false;
+                        errorMessage = 'Scheduled time must be in the future';
+                    }
+                }
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert(errorMessage);
+                return false;
+            }
+            
+            // Set recipient type one last time before submission
+            if (activeTab === 'manual') {
+                const count = getRecipientCount(recipientsField.value);
+                recipientsTypeField.value = count === 1 ? 'single' : 'multiple';
+            }
+            
+            return true;
         });
         
         // Handle initial URL params for template
@@ -365,6 +535,47 @@
         // All contacts checkbox
         if (sendToAllContactsCheckbox) {
             sendToAllContactsCheckbox.addEventListener('change', updateRecipientCounts);
+        }
+
+        // Contact selection
+        contactCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateRecipientCounts);
+        });
+
+        // Contact search
+        if (contactSearchInput) {
+            contactSearchInput.addEventListener('input', function() {
+                const searchTerm = contactSearchInput.value.toLowerCase();
+                document.querySelectorAll('.contact-item').forEach(item => {
+                    const name = item.querySelector('.contact-name').textContent.toLowerCase();
+                    const phone = item.querySelector('.contact-phone').textContent.toLowerCase();
+                    if (name.includes(searchTerm) || phone.includes(searchTerm)) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Clear contact search
+        if (clearContactSearch) {
+            clearContactSearch.addEventListener('click', function() {
+                contactSearchInput.value = '';
+                document.querySelectorAll('.contact-item').forEach(item => {
+                    item.style.display = '';
+                });
+            });
+        }
+
+        // Select all contacts
+        if (selectAllContactsButton) {
+            selectAllContactsButton.addEventListener('click', function() {
+                contactCheckboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+                updateRecipientCounts();
+            });
         }
 
         // Initialize metrics on page load - critical to show initial values
@@ -483,6 +694,10 @@
                 recipientCount = getRecipientCount(recipientsField.value);
                 document.getElementById('recipientCount').textContent = recipientCount + ' recipient(s)';
             }
+            else if (activeTab === 'select-contacts') {
+                recipientCount = document.querySelectorAll('.contact-checkbox:checked').length;
+                selectedContactsCount.textContent = recipientCount + ' contact(s) selected';
+            }
             else if (activeTab === 'groups') {
                 recipientCount = 0;
                 const selectedGroups = document.querySelectorAll('.contact-group-checkbox:checked');
@@ -493,6 +708,11 @@
             }
             else if (activeTab === 'all-contacts') {
                 recipientCount = sendToAllContactsCheckbox.checked ? {{ $totalContactsCount ?? 0 }} : 0;
+            }
+            else if (activeTab === 'file-upload') {
+                // For file upload, we can't determine the exact count
+                const fileInput = document.getElementById('recipients_file');
+                recipientCount = fileInput.files.length > 0 ? 1 : 0; // Just indicate if a file is selected
             }
             
             // Update the global count
@@ -537,15 +757,7 @@
                 window.calculateTimeout = setTimeout(function() {
                     const formData = new FormData();
                     formData.append('message', message);
-                    
-                    // Get recipients based on active tab
-                    if (activeTab === 'manual') {
-                        formData.append('recipients', recipientsField.value);
-                    } else {
-                        // For groups or all contacts, use dummy recipients for calculation
-                        formData.append('recipients', '1'.repeat(recipientCount).split('').join(','));
-                    }
-                    
+                    formData.append('recipients_count', recipientCount);
                     formData.append('_token', '{{ csrf_token() }}');
                     
                     fetch('{{ route('sms.calculate-credits') }}', {
@@ -559,14 +771,37 @@
                         return response.json();
                     })
                     .then(data => {
-                        creditsNeeded.textContent = data.credits_needed;
-                        messageParts.textContent = data.sms_parts;
-                        
-                        if (data.sms_parts > 1) {
-                            messageInfo.style.display = 'block';
+                        if (data.success) {
+                            creditsNeeded.textContent = data.credits_needed;
+                            messageParts.textContent = data.parts;
+                            
+                            if (data.parts > 1) {
+                                messageInfo.style.display = 'block';
+                            }
+                            
+                            // Display warning if user doesn't have enough credits
+                            if (!data.has_enough_credits) {
+                                // Check if warning already exists
+                                let creditWarning = document.getElementById('credit-warning');
+                                if (!creditWarning) {
+                                    creditWarning = document.createElement('div');
+                                    creditWarning.id = 'credit-warning';
+                                    creditWarning.className = 'alert alert-danger mt-2';
+                                    creditWarning.innerHTML = `<strong>Warning:</strong> You don't have enough credits. You need ${data.credits_needed} credits but have ${data.user_credits}.`;
+                                    document.getElementById('sendButton').parentNode.insertBefore(creditWarning, document.getElementById('sendButton'));
+                                } else {
+                                    creditWarning.innerHTML = `<strong>Warning:</strong> You don't have enough credits. You need ${data.credits_needed} credits but have ${data.user_credits}.`;
+                                }
+                            } else {
+                                // Remove warning if it exists
+                                const creditWarning = document.getElementById('credit-warning');
+                                if (creditWarning) {
+                                    creditWarning.remove();
+                                }
+                            }
+                            
+                            console.log('API credits calculation:', data);
                         }
-                        
-                        console.log('API credits calculation:', data);
                     })
                     .catch(error => {
                         console.error('Error calculating credits:', error);

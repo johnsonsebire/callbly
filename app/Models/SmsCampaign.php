@@ -93,9 +93,9 @@ class SmsCampaign extends Model
             ->first();
 
         $this->update([
-            'recipients_count' => $metrics->total_count,
-            'delivered_count' => $metrics->delivered_count,
-            'failed_count' => $metrics->failed_count,
+            'recipients_count' => $metrics->total_count ?? 0,
+            'delivered_count' => $metrics->delivered_count ?? 0,
+            'failed_count' => $metrics->failed_count ?? 0,
             'credits_used' => $this->calculateCreditsUsed()
         ]);
     }

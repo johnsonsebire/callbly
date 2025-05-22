@@ -149,6 +149,7 @@ class SmsController extends Controller
             'sender_name' => 'required|string|exists:sender_names,name',
             'name' => 'required|string|max:255',
             'scheduled_at' => 'nullable|date|after:now',
+            'campaign_id' => 'nullable|integer|exists:sms_campaigns,id', // Add campaign_id parameter
         ]);
 
         if ($validator->fails()) {
@@ -188,16 +189,36 @@ class SmsController extends Controller
                 ], 400);
             }
 
-            // Create SMS campaign
-            $campaign = SmsCampaign::create([
-                'user_id' => $user->id,
-                'name' => $request->name,
-                'message' => $request->message,
-                'sender_name' => $request->sender_name,
-                'status' => 'processing',
-                'recipients_count' => $recipientsCount,
-                'scheduled_at' => $request->scheduled_at,
-            ]);
+            // Check if we should use an existing campaign or create a new one
+            if ($request->has('campaign_id')) {
+                $campaign = SmsCampaign::where('id', $request->campaign_id)
+                    ->where('user_id', $user->id)
+                    ->first();
+                
+                if (!$campaign) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Campaign not found or does not belong to user'
+                    ], 400);
+                }
+                
+                // Update campaign with new details if needed
+                $campaign->update([
+                    'status' => 'processing',
+                    'recipients_count' => $recipientsCount,
+                ]);
+            } else {
+                // Create new SMS campaign
+                $campaign = SmsCampaign::create([
+                    'user_id' => $user->id,
+                    'name' => $request->name,
+                    'message' => $request->message,
+                    'sender_name' => $request->sender_name,
+                    'status' => 'processing',
+                    'recipients_count' => $recipientsCount,
+                    'scheduled_at' => $request->scheduled_at,
+                ]);
+            }
 
             // Send SMS via service (this might be processed as a queue job for large batches)
             $result = $this->smsService->sendBulk(

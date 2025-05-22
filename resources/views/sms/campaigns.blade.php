@@ -59,12 +59,12 @@ use Illuminate\Support\Str;
                                                 <td>{{ $campaign->id }}</td>
                                                 <td>
                                                     <div class="d-flex flex-column">
-                                                        <span class="text-dark fw-bold mb-1">{{ Str::limit($campaign->title, 30) }}</span>
+                                                        <span class="text-dark fw-bold mb-1">{{ Str::limit($campaign->name, 30) }}</span>
                                                         <span class="text-muted fw-semibold d-block fs-7">{{ Str::limit($campaign->message, 50) }}</span>
                                                     </div>
                                                 </td>
                                                 <td>{{ $campaign->sender_name }}</td>
-                                                <td>{{ $campaign->recipient_count }}</td>
+                                                <td>{{ $campaign->recipients_count }}</td>
                                                 <td>
                                                     <span class="badge badge-light-{{ $campaign->status == 'sent' ? 'success' : ($campaign->status == 'failed' ? 'danger' : 'warning') }} fs-7 fw-bold">
                                                         {{ ucfirst($campaign->status) }}

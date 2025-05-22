@@ -365,18 +365,43 @@ class SmsService
                 $failedCount = $totalRecipients;
             }
             
-            // Update the campaign statistics
-            $campaign->delivered_count += $deliveredCount;
-            $campaign->failed_count += $failedCount;
+            // Calculate the actual metrics from the recipients
+            $metrics = $campaign->recipients()
+                ->selectRaw('
+                    COUNT(*) as total_count,
+                    SUM(CASE WHEN status = "delivered" THEN 1 ELSE 0 END) as delivered_count,
+                    SUM(CASE WHEN status = "failed" THEN 1 ELSE 0 END) as failed_count,
+                    SUM(CASE WHEN status = "sent" THEN 1 ELSE 0 END) as sent_count,
+                    SUM(CASE WHEN status = "pending" THEN 1 ELSE 0 END) as pending_count
+                ')
+                ->first();
+            
+            // Update the campaign with the actual counts from the database
+            $campaign->recipients_count = $metrics->total_count ?? $campaign->recipients_count;
+            $campaign->delivered_count = $metrics->delivered_count ?? 0;
+            $campaign->failed_count = $metrics->failed_count ?? 0;
             
             // Update credits used if available
             if (isset($result['credits_used'])) {
                 $campaign->credits_used = $result['credits_used'];
+            } else {
+                // Calculate credits used based on message parts and recipient count
+                $messageLength = mb_strlen($campaign->message);
+                $hasUnicode = preg_match('/[\x{0080}-\x{FFFF}]/u', $campaign->message);
+                
+                if ($hasUnicode) {
+                    $parts = $messageLength <= 70 ? 1 : ceil(($messageLength - 70) / 67) + 1;
+                } else {
+                    $parts = $messageLength <= 160 ? 1 : ceil(($messageLength - 160) / 153) + 1;
+                }
+                
+                $campaign->credits_used = $parts * $campaign->recipients_count;
             }
             
             // Mark completion time if all messages are processed
-            if ($campaign->delivered_count + $campaign->failed_count >= $campaign->recipients_count) {
+            if (($metrics->delivered_count + $metrics->failed_count) >= $campaign->recipients_count) {
                 $campaign->completed_at = now();
+                $campaign->status = 'completed';
             }
             
             // Save the campaign
@@ -384,6 +409,7 @@ class SmsService
             
             Log::info('Campaign statistics updated', [
                 'campaign_id' => $campaignId,
+                'total_recipients' => $campaign->recipients_count,
                 'delivered_count' => $campaign->delivered_count,
                 'failed_count' => $campaign->failed_count,
                 'credits_used' => $campaign->credits_used
