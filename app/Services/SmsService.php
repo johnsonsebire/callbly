@@ -88,7 +88,7 @@ class SmsService
     }
 
     /**
-     * Send bulk SMS messages.
+     * Send bulk SMS messages with template variable replacement.
      *
      * @param array $recipients
      * @param string $message
@@ -100,41 +100,98 @@ class SmsService
     {
         try {
             $reference = 'BULK_SMS_' . Str::uuid()->toString();
+            $campaign = \App\Models\SmsCampaign::find($campaignId);
+            $user = $campaign->user;
             
-            // Format all phone numbers correctly
-            $formattedRecipients = array_map([$this, 'formatPhoneNumber'], $recipients);
+            // Track success metrics
+            $totalSent = 0;
+            $totalFailed = 0;
             
-            // Use the configured SMS provider interface
-            $result = $this->provider->sendBulkSms($formattedRecipients, $message, $senderName);
+            // Get contacts associated with these phone numbers for personalization
+            $phoneNumbers = array_map([$this, 'formatPhoneNumber'], $recipients);
+            $contacts = $user->contacts()->whereIn('phone_number', $phoneNumbers)->get()->keyBy('phone_number');
             
-            // Log campaign info with the result for tracking
-            Log::info('Bulk SMS sent via provider', [
+            // Log personalization info
+            Log::info('SMS personalization data', [
                 'campaign_id' => $campaignId,
-                'recipients_count' => count($formattedRecipients),
-                'sender' => $senderName,
-                'reference' => $reference,
-                'provider_response' => $result
+                'has_contacts_for_personalization' => $contacts->count() > 0,
+                'contacts_found' => $contacts->count(),
+                'recipients_total' => count($recipients)
             ]);
             
-            // Create recipient records if campaign ID is provided
-            if ($campaignId > 0) {
-                // Create recipient records for all recipients
-                foreach ($formattedRecipients as $recipient) {
-                    $this->createSmsRecipient($campaignId, $recipient, $result);
+            // Send individually for personalization if needed
+            foreach ($recipients as $recipient) {
+                try {
+                    $formattedNumber = $this->formatPhoneNumber($recipient);
+                    $contact = $contacts->get($formattedNumber);
+                    $personalizedMessage = $message;
+                    
+                    // Personalize message if contact exists
+                    if ($contact) {
+                        $personalizedMessage = $this->replaceTemplateVariables($message, $contact);
+                    }
+                    
+                    // Send individual message
+                    $result = $this->provider->sendSms($formattedNumber, $personalizedMessage, $senderName);
+                    
+                    // Create recipient record
+                    $this->createSmsRecipient(
+                        $campaignId, 
+                        $formattedNumber, 
+                        $result, 
+                        $contact->id ?? null
+                    );
+                    
+                    if ($result['success'] ?? false) {
+                        $totalSent++;
+                    } else {
+                        $totalFailed++;
+                    }
+                    
+                } catch (\Exception $e) {
+                    // Log individual sending error but continue with others
+                    Log::error('Error sending to individual recipient', [
+                        'recipient' => $recipient,
+                        'campaign_id' => $campaignId,
+                        'error' => $e->getMessage()
+                    ]);
+                    
+                    // Record failed recipient
+                    $this->createSmsRecipient($campaignId, $recipient, [
+                        'success' => false,
+                        'error' => $e->getMessage(),
+                        'status' => 'failed'
+                    ]);
+                    
+                    $totalFailed++;
                 }
-                
-                // Update campaign statistics
-                $this->updateCampaignStatistics($campaignId, $result, count($formattedRecipients));
             }
             
+            // Log campaign results
+            Log::info('Bulk SMS campaign completed', [
+                'campaign_id' => $campaignId,
+                'recipients_count' => count($recipients),
+                'sent_count' => $totalSent,
+                'failed_count' => $totalFailed,
+                'sender' => $senderName,
+                'reference' => $reference
+            ]);
+            
+            // Update campaign statistics
+            $this->updateCampaignStatistics($campaignId, [
+                'success' => $totalSent > 0,
+                'total_sent' => $totalSent,
+                'total_failed' => $totalFailed
+            ], count($recipients));
+            
             return [
-                'success' => $result['success'] ?? false,
+                'success' => $totalSent > 0,
                 'reference' => $reference,
-                'batch_id' => $result['batch_id'] ?? null,
-                'completed' => $result['status'] === 'completed',
-                'total' => count($formattedRecipients),
-                'delivered_count' => $result['total_sent'] ?? 0,
-                'failed_count' => (count($formattedRecipients) - ($result['total_sent'] ?? 0)),
+                'batch_id' => $reference,
+                'completed' => true,
+                'total' => count($recipients),
+                'delivered_count' => $totalSent,
+                'failed_count' => $totalFailed,
             ];
         } catch (\Exception $e) {
             Log::error('Bulk SMS error: ' . $e->getMessage(), [
@@ -281,6 +338,45 @@ class SmsService
         // Remove leading zeros if they exist
         $cleaned = ltrim($cleaned, '0');
         return '233' . $cleaned;
+    }
+
+    /**
+     * Replace template variables in a message with contact data.
+     *
+     * @param string $message The message template with variables
+     * @param \App\Models\Contact $contact The contact with data to use for replacement
+     * @return string The message with variables replaced
+     */
+    protected function replaceTemplateVariables(string $message, $contact): string
+    {
+        if (!$contact) {
+            return $message;
+        }
+        
+        $variables = [
+            'name' => $contact->name ?? '',
+            'first_name' => $contact->first_name ?? '',
+            'last_name' => $contact->last_name ?? '',
+            'dob' => $contact->date_of_birth ? date('d/m/Y', strtotime($contact->date_of_birth)) : '',
+            'email' => $contact->email ?? '',
+            'phone' => $contact->phone_number ?? '',
+            'company' => $contact->company ?? '',
+        ];
+        
+        Log::info('Replacing template variables for contact', [
+            'contact_id' => $contact->id,
+            'variables_available' => array_keys($variables)
+        ]);
+        
+        // Replace variables in the format {variable_name}
+        return preg_replace_callback(
+            '/\{([a-z_]+)\}/i',
+            function ($matches) use ($variables) {
+                $key = strtolower($matches[1]);
+                return $variables[$key] ?? $matches[0]; // Return original if variable not found
+            },
+            $message
+        );
     }
 
     /**

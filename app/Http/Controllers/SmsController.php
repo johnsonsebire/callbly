@@ -145,11 +145,41 @@ class SmsController extends Controller
         ];
     }
 
-    protected function replaceTemplateVariables(string $message, array $variables): string
+    /**
+     * Replace template variables with actual contact data.
+     *
+     * @param string $message The message template with variables
+     * @param \App\Models\Contact $contact The contact with data to use for replacement
+     * @return string The message with variables replaced
+     */
+    protected function replaceTemplateVariables(string $message, $contact = null): string
     {
-        return str_replace(
-            array_map(fn($key) => '{'.$key.'}', array_keys($variables)),
-            array_values($variables),
+        if (!$contact) {
+            return $message;
+        }
+        
+        $variables = [
+            'name' => $contact->name ?? '',
+            'first_name' => $contact->first_name ?? '',
+            'last_name' => $contact->last_name ?? '',
+            'dob' => $contact->date_of_birth ? date('d/m/Y', strtotime($contact->date_of_birth)) : '',
+            'email' => $contact->email ?? '',
+            'phone' => $contact->phone_number ?? '',
+            'company' => $contact->company ?? '',
+        ];
+        
+        \Illuminate\Support\Facades\Log::info('Replacing template variables', [
+            'original_message' => $message,
+            'variables' => $variables
+        ]);
+        
+        // Replace variables in the format {variable_name}
+        return preg_replace_callback(
+            '/\{([a-z_]+)\}/i',
+            function ($matches) use ($variables) {
+                $key = strtolower($matches[1]);
+                return $variables[$key] ?? $matches[0]; // Return original if variable not found
+            },
             $message
         );
     }
