@@ -10,8 +10,9 @@
                         <div class="fw-bold d-flex align-items-center fs-5">
                             {{ Auth::user()->name }}
                         </div><div class="card-title"></div><div class="card-title"></div>
-                        <a href="#" class="fw-semibold text-muted text-hover-primary fs-7">
-                            {{ Auth::user()->email }}
+                        <a href="javascript:void(0)" onclick="copyToClipboard('{{ Auth::user()->email }}')" class="fw-semibold text-muted text-hover-primary fs-7 d-flex align-items-center" data-bs-toggle="tooltip" data-bs-placement="top" title="Click to copy">
+                            {{ strlen(Auth::user()->email) > 27 ? substr(Auth::user()->email, 0, 24).'...' : Auth::user()->email }}
+                            <i class="ki-outline ki-copy ms-1 fs-8"></i>
                         </a>
                     </div><div class="card-title"></div><div class="card-title"></div>
                 </div><div class="card-title"></div><div class="card-title"></div>
@@ -40,3 +41,41 @@
         </div><div class="card-title"></div><div class="card-title"></div>
     </div><div class="card-title"></div></div>
 @endauth
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Create a temporary tooltip message
+        const tooltip = document.createElement('div');
+        tooltip.textContent = 'Email copied!';
+        tooltip.style.position = 'fixed';
+        tooltip.style.padding = '5px 10px';
+        tooltip.style.background = '#0095E8';
+        tooltip.style.color = 'white';
+        tooltip.style.borderRadius = '4px';
+        tooltip.style.fontSize = '12px';
+        tooltip.style.zIndex = '10000';
+        
+        // Position near the cursor
+        const event = window.event;
+        if (event) {
+            tooltip.style.top = (event.clientY - 40) + 'px';
+            tooltip.style.left = event.clientX + 'px';
+        } else {
+            tooltip.style.top = '50px';
+            tooltip.style.right = '50px';
+        }
+        
+        document.body.appendChild(tooltip);
+        
+        // Remove after 2 seconds
+        setTimeout(() => {
+            tooltip.style.opacity = '0';
+            tooltip.style.transition = 'opacity 0.5s';
+            setTimeout(() => document.body.removeChild(tooltip), 500);
+        }, 1500);
+    }).catch(function() {
+        console.error('Failed to copy text to clipboard');
+    });
+}
+</script>

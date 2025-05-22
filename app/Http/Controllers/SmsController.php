@@ -14,42 +14,24 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 
 class SmsController extends Controller
 {
-    protected SmsProviderInterface $smsProvider;
-    protected SmsWithCurrencyService $smsWithCurrency;
-    protected CurrencyService $currencyService;
-
-    /**
-     * Create a new controller instance.
-     */
     public function __construct(
-        SmsProviderInterface $smsProvider, 
-        SmsWithCurrencyService $smsWithCurrency,
-        CurrencyService $currencyService
-    ) {
-        $this->smsProvider = $smsProvider;
-        $this->smsWithCurrency = $smsWithCurrency;
-        $this->currencyService = $currencyService;
-    }
+        protected SmsProviderInterface $smsProvider,
+        protected SmsWithCurrencyService $smsWithCurrency,
+        protected CurrencyService $currencyService
+    ) {}
 
-    /**
-     * Display the SMS dashboard.
-     *
-     * @return \Illuminate\View\View
-     */
-    public function dashboard()
+    public function dashboard(): View 
     {
         return view('sms.dashboard');
     }
-    
-    /**
-     * Show the form to compose a new SMS.
-     *
-     * @return \Illuminate\View\View
-     */
-    public function compose(Request $request)
+
+    public function compose(Request $request): View
     {
         $user = Auth::user();
         $senderNames = $user->senderNames()->where('status', 'approved')->get();
@@ -57,7 +39,6 @@ class SmsController extends Controller
         $templates = $user->smsTemplates()->latest()->get();
         $totalContactsCount = $user->contacts()->count();
         
-        // Handle template selection from templates list
         $templateContent = null;
         if ($request->has('template')) {
             $template = $user->smsTemplates()->find($request->template);
@@ -73,556 +54,106 @@ class SmsController extends Controller
             'totalContactsCount'
         ))->with('template_content', $templateContent);
     }
-    
-    /**
-     * Send an SMS message.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function send(Request $request)
+
+    public function campaignDetails($id): View
     {
-        $request->validate([
-            'recipients' => 'nullable|string',
-            'contact_group_ids' => 'nullable|array',
-            'contact_group_ids.*' => 'exists:contact_groups,id',
-            'send_to_all_contacts' => 'nullable|boolean',
-            'message' => 'required|string|max:918', // Allow for multi-part SMS
-            'sender_id' => 'required|string|exists:sender_names,name',
+        $campaign = SmsCampaign::with(['recipients' => function($query) {
+            $query->select('id', 'campaign_id', 'phone_number', 'status', 'created_at', 'delivered_at', 'error_message');
+        }])->findOrFail($id);
+
+        $messageLength = mb_strlen($campaign->message);
+        $hasUnicode = preg_match('/[\x{0080}-\x{FFFF}]/u', $campaign->message);
+        
+        $parts = $this->calculateMessageParts($messageLength, $hasUnicode);
+
+        $metrics = $this->calculateCampaignMetrics($campaign);
+        $totalCreditsUsed = $parts * $metrics['totalRecipients'];
+
+        $campaign->update([
+            'recipients_count' => $metrics['totalRecipients'],
+            'delivered_count' => $metrics['deliveredCount'],
+            'failed_count' => $metrics['failedCount'],
+            'credits_used' => $totalCreditsUsed
         ]);
-        
-        if (empty($request->recipients) && empty($request->contact_group_ids) && empty($request->send_to_all_contacts)) {
-            return redirect()->back()->withInput()->withErrors([
-                'recipients' => 'You must specify at least one recipient, select contact groups, or choose to send to all contacts'
-            ]);
-        }
-        
-        $user = Auth::user();
-        $message = $request->message;
-        $senderId = $request->sender_id;
-        $recipients = [];
-        
-        // Process manual recipients
-        if (!empty($request->recipients)) {
-            $manualRecipients = array_filter(explode(',', str_replace(["\r\n", "\n", " "], ",", $request->recipients)));
-            $manualRecipients = array_map(function($number) {
-                return trim($number);
-            }, $manualRecipients);
-            $recipients = array_merge($recipients, $manualRecipients);
-        }
-        
-        // Process contacts from selected groups
-        if (!empty($request->contact_group_ids)) {
-            foreach ($request->contact_group_ids as $groupId) {
-                $group = $user->contactGroups()->find($groupId);
-                if ($group) {
-                    // Get contacts with properly qualified id column to avoid ambiguity
-                    $contactDetails = $group->contacts()
-                        ->select('contacts.id', 'contacts.first_name', 'contacts.last_name', 'contacts.phone_number')
-                        ->get();
-                    
-                    foreach ($contactDetails as $contact) {
-                        $recipients[] = [
-                            'phone_number' => $contact->phone_number,
-                            'contact_id' => $contact->id,
-                            'name' => trim($contact->first_name . ' ' . $contact->last_name)
-                        ];
-                    }
-                }
-            }
-        }
-        
-        // Process all contacts if selected
-        if ($request->send_to_all_contacts) {
-            $allContacts = $user->contacts()
-                ->select('contacts.id', 'contacts.first_name', 'contacts.last_name', 'contacts.phone_number')
-                ->get();
-            foreach ($allContacts as $contact) {
-                $recipients[] = [
-                    'phone_number' => $contact->phone_number,
-                    'contact_id' => $contact->id,
-                    'name' => trim($contact->first_name . ' ' . $contact->last_name)
-                ];
-            }
-        }
-        
-        // Process formatted recipients to standardize format
-        $formattedRecipients = [];
-        foreach ($recipients as $recipient) {
-            if (is_array($recipient)) {
-                $formattedRecipients[] = $recipient;
-            } else {
-                $formattedRecipients[] = [
-                    'phone_number' => $recipient,
-                    'contact_id' => null,
-                    'name' => '' // Unknown name for manually entered numbers
-                ];
-            }
-        }
-        
-        // Ensure only unique phone numbers
-        $uniqueRecipients = [];
-        $uniquePhoneNumbers = [];
-        foreach ($formattedRecipients as $recipient) {
-            if (!in_array($recipient['phone_number'], $uniquePhoneNumbers)) {
-                $uniquePhoneNumbers[] = $recipient['phone_number'];
-                $uniqueRecipients[] = $recipient;
-            }
-        }
-        
-        if (empty($uniquePhoneNumbers)) {
-            return redirect()->back()->withInput()->withErrors([
-                'recipients' => 'No valid recipients found'
-            ]);
-        }
-        
-        // Create campaign record
-        $campaign = new SmsCampaign();
-        $campaign->user_id = $user->id;
-        $campaign->name = $request->campaign_name ?? Str::limit($message, 30);
-        $campaign->message = $message;
-        $campaign->sender_name = $senderId;
-        $campaign->recipients_count = count($uniquePhoneNumbers);
-        $campaign->status = 'processing';
-        $campaign->save();
-        
-        try {
-            // Setup personalized messages for each recipient with template tags replaced
-            $personalizedMessages = [];
-            
-            foreach ($uniqueRecipients as $recipient) {
-                $personalizedMessage = $this->replaceTemplateVariables($message, [
-                    'name' => $recipient['name'],
-                    'company' => $user->company_name ?? config('app.name'),
-                    'date' => now()->format('F j, Y')
-                ]);
-                
-                $personalizedMessages[] = [
-                    'recipient' => $recipient['phone_number'],
-                    'message' => $personalizedMessage,
-                    'contact_id' => $recipient['contact_id']
-                ];
-            }
-            
-            // Use our currency-aware SMS service with personalized messages
-            $response = $this->smsWithCurrency->sendPersonalizedSms(
-                $user, 
-                $personalizedMessages, 
-                $senderId,
-                $campaign->id
-            );
-            
-            // Update campaign with response
-            $campaign->status = $response['success'] ? 'completed' : 'failed';
-            $campaign->provider_response = json_encode($response);
-            
-            if (isset($response['result'])) {
-                $campaign->provider_batch_id = $response['result']['batch_id'] ?? null;
-            }
-            
-            if (isset($response['cost_details'])) {
-                $campaign->credits_used = $response['cost_details']['total_credits'] ?? null;
-                $campaign->delivered_count = $response['success'] ? count($uniquePhoneNumbers) : 0; 
-            }
-            
-            $campaign->save();
-            
-            if ($response['success']) {
-                return redirect()->route('sms.campaigns')->with('success', 'SMS campaign has been sent successfully to ' . count($uniquePhoneNumbers) . ' recipients.');
-            } else {
-                return redirect()->route('sms.compose')->with('error', 'Failed to send SMS: ' . ($response['message'] ?? 'Unknown error'));
-            }
-            
-        } catch (\Exception $e) {
-            Log::error('SMS sending error: ' . $e->getMessage(), [
-                'campaign_id' => $campaign->id,
-                'user_id' => $user->id,
-                'recipients_count' => count($uniquePhoneNumbers),
-            ]);
-            
-            $campaign->status = 'failed';
-            $campaign->save();
-            
-            return redirect()->route('sms.compose')->with('error', 'An error occurred while sending your SMS: ' . $e->getMessage());
-        }
-    }
-    
-    /**
-     * Replace template variables in a message with actual values
-     *
-     * @param string $message The template message with variables
-     * @param array $variables The variables to replace [variable_name => value]
-     * @return string The message with variables replaced
-     */
-    protected function replaceTemplateVariables(string $message, array $variables): string
-    {
-        foreach ($variables as $key => $value) {
-            $message = str_replace('{'.$key.'}', $value, $message);
-        }
-        
-        return $message;
+
+        $recipients = $campaign->recipients()
+            ->when(request('status'), fn($query, $status) => $query->where('status', $status))
+            ->orderBy('created_at', 'desc')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('sms.campaign-details', [
+            'campaign' => $campaign,
+            'recipients' => $recipients,
+            'totalRecipients' => $metrics['totalRecipients'],
+            'deliveredCount' => $metrics['deliveredCount'],
+            'failedCount' => $metrics['failedCount'],
+            'pendingCount' => $metrics['pendingCount'],
+            'deliveredPercentage' => $metrics['deliveredPercentage'],
+            'failedPercentage' => $metrics['failedPercentage'],
+            'pendingPercentage' => $metrics['pendingPercentage'],
+            'totalCreditsUsed' => $totalCreditsUsed,
+            'parts' => $parts
+        ]);
     }
 
-    /**
-     * Show all SMS campaigns for the authenticated user.
-     *
-     * @return \Illuminate\View\View
-     */
-    public function campaigns()
+    public function credits(): View
     {
-        $campaigns = Auth::user()->smsCampaigns()->latest()->paginate(10);
-        return view('sms.campaigns', compact('campaigns'));
-    }
-    
-    /**
-     * Show details of a specific SMS campaign.
-     *
-     * @param  int  $id
-     * @return \Illuminate\View\View
-     */
-    public function campaignDetails($id)
-    {
-        $campaign = SmsCampaign::where('user_id', Auth::id())
-            ->findOrFail($id);
+        $user = Auth::user();
+        $smsCredits = $user->smsCredits ?? 0;
+        $currency = $user->currency ?? $this->currencyService->getDefaultCurrency();
+        
+        // Get credit purchase history if available
+        $creditPurchases = $user->creditPurchases ?? collect([]);
+        
+        // Get credit usage history
+        $campaigns = $user->smsCampaigns()
+            ->with('recipients')
+            ->select('id', 'name', 'created_at', 'credits_used')
+            ->latest()
+            ->take(5)
+            ->get();
             
-        // Get recipients with optional status filter
-        $query = $campaign->recipients();
-        
-        if (request()->has('status') && request('status')) {
-            $query->where('status', request('status'));
+        return view('sms.credits', compact(
+            'smsCredits',
+            'currency',
+            'creditPurchases',
+            'campaigns'
+        ));
+    }
+
+    protected function calculateMessageParts(int $messageLength, bool $hasUnicode): int
+    {
+        if ($hasUnicode) {
+            return $messageLength <= 70 ? 1 : ceil(($messageLength - 70) / 67) + 1;
         }
-        
-        $recipients = $query->latest()->paginate(15);
-        
-        // Calculate delivery statistics
+        return $messageLength <= 160 ? 1 : ceil(($messageLength - 160) / 153) + 1;
+    }
+
+    protected function calculateCampaignMetrics(SmsCampaign $campaign): array
+    {
+        $totalRecipients = $campaign->recipients()->count();
         $deliveredCount = $campaign->recipients()->where('status', 'delivered')->count();
         $failedCount = $campaign->recipients()->where('status', 'failed')->count();
         $pendingCount = $campaign->recipients()->where('status', 'pending')->count();
-            
-        return view('sms.campaign-details', compact(
-            'campaign', 
-            'recipients',
-            'deliveredCount',
-            'failedCount',
-            'pendingCount'
-        ));
-    }
-    
-    /**
-     * Show sender names management page.
-     *
-     * @return \Illuminate\View\View
-     */
-    public function senderNames()
-    {
-        $senderNames = Auth::user()->senderNames()->latest()->get();
-        return view('sms.sender-names', compact('senderNames'));
-    }
-    
-    /**
-     * Store a new sender name.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function storeSenderName(Request $request)
-    {
-        $maxLength = config('sms.sender_name.max_length', 11);
-        $minLength = config('sms.sender_name.min_length', 3);
-        
-        $request->validate([
-            'name' => "required|string|min:{$minLength}|max:{$maxLength}|alpha_num|unique:sender_names,name,NULL,id,user_id," . Auth::id(),
-        ]);
-        
-        $senderName = new SenderName();
-        $senderName->user_id = Auth::id();
-        $senderName->name = $request->name; // Preserve the original case
-        $senderName->status = config('sms.sender_name.require_approval', true) ? 'pending' : 'approved';
-        $senderName->save();
-        
-        return redirect()->route('sms.sender-names')->with('success', 'Sender name has been submitted successfully.');
-    }
-    
-    /**
-     * Show credit balance page.
-     *
-     * @return \Illuminate\View\View
-     */
-    public function credits()
-    {
-        $user = Auth::user();
-        $billingTier = $user->billingTier;
-        return view('sms.credits', compact('user', 'billingTier'));
-    }
-    
-    /**
-     * Calculate credits needed for a message.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function calculateCredits(Request $request)
-    {
-        $request->validate([
-            'message' => 'required|string',
-            'recipients' => 'required|string',
-        ]);
-        
-        $user = Auth::user();
-        $message = $request->message;
-        $recipients = array_filter(explode(',', str_replace(["\r\n", "\n", " "], ",", $request->recipients)));
-        $recipientCount = count($recipients);
-        
-        $smsCount = $this->smsWithCurrency->calculateSmsPartsCount($message);
-        $totalCredits = $this->smsWithCurrency->calculateCreditsNeeded($message, $recipientCount);
-        
-        // Calculate cost using the user's billing tier and currency
-        $costDetails = $this->smsWithCurrency->calculateSmsCost($user, $smsCount, $recipientCount);
-        
-        return response()->json([
-            'credits_needed' => $totalCredits,
-            'recipient_count' => $recipientCount,
-            'sms_parts' => $smsCount,
-            'cost' => $costDetails['user_cost'],
-            'formatted_cost' => $costDetails['formatted_cost'],
-            'rate' => $costDetails['sms_rate'],
-            'billing_tier' => $costDetails['billing_tier'],
-            'currency' => $user->currency->code,
-            'currency_symbol' => $user->currency->symbol
-        ]);
-    }
-    
-    /**
-     * Show user's current SMS rate and billing tier
-     * 
-     * @return \Illuminate\View\View
-     */
-    public function showBillingTier()
-    {
-        $user = Auth::user();
-        $currentTier = $user->billingTier;
-        $userCurrency = $user->currency;
-        
-        // Format SMS rate in user's currency
-        $smsRate = $user->getSmsRate();
-        $formattedSmsRate = $userCurrency->symbol . number_format($smsRate, 3);
-        
-        // Get all billing tiers to display in the table
-        $allTiers = \App\Models\BillingTier::orderBy('price_per_sms', 'desc')->get();
-        
-        return view('sms.billing-tier', compact(
-            'user', 
-            'currentTier', 
-            'userCurrency', 
-            'formattedSmsRate', 
-            'allTiers'
-        ));
-    }
-    
-    /**
-     * Show the SMS messages page.
-     *
-     * @return \Illuminate\View\View
-     */
-    public function messages()
-    {
-        $user = Auth::user();
-        $messages = $user->smsCampaigns()
-            ->with(['recipients' => function ($query) {
-                $query->latest();
-            }])
-            ->latest()
-            ->paginate(15);
-            
-        return view('sms.messages', compact('messages'));
-    }
 
-    /**
-     * Show SMS templates list.
-     *
-     * @return \Illuminate\View\View
-     */
-    public function templates()
-    {
-        $user = Auth::user();
-        $templates = $user->smsTemplates()->latest()->paginate(10);
-        return view('sms.templates.index', compact('templates'));
-    }
-
-    /**
-     * Show form to create a new SMS template.
-     *
-     * @return \Illuminate\View\View
-     */
-    public function createTemplate()
-    {
-        return view('sms.templates.create');
-    }
-
-    /**
-     * Store a new SMS template.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function storeTemplate(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'content' => 'required|string|max:918',
-            'description' => 'nullable|string|max:1000',
-        ]);
-
-        $template = new SmsTemplate();
-        $template->user_id = Auth::id();
-        $template->name = $request->name;
-        $template->content = $request->content;
-        $template->description = $request->description;
-        $template->save();
-
-        return redirect()->route('sms.templates')
-            ->with('success', 'Template created successfully.');
-    }
-
-    /**
-     * Show form to edit an SMS template.
-     *
-     * @param  int  $id
-     * @return \Illuminate\View\View
-     */
-    public function editTemplate($id)
-    {
-        $template = SmsTemplate::where('user_id', Auth::id())->findOrFail($id);
-        return view('sms.templates.edit', compact('template'));
-    }
-
-    /**
-     * Update an SMS template.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function updateTemplate(Request $request, $id)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'content' => 'required|string|max:918',
-            'description' => 'nullable|string|max:1000',
-        ]);
-
-        $template = SmsTemplate::where('user_id', Auth::id())->findOrFail($id);
-        $template->name = $request->name;
-        $template->content = $request->content;
-        $template->description = $request->description;
-        $template->save();
-
-        return redirect()->route('sms.templates')
-            ->with('success', 'Template updated successfully.');
-    }
-
-    /**
-     * Delete an SMS template.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function deleteTemplate($id)
-    {
-        $template = SmsTemplate::where('user_id', Auth::id())->findOrFail($id);
-        $template->delete();
-
-        return redirect()->route('sms.templates')
-            ->with('success', 'Template deleted successfully.');
-    }
-
-    /**
-     * Download a report for a specific SMS campaign.
-     *
-     * @param  int  $id
-     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
-     */
-    public function downloadReport($id)
-    {
-        // Get the campaign and make sure it belongs to the authenticated user
-        $campaign = SmsCampaign::where('user_id', Auth::id())->findOrFail($id);
-        
-        // Get all recipients for this campaign
-        $recipients = $campaign->recipients()->get();
-        
-        // Create CSV data
-        $csvData = [
-            ['Campaign ID', 'Campaign Name', 'Sender Name', 'Phone Number', 'Status', 'Sent Time', 'Delivered Time', 'Error Message']
+        return [
+            'totalRecipients' => $totalRecipients,
+            'deliveredCount' => $deliveredCount,
+            'failedCount' => $failedCount,
+            'pendingCount' => $pendingCount,
+            'deliveredPercentage' => $totalRecipients > 0 ? round(($deliveredCount / $totalRecipients) * 100) : 0,
+            'failedPercentage' => $totalRecipients > 0 ? round(($failedCount / $totalRecipients) * 100) : 0,
+            'pendingPercentage' => $totalRecipients > 0 ? round(($pendingCount / $totalRecipients) * 100) : 0
         ];
-        
-        foreach ($recipients as $recipient) {
-            $csvData[] = [
-                $campaign->id,
-                $campaign->name,
-                $campaign->sender_name,
-                $recipient->phone_number,
-                ucfirst($recipient->status),
-                $recipient->created_at ? $recipient->created_at->format('Y-m-d H:i:s') : 'N/A',
-                $recipient->delivered_at ? $recipient->delivered_at->format('Y-m-d H:i:s') : 'N/A',
-                $recipient->error_message ?? 'N/A'
-            ];
-        }
-        
-        // Create a temporary file
-        $fileName = 'sms-campaign-' . $campaign->id . '-' . date('Y-m-d') . '.csv';
-        $tempFile = tempnam(sys_get_temp_dir(), 'sms_report_');
-        $file = fopen($tempFile, 'w');
-        
-        foreach ($csvData as $row) {
-            fputcsv($file, $row);
-        }
-        
-        fclose($file);
-        
-        // Return the file for download
-        return response()->download($tempFile, $fileName, [
-            'Content-Type' => 'text/csv',
-        ])->deleteFileAfterSend(true);
-    }
-    
-    /**
-     * Duplicate an existing SMS campaign.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function duplicateCampaign($id)
-    {
-        // Get the original campaign
-        $original = SmsCampaign::where('user_id', Auth::id())->findOrFail($id);
-        
-        // Create a duplicate campaign
-        $duplicate = $original->replicate();
-        $duplicate->name = $original->name . ' (Copy)';
-        $duplicate->status = 'pending'; // Changed from 'draft' to 'pending' to match the allowed ENUM values
-        $duplicate->created_at = now();
-        $duplicate->updated_at = now();
-        $duplicate->provider_batch_id = null;
-        $duplicate->provider_response = null;
-        $duplicate->save();
-        
-        return redirect()->route('sms.campaigns')
-            ->with('success', 'Campaign duplicated successfully. You can now edit and send the duplicated campaign.');
     }
 
-    /**
-     * Get template content by ID.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function getTemplateContent($id)
+    protected function replaceTemplateVariables(string $message, array $variables): string
     {
-        $template = SmsTemplate::where('user_id', Auth::id())->findOrFail($id);
-        
-        return response()->json([
-            'success' => true,
-            'content' => $template->content
-        ]);
+        return str_replace(
+            array_map(fn($key) => '{'.$key.'}', array_keys($variables)),
+            array_values($variables),
+            $message
+        );
     }
 }

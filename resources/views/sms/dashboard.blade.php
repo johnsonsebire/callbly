@@ -35,7 +35,7 @@
                                 </div>
                                 <div class="mt-3">
                                     <a href="{{ route('sms.credits') }}" class="btn btn-sm btn-outline-primary">View Details</a>
-                                    <a href="#" class="btn btn-sm btn-primary">Buy Credits</a>
+                                    <a href="{{ route('sms.credits') }}" class="btn btn-sm btn-primary">Buy Credits</a>
                                 </div>
                             </div>
                             <!--end::Card body-->

@@ -59,4 +59,80 @@ class SmsCampaign extends Model
     {
         return $this->hasMany(SmsRecipient::class, 'campaign_id');
     }
+
+    /**
+     * Calculate the total credits used for this campaign
+     */
+    public function calculateCreditsUsed(): int
+    {
+        $messageLength = mb_strlen($this->message);
+        $hasUnicode = preg_match('/[\x{0080}-\x{FFFF}]/u', $this->message);
+        
+        // Calculate message parts
+        if ($hasUnicode) {
+            $parts = $messageLength <= 70 ? 1 : ceil(($messageLength - 70) / 67) + 1;
+        } else {
+            $parts = $messageLength <= 160 ? 1 : ceil(($messageLength - 160) / 153) + 1;
+        }
+        
+        return $parts * $this->recipients_count;
+    }
+
+    /**
+     * Update campaign metrics from recipients
+     */
+    public function updateMetrics(): void
+    {
+        $metrics = $this->recipients()
+            ->selectRaw('
+                COUNT(*) as total_count,
+                SUM(CASE WHEN status = "delivered" THEN 1 ELSE 0 END) as delivered_count,
+                SUM(CASE WHEN status = "failed" THEN 1 ELSE 0 END) as failed_count,
+                SUM(CASE WHEN status = "pending" THEN 1 ELSE 0 END) as pending_count
+            ')
+            ->first();
+
+        $this->update([
+            'recipients_count' => $metrics->total_count,
+            'delivered_count' => $metrics->delivered_count,
+            'failed_count' => $metrics->failed_count,
+            'credits_used' => $this->calculateCreditsUsed()
+        ]);
+    }
+
+    /**
+     * Get the delivery success rate as a percentage
+     */
+    public function getSuccessRate(): float
+    {
+        if ($this->recipients_count === 0) return 0;
+        return round(($this->delivered_count / $this->recipients_count) * 100, 2);
+    }
+
+    /**
+     * Get the delivery failure rate as a percentage
+     */
+    public function getFailureRate(): float
+    {
+        if ($this->recipients_count === 0) return 0;
+        return round(($this->failed_count / $this->recipients_count) * 100, 2);
+    }
+
+    /**
+     * Get the pending rate as a percentage
+     */
+    public function getPendingRate(): float
+    {
+        if ($this->recipients_count === 0) return 0;
+        $pendingCount = $this->recipients_count - ($this->delivered_count + $this->failed_count);
+        return round(($pendingCount / $this->recipients_count) * 100, 2);
+    }
+
+    /**
+     * Get total credits used for the campaign
+     */
+    public function getTotalCreditsUsed(): int
+    {
+        return $this->credits_used ?? $this->calculateCreditsUsed();
+    }
 }
