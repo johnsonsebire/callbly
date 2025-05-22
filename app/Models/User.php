@@ -255,10 +255,17 @@ class User extends Authenticatable implements MustVerifyEmail
     public function wallet()
     {
         return $this->hasOne(Wallet::class)->withDefault(function ($wallet, $user) {
+            // Get default currency if user doesn't have one
+            $currencyId = $user->currency_id;
+            if (!$currencyId) {
+                $defaultCurrency = Currency::getDefaultCurrency();
+                $currencyId = $defaultCurrency->id;
+            }
+            
             // Create a default wallet if none exists
             return Wallet::create([
                 'user_id' => $user->id,
-                'currency_id' => $user->currency_id,
+                'currency_id' => $currencyId,
                 'balance' => 0.00,
             ]);
         });

@@ -1,8 +1,13 @@
 <?php
 
+use App\Http\Controllers\Api\AffiliateController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ContactCenterController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\ServicePlanController;
 use App\Http\Controllers\Api\SmsController;
 use App\Http\Controllers\Api\UssdController;
 use App\Http\Controllers\Api\VirtualNumberController;
@@ -28,6 +33,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // User profile routes
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    
+    // Dashboard overview data
+    Route::get('/dashboard', [DashboardController::class, 'index']);
     
     // SMS routes
     Route::prefix('sms')->group(function () {
@@ -80,6 +88,37 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/calls/{id}/recording', [ContactCenterController::class, 'getCallRecording']);
         Route::post('/calls/{id}/end', [ContactCenterController::class, 'endCall']);
     });
+    
+    // Service plans routes
+    Route::prefix('service-plans')->group(function () {
+        Route::get('/', [ServicePlanController::class, 'index']);
+        Route::get('/{id}', [ServicePlanController::class, 'show']);
+        Route::post('/{id}/purchase', [ServicePlanController::class, 'purchase']);
+    });
+    
+    // Order history routes
+    Route::prefix('orders')->group(function () {
+        Route::get('/', [OrderController::class, 'index']);
+        Route::get('/{id}', [OrderController::class, 'show']);
+        Route::get('/{id}/invoice', [OrderController::class, 'downloadInvoice']);
+    });
+    
+    // Affiliate system routes
+    Route::prefix('affiliate')->group(function () {
+        Route::get('/dashboard', [AffiliateController::class, 'dashboard']);
+        Route::post('/referral-link', [AffiliateController::class, 'generateReferralLink']);
+        Route::get('/commissions', [AffiliateController::class, 'getCommissions']);
+        Route::post('/payout-request', [AffiliateController::class, 'requestPayout']);
+        Route::get('/payout-history', [AffiliateController::class, 'getPayoutHistory']);
+    });
+    
+    // Push notification settings
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'getNotifications']);
+        Route::post('/register-device', [NotificationController::class, 'registerDevice']);
+        Route::put('/settings', [NotificationController::class, 'updateSettings']);
+        Route::post('/mark-read', [NotificationController::class, 'markAsRead']);
+    });
 });
 
 // Webhook routes (no auth required)
@@ -101,3 +140,6 @@ Route::prefix('webhooks')->group(function () {
 
 // Payment callback routes
 Route::get('/payment/callback/{reference}', [PaymentController::class, 'handleCallback'])->name('payment.callback');
+
+// Device authentication status - for biometric auth check
+Route::middleware('auth:sanctum')->post('/auth/verify-device', [AuthController::class, 'verifyDevice']);

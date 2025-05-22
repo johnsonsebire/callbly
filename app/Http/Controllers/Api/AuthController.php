@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserDevice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -142,6 +143,53 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Successfully logged out'
+        ]);
+    }
+
+    /**
+     * Verify device for biometric authentication.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function verifyDevice(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'device_id' => 'required|string',
+            'device_name' => 'required|string',
+            'biometric_enabled' => 'required|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $user = $request->user();
+        
+        // Find or create device record
+        $device = UserDevice::updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'device_id' => $request->device_id,
+            ],
+            [
+                'device_name' => $request->device_name,
+                'biometric_enabled' => $request->biometric_enabled,
+                'last_authenticated_at' => now(),
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Device verified successfully',
+            'data' => [
+                'device' => $device,
+                'biometric_enabled' => $device->biometric_enabled
+            ]
         ]);
     }
 }
