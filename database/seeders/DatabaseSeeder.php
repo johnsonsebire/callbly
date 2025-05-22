@@ -19,6 +19,9 @@ class DatabaseSeeder extends Seeder
         // Setup currencies and billing tiers
         $this->call(CurrencySeeder::class);
         $this->call(BillingTierSeeder::class);
+        
+        // Add team permissions to roles
+        $this->call(TeamPermissionsSeeder::class);
 
         // User::factory(10)->create();
 

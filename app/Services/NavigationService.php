@@ -81,11 +81,34 @@ class NavigationService
                 'active' => $this->checkRoutePattern($currentRouteName, 'dashboard'),
                 'order' => 1
             ],
+            // Teams Navigation Item
+            [
+                'label' => 'Teams',
+                'icon' => 'fas fa-users',
+                'active' => $this->checkRoutePattern($currentRouteName, ['teams.*', 'team-invitations.*']),
+                'order' => 2,
+                'children' => [
+                    [
+                        'label' => 'My Teams',
+                        'url' => route('teams.index'),
+                        'active' => $this->checkRoutePattern($currentRouteName, [
+                            'teams.index',
+                            'teams.show',
+                            'teams.edit'
+                        ])
+                    ],
+                    [
+                        'label' => 'Create Team',
+                        'url' => route('teams.create'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'teams.create')
+                    ]
+                ]
+            ],
             [
                 'label' => 'SMS',
                 'icon' => 'fas fa-sms',
                 'active' => $this->checkRoutePattern($currentRouteName, 'sms.*'),
-                'order' => 2,
+                'order' => 3,
                 'children' => [
                     [
                         'label' => 'Dashboard',
@@ -131,7 +154,7 @@ class NavigationService
                 'label' => 'Contacts',
                 'icon' => 'fas fa-address-book',
                 'active' => $this->checkRoutePattern($currentRouteName, ['contacts.*', 'contact-groups.*']),
-                'order' => 3,
+                'order' => 4,
                 'children' => [
                     [
                         'label' => 'Manage Contacts',
@@ -159,7 +182,7 @@ class NavigationService
                 'label' => 'USSD Services',
                 'icon' => 'fas fa-phone-square',
                 'active' => $this->checkRoutePattern($currentRouteName, 'ussd.*'),
-                'order' => 4,
+                'order' => 5,
                 'children' => [
                     [
                         'label' => 'Dashboard',
@@ -182,7 +205,7 @@ class NavigationService
                 'label' => 'Contact Center',
                 'icon' => 'fas fa-headset',
                 'active' => $this->checkRoutePattern($currentRouteName, 'contact-center.*'),
-                'order' => 5,
+                'order' => 6,
                 'children' => [
                     [
                         'label' => 'Dashboard',
@@ -195,7 +218,7 @@ class NavigationService
                 'label' => 'Virtual Numbers',
                 'icon' => 'fas fa-phone',
                 'active' => $this->checkRoutePattern($currentRouteName, 'virtual-numbers.*'),
-                'order' => 6,
+                'order' => 7,
                 'children' => [
                     [
                         'label' => 'My Numbers',
@@ -213,7 +236,7 @@ class NavigationService
                 'label' => 'Wallet',
                 'icon' => 'fas fa-wallet',
                 'active' => $this->checkRoutePattern($currentRouteName, 'wallet.*'),
-                'order' => 7,
+                'order' => 8,
                 'children' => [
                     [
                         'label' => 'Overview',
@@ -236,7 +259,7 @@ class NavigationService
                 'label' => 'Profile & Settings',
                 'icon' => 'fas fa-user-cog',
                 'active' => $this->checkRoutePattern($currentRouteName, ['profile.*', 'settings.*']),
-                'order' => 8,
+                'order' => 9,
                 'children' => [
                     [
                         'label' => 'My Profile',
@@ -258,7 +281,7 @@ class NavigationService
                 'label' => 'Admin',
                 'icon' => 'fas fa-shield-alt',
                 'active' => $this->checkRoutePattern($currentRouteName, 'admin.*'),
-                'order' => 9,
+                'order' => 10,
                 'children' => [
                     [
                         'label' => 'Sender Name Approval',
