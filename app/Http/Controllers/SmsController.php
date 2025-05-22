@@ -348,7 +348,18 @@ class SmsController extends Controller
         
         // Create campaign
         try {
-            $campaignName = $request->input('campaign_name', 'SMS Campaign - ' . now()->format('Y-m-d H:i'));
+            // Set a default campaign name if none is provided
+            $campaignName = $request->input('campaign_name');
+            
+            // If campaign_name is empty, create a default name using the first part of the message
+            if (empty($campaignName)) {
+                $messagePreview = Str::limit(strip_tags($message), 30);
+                $campaignName = 'SMS Campaign - ' . $messagePreview;
+            }
+            
+            \Illuminate\Support\Facades\Log::info('Creating campaign with name', [
+                'campaign_name' => $campaignName
+            ]);
             
             $campaign = SmsCampaign::create([
                 'user_id' => $user->id,
