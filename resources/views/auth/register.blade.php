@@ -1,6 +1,13 @@
 @extends('layouts.auth')
 
+@section('title', 'Create Account')
+
 @section('content')
+<div class="text-center mb-4">
+    <h1 class="fs-2 fw-bold mb-2">Create Your Account</h1>
+    <p class="text-muted">Fill in the form below to get started</p>
+</div>
+
 <form method="POST" action="{{ route('register') }}">
     @csrf
 
@@ -84,8 +91,8 @@
         </div>
     </div>
 
-    <!-- Add reCAPTCHA -->
-    @include('components.recaptcha-v2')
+    <!-- Add dynamic reCAPTCHA -->
+    @recaptcha
 
     <div class="d-grid mb-4">
         <button type="submit" class="btn btn-primary py-2">

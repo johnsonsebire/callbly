@@ -1,6 +1,13 @@
 @extends('layouts.auth')
 
+@section('title', 'Login')
+
 @section('content')
+<div class="text-center mb-4">
+    <h1 class="fs-2 fw-bold mb-2">Welcome Back!</h1>
+    <p class="text-muted">Please sign in to continue</p>
+</div>
+
 <form method="POST" action="{{ route('login') }}">
     @csrf
 
@@ -41,8 +48,8 @@
         </label>
     </div>
 
-    <!-- Add reCAPTCHA -->
-    @include('components.recaptcha-v2')
+    <!-- Add dynamic reCAPTCHA -->
+    @recaptcha
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <button type="submit" class="btn btn-primary">
