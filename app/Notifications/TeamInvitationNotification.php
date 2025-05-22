@@ -44,14 +44,14 @@ class TeamInvitationNotification extends Notification implements ShouldQueue
         $expiresAt = $this->invitation->expires_at->format('F j, Y');
         
         return (new MailMessage)
-            ->subject('You\'ve Been Invited to Join a Team on ' . config('app.name'))
-            ->greeting('Hello!')
-            ->line('You have been invited to join the **' . $this->invitation->team->name . '** team on ' . config('app.name') . '.')
-            ->line('This invitation was sent by **' . $this->invitation->team->owner->name . '**.')
-            ->line('As a team member, you\'ll be able to collaborate and share resources with other team members.')
-            ->action('Accept Invitation', $url)
-            ->line('This invitation will expire on ' . $expiresAt . '.')
-            ->line('If you did not expect to receive this invitation, you may discard this email.');
+            ->view('emails.team-invitation', [
+                'invitation' => $this->invitation,
+                'url' => $url,
+                'expiresAt' => $expiresAt,
+                'teamName' => $this->invitation->team->name,
+                'inviterName' => $this->invitation->team->owner->name,
+            ])
+            ->subject('Join ' . $this->invitation->team->name . ' on ' . config('app.name'));
     }
 
     /**

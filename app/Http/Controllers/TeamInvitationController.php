@@ -14,6 +14,12 @@ use Illuminate\Support\Str;
 
 class TeamInvitationController extends Controller
 {
+    public function __construct()
+    {
+        // Only apply auth middleware to specific methods
+        $this->middleware('auth')->only(['create', 'store', 'destroy']);
+    }
+
     /**
      * Display the invite form.
      */
@@ -98,13 +104,30 @@ class TeamInvitationController extends Controller
      */
     public function show(string $token)
     {
-        $invitation = TeamInvitation::where('token', $token)->first();
+        $invitation = TeamInvitation::where('token', $token)
+            ->with('team')
+            ->first();
         
         if (!$invitation || $invitation->hasExpired()) {
             return redirect()->route('login')
                 ->with('error', 'This invitation has expired or is invalid.');
         }
-        
+
+        // If user is logged in and invitation matches their email
+        if (auth()->check() && auth()->user()->email === $invitation->email) {
+            return view('teams.invitations.accept', [
+                'invitation' => $invitation,
+            ]);
+        }
+
+        // If user is logged in but with wrong email
+        if (auth()->check() && auth()->user()->email !== $invitation->email) {
+            return view('teams.invitations.wrong-account', [
+                'invitation' => $invitation,
+            ]);
+        }
+
+        // For guests, show registration option
         return view('teams.invitations.show', [
             'invitation' => $invitation,
         ]);
@@ -124,15 +147,18 @@ class TeamInvitationController extends Controller
         
         $user = Auth::user();
         
-        // If user is not logged in, redirect to register with invitation info
+        // If user is not logged in, store invitation token in session and redirect to register
         if (!$user) {
-            return redirect()->route('register', ['invitation' => $token]);
+            session(['team_invitation_token' => $token]);
+            return redirect()->route('register', ['email' => $invitation->email])
+                ->with('message', 'Please create an account to join the team.');
         }
         
         // Check if the invitation was meant for this user
         if ($invitation->email !== $user->email) {
-            return redirect()->route('dashboard')
-                ->with('error', 'This invitation was not meant for your account.');
+            auth()->logout();
+            return redirect()->route('login')
+                ->with('error', 'Please log in with the email address that received the invitation (' . $invitation->email . ')');
         }
         
         // Add user to team with the specified role

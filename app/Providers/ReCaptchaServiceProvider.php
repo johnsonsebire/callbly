@@ -18,6 +18,28 @@ class ReCaptchaServiceProvider extends ServiceProvider
     }
 
     /**
+     * Get the appropriate reCAPTCHA key based on version.
+     */
+    private function getRecaptchaSecret(): string
+    {
+        if (config('recaptcha.version') === 'v3') {
+            return config('recaptcha.v3_secret_key', config('recaptcha.secret_key'));
+        }
+        return config('recaptcha.secret_key');
+    }
+
+    /**
+     * Get the appropriate site key based on version.
+     */
+    private function getRecaptchaSiteKey(): string
+    {
+        if (config('recaptcha.version') === 'v3') {
+            return config('recaptcha.v3_site_key', config('recaptcha.site_key'));
+        }
+        return config('recaptcha.site_key');
+    }
+
+    /**
      * Bootstrap services.
      */
     public function boot(): void
@@ -29,7 +51,7 @@ class ReCaptchaServiceProvider extends ServiceProvider
             }
 
             $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
-                'secret' => config('recaptcha.secret_key'),
+                'secret' => $this->getRecaptchaSecret(),
                 'response' => $value,
                 'remoteip' => request()->ip(),
             ]);
@@ -42,7 +64,7 @@ class ReCaptchaServiceProvider extends ServiceProvider
 
             // For v3 reCAPTCHA, check the score
             if (config('recaptcha.version') === 'v3') {
-                return $responseData['score'] >= config('recaptcha.score_threshold');
+                return $responseData['score'] >= config('recaptcha.score_threshold', 0.5);
             }
 
             return true;
@@ -50,11 +72,11 @@ class ReCaptchaServiceProvider extends ServiceProvider
 
         // Create a Blade directive for adding reCAPTCHA to forms
         Blade::directive('recaptcha', function () {
-            if (config('recaptcha.version') === 'v3') {
-                return '<?php echo view("components.recaptcha-v3")->render(); ?>';
-            }
-            
-            return '<?php echo view("components.recaptcha-v2")->render(); ?>';
+            return sprintf(
+                '<?php echo view("components.recaptcha-%s", ["siteKey" => "%s"])->render(); ?>',
+                config('recaptcha.version', 'v2'),
+                $this->getRecaptchaSiteKey()
+            );
         });
     }
 }
