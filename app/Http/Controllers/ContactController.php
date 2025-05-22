@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Imports\ContactsImport;
+use App\Exports\ContactsExport;
 use App\Models\Contact;
 use App\Models\ContactGroup;
 use App\Models\User;
@@ -48,6 +49,7 @@ class ContactController extends Controller
             'last_name' => 'required|string|max:255',
             'phone_number' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
+            'date_of_birth' => 'nullable|date',
             'company' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'groups' => 'nullable|array',
@@ -59,6 +61,7 @@ class ContactController extends Controller
             'last_name' => $validated['last_name'],
             'phone_number' => $validated['phone_number'],
             'email' => $validated['email'] ?? null,
+            'date_of_birth' => $validated['date_of_birth'] ?? null,
             'company' => $validated['company'] ?? null,
             'notes' => $validated['notes'] ?? null,
         ]);
@@ -116,6 +119,7 @@ class ContactController extends Controller
             'last_name' => 'required|string|max:255',
             'phone_number' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
+            'date_of_birth' => 'nullable|date',
             'company' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'groups' => 'nullable|array',
@@ -126,6 +130,7 @@ class ContactController extends Controller
             'last_name' => $validated['last_name'],
             'phone_number' => $validated['phone_number'],
             'email' => $validated['email'] ?? null,
+            'date_of_birth' => $validated['date_of_birth'] ?? null,
             'company' => $validated['company'] ?? null,
             'notes' => $validated['notes'] ?? null,
         ]);
@@ -284,6 +289,7 @@ class ContactController extends Controller
                 'phone_column' => 'required|string',
                 'email_column' => 'nullable|string',
                 'company_column' => 'nullable|string',
+                'date_of_birth_column' => 'nullable|string',
                 'group_id' => 'nullable|exists:contact_groups,id'
             ]);
 
@@ -316,6 +322,10 @@ class ContactController extends Controller
                 
                 if (!empty($validated['company_column'])) {
                     $columnMapping['company'] = $validated['company_column'];
+                }
+                
+                if (!empty($validated['date_of_birth_column'])) {
+                    $columnMapping['date_of_birth'] = $validated['date_of_birth_column'];
                 }
                 
                 // Start import transaction
@@ -366,45 +376,97 @@ class ContactController extends Controller
     }
 
     /**
-     * Export contacts to CSV
+     * Show the export form
      */
-    public function export(Request $request)
+    public function export()
+    {
+        $user = Auth::user();
+        $groups = ContactGroup::where('user_id', $user->id)->pluck('name', 'id');
+        $allContacts = Contact::where('user_id', $user->id)
+            ->select('id', 'first_name', 'last_name', 'phone_number', 'email')
+            ->orderBy('first_name')
+            ->get();
+            
+        return view('contacts.export', compact('groups', 'allContacts'));
+    }
+
+    /**
+     * Process the contact export
+     */
+    public function processExport(Request $request)
     {
         $user = Auth::user();
         $query = Contact::where('user_id', $user->id);
         
-        // Filter by group if specified
-        if ($request->has('group_id') && $request->group_id) {
+        // Filter based on export type
+        if ($request->export_type === 'group' && $request->filled('group_id')) {
             $query->whereHas('groups', function($q) use ($request) {
                 $q->where('contact_groups.id', $request->group_id);
             });
+        } elseif ($request->export_type === 'selected' && $request->filled('selected_contacts')) {
+            $selectedIds = explode(',', $request->selected_contacts);
+            $query->whereIn('id', $selectedIds);
         }
         
-        $contacts = $query->get(['first_name', 'last_name', 'phone_number', 'email', 'company', 'notes']);
+        // Filter columns to include
+        $columns = $request->columns ?? ['first_name', 'last_name', 'phone_number', 'email', 'company', 'notes'];
         
-        // Create CSV writer
-        $csv = Writer::createFromFileObject(new SplTempFileObject());
+        $contacts = $query->get($columns);
         
-        // Add CSV headers
-        $csv->insertOne(['First Name', 'Last Name', 'Phone Number', 'Email', 'Company', 'Notes']);
+        // Define column headers for the export
+        $headers = [
+            'first_name' => 'First Name',
+            'last_name' => 'Last Name',
+            'phone_number' => 'Phone Number',
+            'email' => 'Email',
+            'date_of_birth' => 'Date of Birth',
+            'company' => 'Company',
+            'notes' => 'Notes'
+        ];
         
-        // Add data rows
-        foreach ($contacts as $contact) {
-            $csv->insertOne([
-                $contact->first_name,
-                $contact->last_name,
-                $contact->phone_number,
-                $contact->email ?? '',
-                $contact->company ?? '',
-                $contact->notes ?? ''
+        // Filter headers to only include requested columns
+        $exportHeaders = array_intersect_key($headers, array_flip($columns));
+        
+        // Generate filename
+        $timestamp = date('Y-m-d_H-i-s');
+        $filename = 'contacts_export_' . $timestamp;
+        
+        // Export based on requested format
+        $format = $request->format ?? 'csv';
+        
+        if ($format === 'pdf') {
+            // PDF Export
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('contacts.export_pdf', [
+                'contacts' => $contacts,
+                'headers' => $exportHeaders
             ]);
+            
+            return $pdf->download($filename . '.pdf');
+            
+        } elseif ($format === 'excel') {
+            // Excel Export using Laravel Excel
+            return Excel::download(new ContactsExport($contacts, $exportHeaders), $filename . '.xlsx');
+            
+        } else {
+            // CSV Export (default)
+            $csv = Writer::createFromFileObject(new SplTempFileObject());
+            
+            // Add headers
+            $csv->insertOne(array_values($exportHeaders));
+            
+            // Add data rows
+            foreach ($contacts as $contact) {
+                $row = [];
+                foreach ($columns as $column) {
+                    $row[] = $contact->{$column} ?? '';
+                }
+                $csv->insertOne($row);
+            }
+            
+            // Return the CSV as a download
+            return response((string) $csv)
+                ->header('Content-Type', 'text/csv')
+                ->header('Content-Disposition', "attachment; filename=\"{$filename}.csv\"");
         }
-        
-        $filename = 'contacts_export_' . date('Y-m-d_H-i-s') . '.csv';
-        
-        // Return the CSV as a download
-        return response((string) $csv)
-            ->header('Content-Type', 'text/csv')
-            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
     }
 }

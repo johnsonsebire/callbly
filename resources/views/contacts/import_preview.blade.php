@@ -151,6 +151,20 @@
                                                     @endforeach
                                                 </select>
                                             </div>
+                                            
+                                            <div class="mb-5">
+                                                <label class="form-label">Date of Birth Column</label>
+                                                <select name="date_of_birth_column" class="form-select form-select-solid">
+                                                    <option value="">Select column</option>
+                                                    @foreach($headers as $header)
+                                                        <option value="{{ $header }}" 
+                                                            {{ strtolower($header) == 'date_of_birth' || strtolower($header) == 'birth_date' || strtolower($header) == 'dob' ? 'selected' : '' }}>
+                                                            {{ $header }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                <div class="form-text text-muted">Date format should be YYYY-MM-DD</div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

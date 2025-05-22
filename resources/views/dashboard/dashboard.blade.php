@@ -245,7 +245,9 @@ use Illuminate\Support\Str;
                                         <div class="text-gray-600 mb-5">
                                             Our support team is available 24/7 to assist you with any questions
                                         </div>
-                                        <a href="#" class="btn btn-sm btn-primary">Contact Support</a>
+                                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#supportModal">
+                                            Contact Support
+                                        </button>
                                     </div>
                                 </div>
                                 <!--end::Help Card-->
@@ -261,4 +263,150 @@ use Illuminate\Support\Str;
     </div>
     <!--end::Content wrapper-->
 </div>
+
+<!-- Support Modal -->
+<div class="modal fade" id="supportModal" tabindex="-1" aria-labelledby="supportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="supportModalLabel">Contact Support</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('support.send') }}" method="POST" id="supportForm">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <label for="support_subject" class="form-label fw-semibold">Subject</label>
+                        <select class="form-select form-select-solid" id="support_subject" name="subject" required>
+                            <option value="">Select a topic</option>
+                            <option value="Billing Issue">Billing Issue</option>
+                            <option value="Technical Support">Technical Support</option>
+                            <option value="Feature Request">Feature Request</option>
+                            <option value="Account Management">Account Management</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="support_message" class="form-label fw-semibold">Message</label>
+                        <textarea class="form-control form-control-solid" id="support_message" name="message" rows="6" placeholder="Please describe your issue in detail..." required></textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="support_priority" class="form-label fw-semibold">Priority</label>
+                        <div class="d-flex">
+                            <div class="form-check form-check-custom form-check-solid me-5">
+                                <input class="form-check-input" type="radio" name="priority" id="priority_low" value="Low" checked>
+                                <label class="form-check-label" for="priority_low">
+                                    Low
+                                </label>
+                            </div>
+                            <div class="form-check form-check-custom form-check-solid me-5">
+                                <input class="form-check-input" type="radio" name="priority" id="priority_medium" value="Medium">
+                                <label class="form-check-label" for="priority_medium">
+                                    Medium
+                                </label>
+                            </div>
+                            <div class="form-check form-check-custom form-check-solid">
+                                <input class="form-check-input" type="radio" name="priority" id="priority_high" value="High">
+                                <label class="form-check-label" for="priority_high">
+                                    High
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center">
+                        <i class="ki-outline ki-information-5 fs-1 text-info me-3"></i>
+                        <div class="text-gray-700 fs-7">
+                            Your request will be sent to our support team and we'll get back to you via email as soon as possible.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="submitSupportRequest">
+                        <span class="indicator-label">Send Request</span>
+                        <span class="indicator-progress">Please wait... 
+                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Support form submission
+        const supportForm = document.getElementById('supportForm');
+        const submitButton = document.getElementById('submitSupportRequest');
+        
+        if (supportForm) {
+            supportForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Disable button and show loading indicator
+                submitButton.setAttribute('data-kt-indicator', 'on');
+                submitButton.disabled = true;
+                
+                // Create form data
+                const formData = new FormData(supportForm);
+                
+                // Send AJAX request
+                fetch(supportForm.getAttribute('action'), {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading indicator
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+                    
+                    // Close modal
+                    const supportModal = bootstrap.Modal.getInstance(document.getElementById('supportModal'));
+                    supportModal.hide();
+                    
+                    // Show success message
+                    Swal.fire({
+                        text: "Your support request has been sent successfully!",
+                        icon: "success",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok, got it!",
+                        customClass: {
+                            confirmButton: "btn btn-primary"
+                        }
+                    });
+                    
+                    // Reset form
+                    supportForm.reset();
+                })
+                .catch(error => {
+                    // Hide loading indicator
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+                    
+                    // Show error message
+                    Swal.fire({
+                        text: "Sorry, there was an error sending your support request. Please try again.",
+                        icon: "error",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok, got it!",
+                        customClass: {
+                            confirmButton: "btn btn-primary"
+                        }
+                    });
+                });
+            });
+        }
+    });
+</script>
+@endpush

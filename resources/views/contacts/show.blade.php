@@ -110,6 +110,10 @@
                                                         <td>{{ $contact->company ?: 'Not specified' }}</td>
                                                     </tr>
                                                     <tr>
+                                                        <td class="fw-bold">Date of Birth</td>
+                                                        <td>{{ $contact->date_of_birth ? $contact->date_of_birth->format('M d, Y') : 'Not specified' }}</td>
+                                                    </tr>
+                                                    <tr>
                                                         <td class="fw-bold">Created</td>
                                                         <td>{{ $contact->created_at->format('M d, Y') }}</td>
                                                     </tr>

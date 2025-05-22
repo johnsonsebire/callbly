@@ -109,6 +109,7 @@ Route::middleware('auth')->group(function () {
         Route::post('contacts-import', [ContactController::class, 'uploadImport'])->name('contacts.upload-import');
         Route::post('contacts-import-process', [ContactController::class, 'processImport'])->name('contacts.process-import');
         Route::get('contacts-export', [ContactController::class, 'export'])->name('contacts.export');
+        Route::get('contacts-export-process', [ContactController::class, 'processExport'])->name('contacts.process-export');
         
         // Contact Group Routes
         Route::prefix('contact-groups')->name('contact-groups.')->group(function () {
@@ -233,4 +234,7 @@ Route::middleware('auth')->group(function () {
     Route::get('stop-impersonating', [\App\Http\Controllers\Admin\ImpersonationController::class, 'stopImpersonating'])
         ->name('stop-impersonating')
         ->middleware('auth');
+
+    // Support Request Route
+    Route::post('/support/send', [App\Http\Controllers\SupportController::class, 'send'])->name('support.send');
 });

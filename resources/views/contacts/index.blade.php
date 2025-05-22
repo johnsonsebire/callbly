@@ -22,9 +22,9 @@
                             <a href="{{ route('contacts.import') }}" class="btn btn-sm btn-light-primary me-2">
                                 <i class="ki-outline ki-upload fs-2 me-2"></i> Import
                             </a>
-                            <button id="exportContactsBtn" class="btn btn-sm btn-light-primary">
+                            <a href="{{ route('contacts.export') }}" class="btn btn-sm btn-light-primary">
                                 <i class="ki-outline ki-download fs-2 me-2"></i> Export
-                            </button>
+                            </a>
                         </div>
                     </div>
                     <div class="card-body">

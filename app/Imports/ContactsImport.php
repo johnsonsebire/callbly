@@ -82,6 +82,7 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
                 $phoneKey = $this->columnMapping['phone'];
                 $emailKey = $this->columnMapping['email'] ?? null;
                 $companyKey = $this->columnMapping['company'] ?? null;
+                $dateOfBirthKey = $this->columnMapping['date_of_birth'] ?? null;
                 
                 Log::debug("Row keys: " . json_encode($row->keys()->toArray()));
                 Log::debug("Mapping keys: first_name={$firstNameKey}, last_name={$lastNameKey}, phone={$phoneKey}");
@@ -92,6 +93,7 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
                 $phone_number = null;
                 $email = null;
                 $company = null;
+                $date_of_birth = null;
                 
                 // Direct access by numeric index if that's what we have
                 if (is_numeric($firstNameKey) && isset($row->values()[$firstNameKey])) {
@@ -128,12 +130,21 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
                     }
                 }
                 
+                if ($dateOfBirthKey) {
+                    if (is_numeric($dateOfBirthKey) && isset($row->values()[$dateOfBirthKey])) {
+                        $date_of_birth = $row->values()[$dateOfBirthKey];
+                    } elseif ($row->has($dateOfBirthKey)) {
+                        $date_of_birth = $row[$dateOfBirthKey];
+                    }
+                }
+                
                 Log::debug("Row $index mapped data", [
                     'first_name' => $first_name,
                     'last_name' => $last_name,
                     'phone_number' => $phone_number,
                     'email' => $email,
                     'company' => $company,
+                    'date_of_birth' => $date_of_birth,
                 ]);
                 
                 // Skip if no phone number
@@ -161,7 +172,8 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
                     'last_name' => $last_name,
                     'phone_number' => $phone_number,
                     'email' => $email,
-                    'company' => $company
+                    'company' => $company,
+                    'date_of_birth' => $date_of_birth
                 ]);
                 
                 $contact->save();
