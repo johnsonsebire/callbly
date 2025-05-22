@@ -141,6 +141,7 @@ return [
         App\Providers\CurrencyServiceProvider::class,
         App\Providers\SmsServiceProvider::class,
         App\Providers\ContactCenterServiceProvider::class,
+        App\Providers\ReCaptchaServiceProvider::class,
     ])->toArray(),
 
     /*

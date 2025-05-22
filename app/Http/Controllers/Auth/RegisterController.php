@@ -33,6 +33,7 @@ class RegisterController extends Controller
             ],
             'phone' => 'required|string|max:20',
             'company_name' => 'nullable|string|max:255',
+            'g-recaptcha-response' => ['required_if:recaptcha.enable,true', 'recaptcha']
         ]);
 
         if ($validator->fails()) {

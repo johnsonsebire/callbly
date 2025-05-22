@@ -84,6 +84,9 @@
         </div>
     </div>
 
+    <!-- Add reCAPTCHA -->
+    @include('components.recaptcha-v2')
+
     <div class="d-grid mb-4">
         <button type="submit" class="btn btn-primary py-2">
             {{ __('Register') }}
