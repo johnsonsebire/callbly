@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Config;
 
 class ReCaptchaServiceProvider extends ServiceProvider
 {
@@ -14,7 +15,7 @@ class ReCaptchaServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->mergeConfigFrom(__DIR__.'/../../config/recaptcha.php', 'recaptcha');
     }
 
     /**
@@ -22,10 +23,9 @@ class ReCaptchaServiceProvider extends ServiceProvider
      */
     private function getRecaptchaSecret(): string
     {
-        if (config('recaptcha.version') === 'v3') {
-            return config('recaptcha.v3_secret_key', config('recaptcha.secret_key'));
-        }
-        return config('recaptcha.secret_key');
+        return config('recaptcha.version') === 'v3' 
+            ? config('recaptcha.v3_secret_key') 
+            : config('recaptcha.secret_key');
     }
 
     /**
@@ -33,10 +33,9 @@ class ReCaptchaServiceProvider extends ServiceProvider
      */
     private function getRecaptchaSiteKey(): string
     {
-        if (config('recaptcha.version') === 'v3') {
-            return config('recaptcha.v3_site_key', config('recaptcha.site_key'));
-        }
-        return config('recaptcha.site_key');
+        return config('recaptcha.version') === 'v3' 
+            ? config('recaptcha.v3_site_key') 
+            : config('recaptcha.site_key');
     }
 
     /**
@@ -50,6 +49,10 @@ class ReCaptchaServiceProvider extends ServiceProvider
                 return true;
             }
 
+            if (empty($value)) {
+                return false;
+            }
+
             $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
                 'secret' => $this->getRecaptchaSecret(),
                 'response' => $value,
@@ -58,12 +61,12 @@ class ReCaptchaServiceProvider extends ServiceProvider
 
             $responseData = $response->json();
 
-            if (!$response->successful() || !$responseData['success']) {
+            if (!$response->successful() || !isset($responseData['success']) || !$responseData['success']) {
                 return false;
             }
 
-            // For v3 reCAPTCHA, check the score
-            if (config('recaptcha.version') === 'v3') {
+            // For v3 reCAPTCHA, check the score if it exists
+            if (config('recaptcha.version') === 'v3' && isset($responseData['score'])) {
                 return $responseData['score'] >= config('recaptcha.score_threshold', 0.5);
             }
 
@@ -72,11 +75,10 @@ class ReCaptchaServiceProvider extends ServiceProvider
 
         // Create a Blade directive for adding reCAPTCHA to forms
         Blade::directive('recaptcha', function () {
-            return sprintf(
-                '<?php echo view("components.recaptcha-%s", ["siteKey" => "%s"])->render(); ?>',
-                config('recaptcha.version', 'v2'),
-                $this->getRecaptchaSiteKey()
-            );
+            $version = config('recaptcha.version', 'v2');
+            $siteKey = $this->getRecaptchaSiteKey();
+            
+            return "<?php echo view('components.recaptcha-{$version}', ['siteKey' => '{$siteKey}'])->render(); ?>";
         });
     }
 }

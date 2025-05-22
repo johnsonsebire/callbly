@@ -5,10 +5,10 @@
     @error('g-recaptcha-response')
         <div class="text-danger mt-1 text-center">{{ $message }}</div>
     @enderror
-    <script src="https://www.google.com/recaptcha/api.js?render={{ config('recaptcha.site_key') }}"></script>
+    <script src="https://www.google.com/recaptcha/api.js?render={{ config('recaptcha.v3_site_key') }}"></script>
     <script>
         grecaptcha.ready(function() {
-            grecaptcha.execute('{{ config('recaptcha.site_key') }}', {action: 'submit'})
+            grecaptcha.execute('{{ config('recaptcha.v3_site_key') }}', {action: 'submit'})
                 .then(function(token) {
                     document.getElementById('g-recaptcha-response').value = token;
                 });
