@@ -89,7 +89,9 @@
                                     </div>
                                 @else
                                     <div class="text-center py-4">
-                                        <img src="{{ asset('img/empty-state.svg') }}" alt="No transactions" class="img-fluid mb-3" style="max-height: 150px;">
+                                        <div class="text-center mb-3">
+                                            <i class="bi bi-wallet2 text-muted" style="font-size: 5rem;"></i>
+                                        </div>
                                         <h5>No Transactions Yet</h5>
                                         <p class="text-muted">Your wallet transactions will appear here once you start using your wallet.</p>
                                         <a href="{{ route('wallet.topup') }}" class="btn btn-primary">Top Up Your Wallet</a>
