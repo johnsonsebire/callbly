@@ -180,7 +180,9 @@
                                     </div>
                                 @else
                                     <div class="text-center py-5">
-                                        <img src="{{ asset('img/empty-state.svg') }}" alt="No numbers" class="img-fluid mb-4" style="max-height: 200px;">
+                                        <div class="mb-4">
+                                            <i class="bi bi-telephone-plus fs-1 text-muted" style="font-size: 5rem !important;"></i>
+                                        </div>
                                         <h5>No Virtual Numbers Yet</h5>
                                         <p class="text-muted">You haven't purchased any virtual numbers yet.</p>
                                         <a href="{{ route('virtual-numbers.browse') }}" class="btn btn-primary">
