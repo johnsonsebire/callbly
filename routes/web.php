@@ -17,6 +17,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ContactGroupController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\WalletController;
+use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TeamInvitationController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -203,6 +205,31 @@ Route::middleware('auth')->group(function () {
         Route::get('/purchase-sms', [WalletController::class, 'showPurchaseSmsForm'])->name('purchase-sms');
         Route::post('/purchase-sms', [WalletController::class, 'processPurchaseSms'])->name('process-purchase-sms');
     });
+
+    // Teams Routes
+    Route::middleware(['auth', 'verified'])->prefix('teams')->name('teams.')->group(function () {
+        Route::get('/', [TeamController::class, 'index'])->name('index');
+        Route::get('/create', [TeamController::class, 'create'])->name('create');
+        Route::post('/', [TeamController::class, 'store'])->name('store');
+        Route::get('/{team}', [TeamController::class, 'show'])->name('show');
+        Route::get('/{team}/edit', [TeamController::class, 'edit'])->name('edit');
+        Route::put('/{team}', [TeamController::class, 'update'])->name('update');
+        Route::delete('/{team}', [TeamController::class, 'destroy'])->name('destroy');
+        Route::post('/{team}/members/{user}', [TeamController::class, 'updateMember'])->name('members.update');
+        Route::delete('/{team}/members/{user}', [TeamController::class, 'removeMember'])->name('members.destroy');
+        Route::post('/{team}/leave', [TeamController::class, 'leave'])->name('leave');
+        Route::post('/switch/{team}', [TeamController::class, 'switchTeam'])->name('switch');
+        
+        // Team Invitations
+        Route::get('/{team}/invitations/create', [TeamInvitationController::class, 'create'])->name('invitations.create');
+        Route::post('/{team}/invitations', [TeamInvitationController::class, 'store'])->name('invitations.store');
+        Route::delete('/{team}/invitations/{invitation}', [TeamInvitationController::class, 'destroy'])->name('invitations.destroy');
+    });
+    
+    // Team Invitation Acceptance Routes (outside auth middleware since guests might need to access)
+    Route::get('/team-invitations/{token}', [TeamInvitationController::class, 'show'])->name('team-invitations.show');
+    Route::post('/team-invitations/{token}/accept', [TeamInvitationController::class, 'accept'])->name('team-invitations.accept');
+    Route::post('/team-invitations/{token}/decline', [TeamInvitationController::class, 'decline'])->name('team-invitations.decline');
 
     // Super Admin Sender Name Approval Routes
     Route::middleware(['auth','role:super-admin'])->prefix('admin')->name('admin.')->group(function () {

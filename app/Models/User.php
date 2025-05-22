@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -269,5 +269,90 @@ class User extends Authenticatable implements MustVerifyEmail
                 'balance' => 0.00,
             ]);
         });
+    }
+
+    /**
+     * Get all of the teams that the user owns.
+     */
+    public function ownedTeams(): HasMany
+    {
+        return $this->hasMany(Team::class, 'owner_id');
+    }
+
+    /**
+     * Get all of the teams that the user belongs to.
+     */
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class)
+            ->using(TeamUser::class)
+            ->withPivot('role', 'permissions')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the user's primary team.
+     */
+    public function currentTeam(): ?Team
+    {
+        if ($this->current_team_id) {
+            return $this->belongsTo(Team::class, 'current_team_id')->first();
+        }
+        
+        // If no current team is set, return the first team
+        return $this->teams()->first() ?: $this->ownedTeams()->first();
+    }
+
+    /**
+     * Get all teams a user has access to (owned + joined).
+     */
+    public function allTeams()
+    {
+        return $this->ownedTeams->merge($this->teams);
+    }
+
+    /**
+     * Determine if the user belongs to the given team.
+     */
+    public function belongsToTeam(Team $team): bool
+    {
+        return $this->teams->contains($team) || $this->ownsTeam($team);
+    }
+
+    /**
+     * Determine if the user owns the given team.
+     */
+    public function ownsTeam(Team $team): bool
+    {
+        return $this->id === $team->owner_id;
+    }
+
+    /**
+     * Get the role that the user has on the team.
+     */
+    public function teamRole(Team $team): ?string
+    {
+        if ($this->ownsTeam($team)) {
+            return 'owner';
+        }
+
+        if (!$this->belongsToTeam($team)) {
+            return null;
+        }
+
+        $membership = $this->teams->find($team->id)->pivot;
+
+        return $membership->role;
+    }
+
+    /**
+     * Create a new personal team for the user.
+     */
+    public function createPersonalTeam(string $name): Team
+    {
+        return $this->ownedTeams()->create([
+            'name' => $name,
+            'personal_team' => true,
+        ]);
     }
 }
