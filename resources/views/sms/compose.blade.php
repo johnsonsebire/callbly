@@ -287,13 +287,25 @@
                                     <div class="card-body pt-5">
                                         <div class="d-flex flex-wrap gap-2">
                                             <button type="button" class="btn btn-sm btn-light-primary template-variable" data-variable="{name}">
-                                                <i class="ki-outline ki-user fs-7 me-1"></i>Name
+                                                <i class="ki-outline ki-user fs-7 me-1"></i>Full Name
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-light-primary template-variable" data-variable="{first_name}">
+                                                <i class="ki-outline ki-user fs-7 me-1"></i>First Name
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-light-primary template-variable" data-variable="{last_name}">
+                                                <i class="ki-outline ki-user fs-7 me-1"></i>Last Name
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-light-primary template-variable" data-variable="{dob}">
+                                                <i class="ki-outline ki-calendar fs-7 me-1"></i>Date of Birth
                                             </button>
                                             <button type="button" class="btn btn-sm btn-light-primary template-variable" data-variable="{company}">
                                                 <i class="ki-outline ki-office-building fs-7 me-1"></i>Company
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-light-primary template-variable" data-variable="{date}">
-                                                <i class="ki-outline ki-calendar fs-7 me-1"></i>Date
+                                            <button type="button" class="btn btn-sm btn-light-primary template-variable" data-variable="{email}">
+                                                <i class="ki-outline ki-sms fs-7 me-1"></i>Email
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-light-primary template-variable" data-variable="{phone}">
+                                                <i class="ki-outline ki-phone fs-7 me-1"></i>Phone
                                             </button>
                                         </div>
                                         <div class="mt-3 fs-7 text-gray-600">

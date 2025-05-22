@@ -22,6 +22,7 @@ class Contact extends Model
         'last_name',
         'phone_number',
         'email',
+        'date_of_birth',
         'company',
         'notes',
         'custom_fields',
@@ -34,6 +35,7 @@ class Contact extends Model
      */
     protected $casts = [
         'custom_fields' => 'json',
+        'date_of_birth' => 'date',
     ];
 
     /**

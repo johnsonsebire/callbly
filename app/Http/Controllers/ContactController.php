@@ -174,7 +174,7 @@ class ContactController extends Controller
         
         try {
             $request->validate([
-                'excel_file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+                'excel_file' => 'required|file|mimetypes:application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain|max:10240',
                 'group_id' => 'nullable|exists:contact_groups,id'
             ]);
             

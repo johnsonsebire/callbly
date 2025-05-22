@@ -145,6 +145,18 @@ class SmsController extends Controller
         ];
     }
 
+        /**
+     * Show SMS templates list.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function templates()
+    {
+        $user = Auth::user();
+        $templates = $user->smsTemplates()->latest()->paginate(10);
+        return view('sms.templates.index', compact('templates'));
+    }
+
     /**
      * Replace template variables with actual contact data.
      *
@@ -159,7 +171,7 @@ class SmsController extends Controller
         }
         
         $variables = [
-            'name' => $contact->name ?? '',
+            'name' => $contact->full_name ?? ($contact->first_name . ' ' . $contact->last_name),
             'first_name' => $contact->first_name ?? '',
             'last_name' => $contact->last_name ?? '',
             'dob' => $contact->date_of_birth ? date('d/m/Y', strtotime($contact->date_of_birth)) : '',
@@ -777,4 +789,91 @@ class SmsController extends Controller
             'content' => $template->content
         ]);
     }
+       /**
+     * Show form to create a new SMS template.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function createTemplate()
+    {
+        return view('sms.templates.create');
+    }
+
+    /**
+     * Store a new SMS template.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function storeTemplate(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'content' => 'required|string|max:918',
+            'description' => 'nullable|string|max:1000',
+        ]);
+
+        $template = new SmsTemplate();
+        $template->user_id = Auth::id();
+        $template->name = $request->name;
+        $template->content = $request->content;
+        $template->description = $request->description;
+        $template->save();
+
+        return redirect()->route('sms.templates')
+            ->with('success', 'Template created successfully.');
+    }
+
+    /**
+     * Show form to edit an SMS template.
+     *
+     * @param  int  $id
+     * @return \Illuminate\View\View
+     */
+    public function editTemplate($id)
+    {
+        $template = SmsTemplate::where('user_id', Auth::id())->findOrFail($id);
+        return view('sms.templates.edit', compact('template'));
+    }
+
+    /**
+     * Update an SMS template.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updateTemplate(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'content' => 'required|string|max:918',
+            'description' => 'nullable|string|max:1000',
+        ]);
+
+        $template = SmsTemplate::where('user_id', Auth::id())->findOrFail($id);
+        $template->name = $request->name;
+        $template->content = $request->content;
+        $template->description = $request->description;
+        $template->save();
+
+        return redirect()->route('sms.templates')
+            ->with('success', 'Template updated successfully.');
+    }
+
+    /**
+     * Delete an SMS template.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function deleteTemplate($id)
+    {
+        $template = SmsTemplate::where('user_id', Auth::id())->findOrFail($id);
+        $template->delete();
+
+        return redirect()->route('sms.templates')
+            ->with('success', 'Template deleted successfully.');
+    }
+
 }

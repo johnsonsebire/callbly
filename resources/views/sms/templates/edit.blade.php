@@ -69,9 +69,13 @@
                                                     required>{{ old('content', $template->content) }}</textarea>
                                             <div id="template-tags-dropdown" class="template-tags-dropdown d-none">
                                                 <div class="template-tags-container">
-                                                    <div class="template-tag" data-tag="{name}">Insert recipient's name</div>
-                                                    <div class="template-tag" data-tag="{company}">Insert your company name</div>
-                                                    <div class="template-tag" data-tag="{date}">Insert current date</div>
+                                                    <div class="template-tag" data-tag="{name}">Insert recipient's full name</div>
+                                                    <div class="template-tag" data-tag="{first_name}">Insert recipient's first name</div>
+                                                    <div class="template-tag" data-tag="{last_name}">Insert recipient's last name</div>
+                                                    <div class="template-tag" data-tag="{dob}">Insert recipient's date of birth</div>
+                                                    <div class="template-tag" data-tag="{email}">Insert recipient's email</div>
+                                                    <div class="template-tag" data-tag="{phone}">Insert recipient's phone number</div>
+                                                    <div class="template-tag" data-tag="{company}">Insert recipient's company</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -130,7 +134,7 @@
                                         <span class="badge bg-primary me-2">Code</span>
                                         <div>
                                             <strong>{name}</strong>
-                                            <div class="small text-muted">Recipient's name</div>
+                                            <div class="small text-muted">Recipient's full name</div>
                                         </div>
                                         <button class="btn btn-sm btn-light ms-auto template-tag-btn" data-tag="{name}">
                                             <i class="fas fa-plus"></i>
@@ -139,8 +143,38 @@
                                     <li class="list-group-item d-flex align-items-center">
                                         <span class="badge bg-primary me-2">Code</span>
                                         <div>
+                                            <strong>{first_name}</strong>
+                                            <div class="small text-muted">Recipient's first name</div>
+                                        </div>
+                                        <button class="btn btn-sm btn-light ms-auto template-tag-btn" data-tag="{first_name}">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item d-flex align-items-center">
+                                        <span class="badge bg-primary me-2">Code</span>
+                                        <div>
+                                            <strong>{last_name}</strong>
+                                            <div class="small text-muted">Recipient's last name</div>
+                                        </div>
+                                        <button class="btn btn-sm btn-light ms-auto template-tag-btn" data-tag="{last_name}">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item d-flex align-items-center">
+                                        <span class="badge bg-primary me-2">Code</span>
+                                        <div>
+                                            <strong>{dob}</strong>
+                                            <div class="small text-muted">Recipient's date of birth</div>
+                                        </div>
+                                        <button class="btn btn-sm btn-light ms-auto template-tag-btn" data-tag="{dob}">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item d-flex align-items-center">
+                                        <span class="badge bg-primary me-2">Code</span>
+                                        <div>
                                             <strong>{company}</strong>
-                                            <div class="small text-muted">Your company name</div>
+                                            <div class="small text-muted">Recipient's company</div>
                                         </div>
                                         <button class="btn btn-sm btn-light ms-auto template-tag-btn" data-tag="{company}">
                                             <i class="fas fa-plus"></i>
@@ -149,10 +183,20 @@
                                     <li class="list-group-item d-flex align-items-center">
                                         <span class="badge bg-primary me-2">Code</span>
                                         <div>
-                                            <strong>{date}</strong>
-                                            <div class="small text-muted">Current date</div>
+                                            <strong>{email}</strong>
+                                            <div class="small text-muted">Recipient's email</div>
                                         </div>
-                                        <button class="btn btn-sm btn-light ms-auto template-tag-btn" data-tag="{date}">
+                                        <button class="btn btn-sm btn-light ms-auto template-tag-btn" data-tag="{email}">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </li>
+                                    <li class="list-group-item d-flex align-items-center">
+                                        <span class="badge bg-primary me-2">Code</span>
+                                        <div>
+                                            <strong>{phone}</strong>
+                                            <div class="small text-muted">Recipient's phone number</div>
+                                        </div>
+                                        <button class="btn btn-sm btn-light ms-auto template-tag-btn" data-tag="{phone}">
                                             <i class="fas fa-plus"></i>
                                         </button>
                                     </li>

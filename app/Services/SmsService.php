@@ -354,7 +354,7 @@ class SmsService
         }
         
         $variables = [
-            'name' => $contact->name ?? '',
+            'name' => $contact->full_name ?? ($contact->first_name . ' ' . $contact->last_name),
             'first_name' => $contact->first_name ?? '',
             'last_name' => $contact->last_name ?? '',
             'dob' => $contact->date_of_birth ? date('d/m/Y', strtotime($contact->date_of_birth)) : '',
