@@ -1,4 +1,7 @@
 @extends('layouts.master')
+@php
+use Illuminate\Support\Str;
+@endphp
 @section('content')
 <div class="app-main flex-column flex-row-fluid">
     <!--begin::Content wrapper-->
@@ -171,17 +174,20 @@
                                                         </div>
                                                         <div class="d-flex justify-content-start flex-column">
                                                             <span class="text-dark fw-bold text-hover-primary mb-1 fs-6">{{ strtoupper($activity->type) }}</span>
+                                                            <span class="text-muted fw-semibold text-muted d-block fs-8">Campaign #{{ $activity->campaign_id }}</span>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <span class="text-dark fw-semibold d-block fs-7">{{ $activity->recipient }}</span>
+                                                    <span class="text-muted fw-semibold text-muted d-block fs-8">{{ Str::limit($activity->message, 30) }}</span>
                                                 </td>
                                                 <td>
                                                     <span class="text-muted fw-semibold d-block fs-7">{{ $activity->created_at->format('M d, Y') }}</span>
+                                                    <span class="text-muted fw-semibold d-block fs-8">{{ $activity->created_at->format('h:i A') }}</span>
                                                 </td>
                                                 <td class="text-end">
-                                                    <span class="badge badge-light-{{ $activity->status === 'delivered' ? 'success' : 'warning' }} fs-7 fw-bold">{{ ucfirst($activity->status) }}</span>
+                                                    <span class="badge badge-light-{{ $activity->status === 'delivered' ? 'success' : ($activity->status === 'failed' ? 'danger' : 'warning') }} fs-7 fw-bold">{{ ucfirst($activity->status) }}</span>
                                                 </td>
                                             </tr>
                                             @empty
