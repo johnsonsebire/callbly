@@ -27,6 +27,13 @@ Route::get('/', function () {
     return view('home'); // Use Blade view for home
 });
 
+// Team Invitation Public Routes (must be before auth middleware)
+Route::prefix('team-invitations')->name('team-invitations.')->group(function() {
+    Route::get('/{token}', [TeamInvitationController::class, 'show'])->name('show');
+    Route::post('/{token}/accept', [TeamInvitationController::class, 'accept'])->name('accept');
+    Route::post('/{token}/decline', [TeamInvitationController::class, 'decline'])->name('decline');
+});
+
 // Authentication Routes
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');
@@ -220,7 +227,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/{team}/leave', [TeamController::class, 'leave'])->name('leave');
         Route::post('/switch/{team}', [TeamController::class, 'switchTeam'])->name('switch');
         
-        // Team Invitations
+        // Team Invitations (for authenticated users)
         Route::middleware('auth')->group(function() {
             Route::get('/{team}/invitations/create', [TeamInvitationController::class, 'create'])->name('invitations.create');
             Route::post('/{team}/invitations', [TeamInvitationController::class, 'store'])->name('invitations.store');
@@ -228,13 +235,6 @@ Route::middleware('auth')->group(function () {
         });
     });
     
-    // Team Invitation Acceptance Routes (no auth middleware since guests need access)
-    Route::prefix('team-invitations')->name('team-invitations.')->group(function() {
-        Route::get('/{token}', [TeamInvitationController::class, 'show'])->name('show');
-        Route::post('/{token}/accept', [TeamInvitationController::class, 'accept'])->name('accept');
-        Route::post('/{token}/decline', [TeamInvitationController::class, 'decline'])->name('decline');
-    });
-
     // Super Admin Sender Name Approval Routes
     Route::middleware(['auth','role:super-admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('sender-names', [\App\Http\Controllers\Admin\SenderNameApprovalController::class, 'index'])

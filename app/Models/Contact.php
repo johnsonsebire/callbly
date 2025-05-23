@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Contact extends Model
 {
@@ -18,6 +19,7 @@ class Contact extends Model
      */
     protected $fillable = [
         'user_id',
+        'team_id',
         'first_name',
         'last_name',
         'phone_number',
@@ -34,7 +36,7 @@ class Contact extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'custom_fields' => 'json',
+        'custom_fields' => 'array',
         'date_of_birth' => 'date',
     ];
 
@@ -47,11 +49,51 @@ class Contact extends Model
     }
 
     /**
+     * Get the team that owns the contact.
+     */
+    public function team(): BelongsTo
+    {
+        return $this->belongsTo(Team::class);
+    }
+
+    /**
      * Get the contact groups this contact belongs to.
      */
     public function groups(): BelongsToMany
     {
-        return $this->belongsToMany(ContactGroup::class, 'contact_group_members');
+        return $this->belongsToMany(ContactGroup::class, 'contact_group_members')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Get the team resources associated with the contact.
+     */
+    public function teamResources(): HasMany
+    {
+        return $this->hasMany(TeamResource::class, 'resource_id')
+                    ->where('resource_type', 'contact');
+    }
+
+    /**
+     * Get the teams this contact is shared with.
+     */
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class, 'team_resources')
+                    ->where('resource_type', 'contact')
+                    ->where('is_shared', true)
+                    ->withTimestamps();
+    }
+
+    /**
+     * Check if the contact is shared with a specific team.
+     *
+     * @param Team $team
+     * @return bool
+     */
+    public function isSharedWithTeam(Team $team): bool
+    {
+        return $this->teams->contains($team);
     }
 
     /**
@@ -90,6 +132,24 @@ class Contact extends Model
      */
     public function getFullNameAttribute(): string
     {
-        return $this->first_name . ' ' . $this->last_name;
+        return trim("{$this->first_name} {$this->last_name}");
+    }
+
+    /**
+     * Scope a query to only include contacts available for a specific team.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param Team $team
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeAvailableForTeam($query, Team $team)
+    {
+        return $query->where(function($q) use ($team) {
+            $q->where('user_id', $team->owner_id)
+              ->orWhere('team_id', $team->id)
+              ->orWhereHas('teams', function($q) use ($team) {
+                  $q->where('teams.id', $team->id);
+              });
+        });
     }
 }

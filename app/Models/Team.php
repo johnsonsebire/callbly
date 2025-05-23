@@ -56,6 +56,18 @@ class Team extends Model
                 $team->slug = Str::slug($team->name);
             }
         });
+
+        static::created(function ($team) {
+            if ($team->personal_team) {
+                $team->users()->attach($team->owner_id, ['role' => 'owner']);
+            }
+        });
+
+        static::deleting(function ($team) {
+            $team->teamResources()->delete();
+            $team->invitations()->delete();
+            $team->users()->detach();
+        });
     }
 
     /**
@@ -86,11 +98,33 @@ class Team extends Model
     }
 
     /**
+     * Get all of the team's resources.
+     */
+    public function teamResources(): HasMany
+    {
+        return $this->hasMany(TeamResource::class);
+    }
+
+    /**
      * Get all of the sender names for the team.
      */
-    public function senderNames(): HasMany
+    public function senderNames(): BelongsToMany
     {
-        return $this->hasMany(SenderName::class);
+        return $this->belongsToMany(SenderName::class, 'team_resources')
+            ->where('resource_type', 'sender_name')
+            ->where('is_shared', true)
+            ->withTimestamps();
+    }
+
+    /**
+     * Get all of the contacts for the team.
+     */
+    public function contacts(): BelongsToMany
+    {
+        return $this->belongsToMany(Contact::class, 'team_resources')
+            ->where('resource_type', 'contact')
+            ->where('is_shared', true)
+            ->withTimestamps();
     }
 
     /**
@@ -98,7 +132,7 @@ class Team extends Model
      */
     public function hasUser(User $user): bool
     {
-        return $this->users()->where('user_id', $user->id)->exists();
+        return $this->users->contains($user) || $this->owner_id === $user->id;
     }
 
     /**
@@ -119,7 +153,60 @@ class Team extends Model
         }
 
         $teamUser = $this->users()->where('user_id', $user->id)->first();
-        
+
         return $teamUser ? $teamUser->pivot->role : null;
+    }
+
+    /**
+     * Get all shared resources of the team.
+     */
+    public function sharedResources(string $type = null)
+    {
+        $query = $this->teamResources()->where('is_shared', true);
+
+        if ($type) {
+            $query->where('resource_type', $type);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Share a resource with the team.
+     */
+    public function shareResource($resource, string $type): void
+    {
+        $this->teamResources()->updateOrCreate(
+            [
+                'resource_type' => $type,
+                'resource_id' => $resource->id,
+            ],
+            ['is_shared' => true]
+        );
+    }
+
+    /**
+     * Unshare a resource from the team.
+     */
+    public function unshareResource($resource, string $type): void
+    {
+        $this->teamResources()
+            ->where('resource_type', $type)
+            ->where('resource_id', $resource->id)
+            ->delete();
+    }
+
+    /**
+     * Sync resources of a specific type with the team.
+     */
+    public function syncResources($resources, string $type): void
+    {
+        // First remove all resources of this type
+        $this->teamResources()
+            ->where('resource_type', $type)
+            ->delete();
+
+        // Then add the new resources
+        $resources->each(fn($resource) => $this->shareResource($resource, $type));
     }
 }

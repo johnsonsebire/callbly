@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\TeamResource;
 use Illuminate\Support\ServiceProvider;
 
 return [
@@ -163,6 +164,7 @@ return [
         'Route' => Illuminate\Support\Facades\Route::class,
         'Storage' => Illuminate\Support\Facades\Storage::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
+        'TeamResource' => TeamResource::class,
     ],
 
 ];

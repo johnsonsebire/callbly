@@ -3,42 +3,33 @@
 @section('title', 'Team Invitation')
 
 @section('content')
+<div class="email-section">
     <h1 class="email-heading">You've Been Invited to Join a Team</h1>
     
     <p class="email-text">
-        Hi there,
+        {{ $invitation->team->owner->name }} has invited you to join their team "{{ $invitation->team->name }}" with the role of {{ ucfirst($invitation->role) }}.
     </p>
-
-    <p class="email-text">
-        {{ $inviterName }} has invited you to join their team "{{ $teamName }}" on {{ config('app.name') }}.
-    </p>
-
-    <div class="email-section">
-        <div class="email-card">
-            <p class="email-text mb-2">
-                <strong>Team:</strong> {{ $teamName }}
-            </p>
-            <p class="email-text mb-2">
-                <strong>Invited by:</strong> {{ $inviterName }}
-            </p>
-            <p class="email-text mb-0">
-                <strong>Expires:</strong> {{ $expiresAt }}
-            </p>
-        </div>
+    
+    <div class="email-card mb-4">
+        <p class="mb-2 fw-bold">Quick Instructions:</p>
+        <ul style="margin-bottom: 20px;">
+            <li>If you don't have an account, you'll need to create one with this email ({{ $invitation->email }})</li>
+            <li>If you already have an account, just click the button below to join</li>
+            <li>This invitation will expire in 7 days</li>
+        </ul>
     </div>
 
     <div class="text-center">
-        <a href="{{ $url }}" class="email-btn">
+        <a href="{{ route('team-invitations.show', $invitation->token) }}" class="email-btn">
             Accept Invitation
         </a>
     </div>
 
-    <p class="email-text text-muted">
-        If you don't have an account yet, you'll be able to create one after clicking the button above.
-        This invitation will expire on {{ $expiresAt }}.
-    </p>
-
-    <p class="email-text text-muted">
-        If you did not expect this invitation, you can safely ignore this email.
-    </p>
+    <div class="email-card mt-4" style="background-color: #f8f9fa;">
+        <p class="mb-2">If the button above doesn't work, copy and paste this link into your browser:</p>
+        <div style="background: #fff; padding: 10px; border-radius: 4px; word-break: break-all;">
+            {{ route('team-invitations.show', $invitation->token) }}
+        </div>
+    </div>
+</div>
 @endsection
