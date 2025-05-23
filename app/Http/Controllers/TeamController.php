@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class TeamController extends Controller
@@ -100,25 +101,25 @@ class TeamController extends Controller
         if (! Gate::allows('update-team', $team)) {
             abort(403);
         }
-        
+
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:1000'],
+            'name' => ['sometimes', 'string', 'max:255'],
             'share_sms_credits' => ['sometimes', 'boolean'],
             'share_contacts' => ['sometimes', 'boolean'],
             'share_sender_names' => ['sometimes', 'boolean'],
         ]);
-        
-        $team->update([
-            'name' => $validated['name'],
-            'description' => $validated['description'],
-            'share_sms_credits' => $request->has('share_sms_credits'),
-            'share_contacts' => $request->has('share_contacts'),
-            'share_sender_names' => $request->has('share_sender_names'),
-        ]);
-        
-        return redirect()->route('teams.show', $team)
-            ->with('success', 'Team updated successfully.');
+
+        $team->update($validated);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Team settings updated successfully',
+                'team' => $team->fresh()
+            ]);
+        }
+
+        return back()->with('success', 'Team updated successfully.');
     }
 
     /**

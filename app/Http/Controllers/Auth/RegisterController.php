@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\TeamInvitation;
 use App\Notifications\WelcomeEmailNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -55,6 +56,46 @@ class RegisterController extends Controller
         $user->notify(new WelcomeEmailNotification($user));
 
         auth()->login($user);
+
+        // Check if there was a pending team invitation
+        if ($invitationToken = session('team_invitation_token')) {
+            $invitation = TeamInvitation::where('token', $invitationToken)
+                ->where('email', $user->email)
+                ->first();
+
+            if ($invitation && !$invitation->hasExpired()) {
+                // Add user to team with the specified role
+                $invitation->team->users()->attach($user->id, ['role' => $invitation->role]);
+                
+                // Set this as the user's current team
+                $user->current_team_id = $invitation->team_id;
+                $user->save();
+
+                // Assign team role and permissions
+                if ($invitation->role === 'admin') {
+                    $user->assignRole('team-admin');
+                    $user->givePermissionTo([
+                        'manage-team-settings',
+                        'invite-team-members',
+                        'remove-team-members',
+                        'view-team-billing',
+                    ]);
+                } else {
+                    $user->assignRole('team-member');
+                    $user->givePermissionTo([
+                        'access-team-resources',
+                        'view-team-dashboard',
+                    ]);
+                }
+
+                // Delete the invitation
+                $invitation->delete();
+                session()->forget('team_invitation_token');
+
+                return redirect()->route('teams.show', $invitation->team)
+                    ->with('success', 'You have joined the team successfully.');
+            }
+        }
 
         return redirect()->route('dashboard');
     }

@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 
 class TeamInvitationController extends Controller
 {
@@ -59,7 +61,6 @@ class TeamInvitationController extends Controller
                 'expires_at' => now()->addDays(7),
             ]);
             
-            // Send the invitation email
             try {
                 $existingInvitation->sendInvitation();
                 return back()->with('success', 'Invitation has been resent successfully.');
@@ -79,10 +80,8 @@ class TeamInvitationController extends Controller
         try {
             // Send invitation email
             if ($existingUser) {
-                // If user exists but is not on team, send notification to existing user
                 $existingUser->notify(new TeamInvitationNotification($invitation));
             } else {
-                // Send email invitation to new user
                 Notification::route('mail', $validated['email'])
                     ->notify(new TeamInvitationNotification($invitation));
             }
@@ -107,22 +106,22 @@ class TeamInvitationController extends Controller
                 ->with('error', 'This invitation has expired or is invalid.');
         }
 
+        // For guests, show the public invitation view
+        if (!auth()->check()) {
+            return view('teams.invitations.show', [
+                'invitation' => $invitation,
+            ]);
+        }
+
         // If user is logged in and invitation matches their email
-        if (auth()->check() && auth()->user()->email === $invitation->email) {
+        if (auth()->user()->email === $invitation->email) {
             return view('teams.invitations.accept', [
                 'invitation' => $invitation,
             ]);
         }
 
         // If user is logged in but with wrong email
-        if (auth()->check() && auth()->user()->email !== $invitation->email) {
-            return view('teams.invitations.wrong-account', [
-                'invitation' => $invitation,
-            ]);
-        }
-
-        // For guests, show registration option
-        return view('teams.invitations.show', [
+        return view('teams.invitations.wrong-account', [
             'invitation' => $invitation,
         ]);
     }
@@ -156,9 +155,24 @@ class TeamInvitationController extends Controller
         }
         
         // Add user to team with the specified role
-        $invitation->team->users()->attach($user->id, [
-            'role' => $invitation->role,
-        ]);
+        $invitation->team->users()->attach($user->id, ['role' => $invitation->role]);
+        
+        // Assign team role and permissions
+        if ($invitation->role === 'admin') {
+            $user->assignRole('team-admin');
+            $user->givePermissionTo([
+                'manage-team-settings',
+                'invite-team-members',
+                'remove-team-members',
+                'view-team-billing',
+            ]);
+        } else {
+            $user->assignRole('team-member');
+            $user->givePermissionTo([
+                'access-team-resources',
+                'view-team-dashboard',
+            ]);
+        }
         
         // Set this as the user's current team if they don't have one
         if (!$user->current_team_id) {
@@ -200,7 +214,6 @@ class TeamInvitationController extends Controller
             abort(403);
         }
         
-        // Ensure the invitation belongs to this team
         if ($invitation->team_id !== $team->id) {
             abort(404);
         }
