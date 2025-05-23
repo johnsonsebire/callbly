@@ -6,6 +6,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Models\SenderName;
 use App\Models\Contact;
+use App\Models\TeamUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -69,8 +70,9 @@ class TeamController extends Controller
      */
     public function show(Team $team)
     {
-        if (!Gate::allows('view', $team)) {
-            abort(403);
+        // Access check using User model's belongsToTeam method
+        if (!auth()->user()->belongsToTeam($team)) {
+            abort(403, 'You do not have access to this team.');
         }
 
         $members = $team->users()
@@ -93,8 +95,9 @@ class TeamController extends Controller
      */
     public function update(Request $request, Team $team)
     {
-        if (!Gate::allows('update-team', $team)) {
-            abort(403);
+        // Check if user can update team using ownsTeam method
+        if (!auth()->user()->ownsTeam($team)) {
+            abort(403, 'Only team owners can update team settings.');
         }
 
         $validated = $request->validate([
@@ -106,33 +109,26 @@ class TeamController extends Controller
         ]);
 
         DB::transaction(function () use ($team, $validated) {
-            // Update team settings
             $team->update($validated);
 
-            // Handle sender names sharing
             if (isset($validated['share_sender_names'])) {
                 if ($validated['share_sender_names']) {
-                    // Share all owner's sender names with the team
                     $senderNames = SenderName::where('user_id', $team->owner_id)
                                            ->approved()
                                            ->get();
                     $team->syncResources($senderNames, 'sender_name');
                 } else {
-                    // Remove all shared sender names
                     $team->teamResources()
                          ->where('resource_type', 'sender_name')
                          ->delete();
                 }
             }
 
-            // Handle contacts sharing
             if (isset($validated['share_contacts'])) {
                 if ($validated['share_contacts']) {
-                    // Share all owner's contacts with the team
                     $contacts = Contact::where('user_id', $team->owner_id)->get();
                     $team->syncResources($contacts, 'contact');
                 } else {
-                    // Remove all shared contacts
                     $team->teamResources()
                          ->where('resource_type', 'contact')
                          ->delete();
@@ -148,30 +144,99 @@ class TeamController extends Controller
      */
     public function destroy(Team $team)
     {
-        if (!Gate::allows('delete', $team)) {
-            abort(403);
+        // Check if user can delete team using ownsTeam method
+        if (!auth()->user()->ownsTeam($team)) {
+            abort(403, 'Only team owners can delete teams.');
         }
 
-        // Don't allow deleting personal teams
         if ($team->personal_team) {
             return back()->with('error', 'Cannot delete personal team.');
         }
 
         DB::transaction(function () use ($team) {
-            // Remove all team resources
             $team->teamResources()->delete();
-            
-            // Remove all team memberships
             $team->users()->detach();
-            
-            // Delete pending invitations
             $team->invitations()->delete();
-            
-            // Finally delete the team
             $team->delete();
         });
 
         return redirect()->route('teams.index')
                         ->with('success', 'Team deleted successfully.');
+    }
+
+    /**
+     * Update team member role.
+     */
+    public function updateMember(Request $request, Team $team, User $user)
+    {
+        if (!auth()->user()->ownsTeam($team)) {
+            abort(403, 'Only team owners can update member roles.');
+        }
+
+        $validated = $request->validate([
+            'role' => ['required', 'string', 'in:' . implode(',', TeamUser::roles())]
+        ]);
+
+        if ($user->id === $team->owner_id) {
+            return back()->with('error', 'Cannot change the role of the team owner.');
+        }
+
+        $team->users()->updateExistingPivot($user->id, [
+            'role' => $validated['role']
+        ]);
+
+        return back()->with('success', 'Team member role updated successfully.');
+    }
+
+    /**
+     * Remove team member.
+     */
+    public function removeMember(Team $team, User $user)
+    {
+        if (!auth()->user()->ownsTeam($team)) {
+            abort(403, 'Only team owners can remove team members.');
+        }
+
+        if ($user->id === $team->owner_id) {
+            return back()->with('error', 'Cannot remove the team owner.');
+        }
+
+        $team->users()->detach($user->id);
+
+        return back()->with('success', 'Team member removed successfully.');
+    }
+
+    /**
+     * Leave team.
+     */
+    public function leave(Team $team)
+    {
+        $user = auth()->user();
+
+        if ($user->id === $team->owner_id) {
+            return back()->with('error', 'Team owners cannot leave their own team.');
+        }
+
+        $team->users()->detach($user->id);
+
+        return redirect()->route('teams.index')
+                        ->with('success', 'You have left the team successfully.');
+    }
+
+    /**
+     * Switch to team.
+     */
+    public function switchTeam(Team $team)
+    {
+        $user = auth()->user();
+
+        if (!$user->belongsToTeam($team)) {
+            abort(403, 'You do not have access to this team.');
+        }
+
+        $user->current_team_id = $team->id;
+        $user->save();
+
+        return back()->with('success', 'Current team switched successfully.');
     }
 }

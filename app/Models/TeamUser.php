@@ -8,13 +8,18 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 class TeamUser extends Pivot
 {
     /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = true;
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
     protected $fillable = [
-        'team_id',
-        'user_id',
         'role',
         'permissions',
     ];
@@ -27,6 +32,38 @@ class TeamUser extends Pivot
     protected $casts = [
         'permissions' => 'json',
     ];
+
+    /**
+     * Check if the user has admin role in the team
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Check if the user has member role in the team
+     */
+    public function isMember(): bool
+    {
+        return $this->role === 'member';
+    }
+
+    /**
+     * Check if the user is owner of the team
+     */
+    public function isOwner(): bool
+    {
+        return $this->role === 'owner';
+    }
+
+    /**
+     * Get all available team roles
+     */
+    public static function roles(): array
+    {
+        return ['owner', 'admin', 'member'];
+    }
 
     /**
      * Get the team that the user belongs to.

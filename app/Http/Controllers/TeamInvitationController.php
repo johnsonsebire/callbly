@@ -131,7 +131,9 @@ class TeamInvitationController extends Controller
      */
     public function accept(Request $request, string $token)
     {
-        $invitation = TeamInvitation::where('token', $token)->first();
+        $invitation = TeamInvitation::where('token', $token)
+            ->with('team.owner')
+            ->first();
         
         if (!$invitation || $invitation->hasExpired()) {
             return redirect()->route('login')
@@ -153,9 +155,38 @@ class TeamInvitationController extends Controller
             return redirect()->route('login')
                 ->with('error', 'Please log in with the email address that received the invitation (' . $invitation->email . ')');
         }
+
+        // Check if user is already on the team
+        if ($invitation->team->hasUser($user)) {
+            return back()->with('error', 'You are already a member of this team.');
+        }
         
         // Add user to team with the specified role
         $invitation->team->users()->attach($user->id, ['role' => $invitation->role]);
+
+        // Make sure roles exist
+        if (!Role::where('name', 'team-admin')->exists()) {
+            Role::create(['name' => 'team-admin']);
+        }
+        if (!Role::where('name', 'team-member')->exists()) {
+            Role::create(['name' => 'team-member']);
+        }
+
+        // Create necessary permissions if they don't exist
+        $permissions = [
+            'manage-team-settings',
+            'invite-team-members',
+            'remove-team-members',
+            'view-team-billing',
+            'access-team-resources',
+            'view-team-dashboard'
+        ];
+
+        foreach ($permissions as $permissionName) {
+            if (!Permission::where('name', $permissionName)->exists()) {
+                Permission::create(['name' => $permissionName]);
+            }
+        }
         
         // Assign team role and permissions
         if ($invitation->role === 'admin') {
@@ -164,13 +195,13 @@ class TeamInvitationController extends Controller
                 'manage-team-settings',
                 'invite-team-members',
                 'remove-team-members',
-                'view-team-billing',
+                'view-team-billing'
             ]);
         } else {
             $user->assignRole('team-member');
             $user->givePermissionTo([
                 'access-team-resources',
-                'view-team-dashboard',
+                'view-team-dashboard'
             ]);
         }
         
