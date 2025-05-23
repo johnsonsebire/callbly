@@ -24,6 +24,13 @@ return new class extends Migration
             $table->unsignedBigInteger('model_id');
             $table->unsignedBigInteger('team_id')->nullable();
 
+            // Create primary key without team_id
+            $table->primary(['role_id', 'model_id', 'model_type']);
+
+            // Add unique constraint including team_id
+            $table->unique(['team_id', 'role_id', 'model_id', 'model_type'], 
+                'model_has_roles_team_role_unique');
+
             $table->foreign('team_id')
                   ->references('id')
                   ->on('teams')
@@ -33,9 +40,6 @@ return new class extends Migration
                   ->references('id')
                   ->on('roles')
                   ->onDelete('cascade');
-
-            $table->primary(['team_id', 'role_id', 'model_id', 'model_type'],
-                'model_has_roles_role_model_type_primary');
 
             $table->index(['model_id', 'model_type']);
         });
