@@ -11,11 +11,33 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // First, drop the foreign key constraint from users table
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['current_team_id']);
-            $table->dropColumn('current_team_id');
-        });
+        // Drop foreign keys from all tables that reference teams
+        if (Schema::hasTable('users')) {
+            Schema::table('users', function (Blueprint $table) {
+                if (Schema::hasColumn('users', 'current_team_id')) {
+                    $table->dropForeign(['current_team_id']);
+                    $table->dropColumn('current_team_id');
+                }
+            });
+        }
+
+        if (Schema::hasTable('sender_names')) {
+            Schema::table('sender_names', function (Blueprint $table) {
+                if (Schema::hasColumn('sender_names', 'team_id')) {
+                    $table->dropForeign(['team_id']);
+                    $table->dropColumn('team_id');
+                }
+            });
+        }
+
+        if (Schema::hasTable('contacts')) {
+            Schema::table('contacts', function (Blueprint $table) {
+                if (Schema::hasColumn('contacts', 'team_id')) {
+                    $table->dropForeign(['team_id']);
+                    $table->dropColumn('team_id');
+                }
+            });
+        }
 
         // Now we can safely drop the team-related tables in the correct order
         Schema::dropIfExists('team_resources');
@@ -29,6 +51,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // No need to reverse as this is a cleanup migration
+        // This is a cleanup migration, no down() needed
     }
 };
