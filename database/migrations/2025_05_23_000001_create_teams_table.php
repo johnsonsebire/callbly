@@ -11,6 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Drop existing tables if they exist
+        Schema::dropIfExists('team_resources');
+        Schema::dropIfExists('team_invitations');
+        Schema::dropIfExists('team_user');
+        Schema::dropIfExists('teams');
+        // Create new tables
         Schema::create('teams', function (Blueprint $table) {
             $table->id();
             $table->foreignId('owner_id')->constrained('users')->onDelete('cascade');
