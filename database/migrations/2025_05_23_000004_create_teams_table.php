@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -64,25 +65,45 @@ return new class extends Migration
             $table->index(['resource_type', 'resource_id']);
         });
 
-        // Add current_team_id to users table
-        Schema::table('users', function (Blueprint $table) {
-            $table->foreignId('current_team_id')->nullable()->after('remember_token')
-                  ->constrained('teams')->nullOnDelete();
-        });
+        // Add current_team_id to users table if it doesn't exist
+        if (!Schema::hasColumn('users', 'current_team_id')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->foreignId('current_team_id')->nullable()->after('remember_token')
+                      ->constrained('teams')->nullOnDelete();
+            });
+        }
 
-        // Add team_id to contacts table
-        Schema::table('contacts', function (Blueprint $table) {
-            $table->foreignId('team_id')->nullable()->after('user_id')
-                  ->constrained()->nullOnDelete();
-            $table->index(['team_id', 'user_id']);
-        });
+        // Add team_id to contacts table if it doesn't exist
+        if (!Schema::hasColumn('contacts', 'team_id')) {
+            Schema::table('contacts', function (Blueprint $table) {
+                $table->foreignId('team_id')->nullable()->after('user_id')
+                      ->constrained()->nullOnDelete();
+            });
+        }
 
-        // Add team_id to sender_names table
-        Schema::table('sender_names', function (Blueprint $table) {
-            $table->foreignId('team_id')->nullable()->after('user_id')
-                  ->constrained()->nullOnDelete();
-            $table->index(['team_id', 'status']);
-        });
+        // Check if the index exists before creating it
+        $contactIndexExists = collect(DB::select("SHOW INDEXES FROM contacts WHERE Key_name = 'contacts_team_id_user_id_index'"))->isNotEmpty();
+        if (!$contactIndexExists) {
+            Schema::table('contacts', function (Blueprint $table) {
+                $table->index(['team_id', 'user_id']);
+            });
+        }
+
+        // Add team_id to sender_names table if it doesn't exist
+        if (!Schema::hasColumn('sender_names', 'team_id')) {
+            Schema::table('sender_names', function (Blueprint $table) {
+                $table->foreignId('team_id')->nullable()->after('user_id')
+                      ->constrained()->nullOnDelete();
+            });
+        }
+
+        // Check if the index exists before creating it
+        $senderNameIndexExists = collect(DB::select("SHOW INDEXES FROM sender_names WHERE Key_name = 'sender_names_team_id_status_index'"))->isNotEmpty();
+        if (!$senderNameIndexExists) {
+            Schema::table('sender_names', function (Blueprint $table) {
+                $table->index(['team_id', 'status']);
+            });
+        }
     }
 
     /**
@@ -90,25 +111,52 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop team_id from sender_names
-        Schema::table('sender_names', function (Blueprint $table) {
-            $table->dropIndex(['team_id', 'status']);
-            $table->dropForeign(['team_id']);
-            $table->dropColumn('team_id');
-        });
+        // Drop indexes first
+        if (Schema::hasTable('sender_names')) {
+            $senderNameIndexExists = collect(DB::select("SHOW INDEXES FROM sender_names WHERE Key_name = 'sender_names_team_id_status_index'"))->isNotEmpty();
+            if ($senderNameIndexExists) {
+                Schema::table('sender_names', function (Blueprint $table) {
+                    $table->dropIndex('sender_names_team_id_status_index');
+                });
+            }
+        }
 
-        // Drop team_id from contacts
-        Schema::table('contacts', function (Blueprint $table) {
-            $table->dropIndex(['team_id', 'user_id']);
-            $table->dropForeign(['team_id']);
-            $table->dropColumn('team_id');
-        });
+        if (Schema::hasTable('contacts')) {
+            $contactIndexExists = collect(DB::select("SHOW INDEXES FROM contacts WHERE Key_name = 'contacts_team_id_user_id_index'"))->isNotEmpty();
+            if ($contactIndexExists) {
+                Schema::table('contacts', function (Blueprint $table) {
+                    $table->dropIndex('contacts_team_id_user_id_index');
+                });
+            }
+        }
 
-        // Drop current_team_id from users
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['current_team_id']);
-            $table->dropColumn('current_team_id');
-        });
+        // Drop foreign keys and columns
+        if (Schema::hasTable('sender_names')) {
+            Schema::table('sender_names', function (Blueprint $table) {
+                if (Schema::hasColumn('sender_names', 'team_id')) {
+                    $table->dropForeign(['team_id']);
+                    $table->dropColumn('team_id');
+                }
+            });
+        }
+
+        if (Schema::hasTable('contacts')) {
+            Schema::table('contacts', function (Blueprint $table) {
+                if (Schema::hasColumn('contacts', 'team_id')) {
+                    $table->dropForeign(['team_id']);
+                    $table->dropColumn('team_id');
+                }
+            });
+        }
+
+        if (Schema::hasTable('users')) {
+            Schema::table('users', function (Blueprint $table) {
+                if (Schema::hasColumn('users', 'current_team_id')) {
+                    $table->dropForeign(['current_team_id']);
+                    $table->dropColumn('current_team_id');
+                }
+            });
+        }
 
         // Drop team-related tables
         Schema::dropIfExists('team_resources');
