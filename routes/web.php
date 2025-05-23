@@ -221,15 +221,19 @@ Route::middleware('auth')->group(function () {
         Route::post('/switch/{team}', [TeamController::class, 'switchTeam'])->name('switch');
         
         // Team Invitations
-        Route::get('/{team}/invitations/create', [TeamInvitationController::class, 'create'])->name('invitations.create');
-        Route::post('/{team}/invitations', [TeamInvitationController::class, 'store'])->name('invitations.store');
-        Route::delete('/{team}/invitations/{invitation}', [TeamInvitationController::class, 'destroy'])->name('invitations.destroy');
+        Route::middleware('auth')->group(function() {
+            Route::get('/{team}/invitations/create', [TeamInvitationController::class, 'create'])->name('invitations.create');
+            Route::post('/{team}/invitations', [TeamInvitationController::class, 'store'])->name('invitations.store');
+            Route::delete('/{team}/invitations/{invitation}', [TeamInvitationController::class, 'destroy'])->name('invitations.destroy');
+        });
     });
     
-    // Team Invitation Acceptance Routes (outside auth middleware since guests might need to access)
-    Route::get('/team-invitations/{token}', [TeamInvitationController::class, 'show'])->name('team-invitations.show');
-    Route::post('/team-invitations/{token}/accept', [TeamInvitationController::class, 'accept'])->name('team-invitations.accept');
-    Route::post('/team-invitations/{token}/decline', [TeamInvitationController::class, 'decline'])->name('team-invitations.decline');
+    // Team Invitation Acceptance Routes (no auth middleware since guests need access)
+    Route::prefix('team-invitations')->name('team-invitations.')->group(function() {
+        Route::get('/{token}', [TeamInvitationController::class, 'show'])->name('show');
+        Route::post('/{token}/accept', [TeamInvitationController::class, 'accept'])->name('accept');
+        Route::post('/{token}/decline', [TeamInvitationController::class, 'decline'])->name('decline');
+    });
 
     // Super Admin Sender Name Approval Routes
     Route::middleware(['auth','role:super-admin'])->prefix('admin')->name('admin.')->group(function () {

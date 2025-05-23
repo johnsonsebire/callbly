@@ -14,12 +14,6 @@ use Illuminate\Support\Str;
 
 class TeamInvitationController extends Controller
 {
-    public function __construct()
-    {
-        // Only apply auth middleware to specific methods
-        $this->middleware('auth')->only(['create', 'store', 'destroy']);
-    }
-
     /**
      * Display the invite form.
      */
