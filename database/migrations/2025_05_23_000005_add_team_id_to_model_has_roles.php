@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,22 +12,42 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Add team_id to model_has_roles if it doesn't exist
-        if (!Schema::hasColumn('model_has_roles', 'team_id')) {
-            Schema::table('model_has_roles', function (Blueprint $table) {
-                $table->unsignedBigInteger('team_id')->nullable()->after('model_id');
-                $table->foreign('team_id')
-                      ->references('id')
-                      ->on('teams')
-                      ->onDelete('cascade');
+        // First, get all existing role assignments to preserve them
+        $existingRoles = DB::table('model_has_roles')->get();
+        
+        // Drop the existing model_has_roles table and recreate it with team_id
+        Schema::dropIfExists('model_has_roles');
+        
+        Schema::create('model_has_roles', function (Blueprint $table) {
+            $table->unsignedBigInteger('role_id');
+            $table->string('model_type');
+            $table->unsignedBigInteger('model_id');
+            $table->unsignedBigInteger('team_id')->nullable();
 
-                // Drop the existing primary key
-                $table->dropPrimary();
-                
-                // Create new primary key including team_id
-                $table->primary(['team_id', 'role_id', 'model_id', 'model_type'],
-                    'model_has_roles_role_model_type_primary');
-            });
+            $table->foreign('team_id')
+                  ->references('id')
+                  ->on('teams')
+                  ->onDelete('cascade');
+                  
+            $table->foreign('role_id')
+                  ->references('id')
+                  ->on('roles')
+                  ->onDelete('cascade');
+
+            $table->primary(['team_id', 'role_id', 'model_id', 'model_type'],
+                'model_has_roles_role_model_type_primary');
+
+            $table->index(['model_id', 'model_type']);
+        });
+
+        // Restore the existing role assignments
+        foreach ($existingRoles as $role) {
+            DB::table('model_has_roles')->insert([
+                'role_id' => $role->role_id,
+                'model_type' => $role->model_type,
+                'model_id' => $role->model_id,
+                'team_id' => null // Set default team_id as null for existing roles
+            ]);
         }
         
         // Add team_id to roles if it doesn't exist
@@ -46,21 +67,32 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasColumn('model_has_roles', 'team_id')) {
-            Schema::table('model_has_roles', function (Blueprint $table) {
-                // Drop the current primary key
-                $table->dropPrimary();
-                
-                // Drop the foreign key
-                $table->dropForeign(['team_id']);
-                
-                // Drop the team_id column
-                $table->dropColumn('team_id');
-                
-                // Recreate the original primary key
-                $table->primary(['role_id', 'model_id', 'model_type'],
-                    'model_has_roles_role_model_type_primary');
-            });
+        // Get existing role assignments
+        $existingRoles = DB::table('model_has_roles')->get();
+        
+        // Drop and recreate the table without team_id
+        Schema::dropIfExists('model_has_roles');
+        
+        Schema::create('model_has_roles', function (Blueprint $table) {
+            $table->unsignedBigInteger('role_id');
+            $table->string('model_type');
+            $table->unsignedBigInteger('model_id');
+
+            $table->foreign('role_id')
+                  ->references('id')
+                  ->on('roles')
+                  ->onDelete('cascade');
+
+            $table->primary(['role_id', 'model_id', 'model_type']);
+        });
+
+        // Restore role assignments
+        foreach ($existingRoles as $role) {
+            DB::table('model_has_roles')->insert([
+                'role_id' => $role->role_id,
+                'model_type' => $role->model_type,
+                'model_id' => $role->model_id
+            ]);
         }
 
         if (Schema::hasColumn('roles', 'team_id')) {
