@@ -12,58 +12,66 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Create teams table
-        Schema::create('teams', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('owner_id')->constrained('users')->onDelete('cascade');
-            $table->string('name');
-            $table->string('slug')->unique();
-            $table->text('description')->nullable();
-            $table->string('logo_path')->nullable();
-            $table->boolean('personal_team')->default(false);
-            $table->boolean('share_sms_credits')->default(false);
-            $table->boolean('share_contacts')->default(false);
-            $table->boolean('share_sender_names')->default(false);
-            $table->timestamps();
-        });
+        // Create teams table if it doesn't exist
+        if (!Schema::hasTable('teams')) {
+            Schema::create('teams', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('owner_id')->constrained('users')->onDelete('cascade');
+                $table->string('name');
+                $table->string('slug')->unique();
+                $table->text('description')->nullable();
+                $table->string('logo_path')->nullable();
+                $table->boolean('personal_team')->default(false);
+                $table->boolean('share_sms_credits')->default(false);
+                $table->boolean('share_contacts')->default(false);
+                $table->boolean('share_sender_names')->default(false);
+                $table->timestamps();
+            });
+        }
 
-        // Create team_user pivot table
-        Schema::create('team_user', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('team_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('role');
-            $table->json('permissions')->nullable();
-            $table->timestamps();
+        // Create team_user pivot table if it doesn't exist
+        if (!Schema::hasTable('team_user')) {
+            Schema::create('team_user', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('team_id')->constrained()->onDelete('cascade');
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->string('role');
+                $table->json('permissions')->nullable();
+                $table->timestamps();
 
-            $table->unique(['team_id', 'user_id']);
-        });
+                $table->unique(['team_id', 'user_id']);
+            });
+        }
 
-        // Create team_invitations table
-        Schema::create('team_invitations', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('team_id')->constrained()->onDelete('cascade');
-            $table->string('email');
-            $table->string('role');
-            $table->string('token', 64)->unique();
-            $table->timestamp('expires_at');
-            $table->timestamps();
+        // Create team_invitations table if it doesn't exist
+        if (!Schema::hasTable('team_invitations')) {
+            Schema::create('team_invitations', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('team_id')->constrained()->onDelete('cascade');
+                $table->string('email');
+                $table->string('role');
+                $table->string('token', 64)->unique();
+                $table->timestamp('expires_at');
+                $table->timestamps();
 
-            $table->unique(['team_id', 'email']);
-        });
+                $table->unique(['team_id', 'email']);
+            });
+        }
 
-        // Create team_resources table
-        Schema::create('team_resources', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('team_id')->constrained()->onDelete('cascade');
-            $table->string('resource_type');
-            $table->unsignedBigInteger('resource_id');
-            $table->boolean('is_shared')->default(true);
-            $table->timestamps();
+        // Create team_resources table if it doesn't exist
+        if (!Schema::hasTable('team_resources')) {
+            Schema::create('team_resources', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('team_id')->constrained()->onDelete('cascade');
+                $table->string('resource_type');
+                $table->unsignedBigInteger('resource_id');
+                $table->boolean('is_shared')->default(true);
+                $table->timestamps();
 
-            $table->unique(['team_id', 'resource_type', 'resource_id'], 'team_resources_unique');
-            $table->index(['resource_type', 'resource_id']);
-        });
+                $table->unique(['team_id', 'resource_type', 'resource_id'], 'team_resources_unique');
+                $table->index(['resource_type', 'resource_id']);
+            });
+        }
 
         // Add current_team_id to users table if it doesn't exist
         if (!Schema::hasColumn('users', 'current_team_id')) {
@@ -81,7 +89,7 @@ return new class extends Migration
             });
         }
 
-        // Check if the index exists before creating it
+        // Add indexes if they don't exist
         $contactIndexExists = collect(DB::select("SHOW INDEXES FROM contacts WHERE Key_name = 'contacts_team_id_user_id_index'"))->isNotEmpty();
         if (!$contactIndexExists) {
             Schema::table('contacts', function (Blueprint $table) {
@@ -97,7 +105,7 @@ return new class extends Migration
             });
         }
 
-        // Check if the index exists before creating it
+        // Add index to sender_names if it doesn't exist
         $senderNameIndexExists = collect(DB::select("SHOW INDEXES FROM sender_names WHERE Key_name = 'sender_names_team_id_status_index'"))->isNotEmpty();
         if (!$senderNameIndexExists) {
             Schema::table('sender_names', function (Blueprint $table) {
@@ -111,12 +119,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Drop indexes first
+        // Drop indexes first if they exist
         if (Schema::hasTable('sender_names')) {
             $senderNameIndexExists = collect(DB::select("SHOW INDEXES FROM sender_names WHERE Key_name = 'sender_names_team_id_status_index'"))->isNotEmpty();
             if ($senderNameIndexExists) {
                 Schema::table('sender_names', function (Blueprint $table) {
-                    $table->dropIndex('sender_names_team_id_status_index');
+                    $table->dropIndex(['team_id', 'status']);
                 });
             }
         }
@@ -125,7 +133,7 @@ return new class extends Migration
             $contactIndexExists = collect(DB::select("SHOW INDEXES FROM contacts WHERE Key_name = 'contacts_team_id_user_id_index'"))->isNotEmpty();
             if ($contactIndexExists) {
                 Schema::table('contacts', function (Blueprint $table) {
-                    $table->dropIndex('contacts_team_id_user_id_index');
+                    $table->dropIndex(['team_id', 'user_id']);
                 });
             }
         }
