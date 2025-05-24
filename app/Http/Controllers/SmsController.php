@@ -474,15 +474,24 @@ class SmsController extends Controller
             \Illuminate\Support\Facades\Log::info('API response received', [
                 'success' => $responseData['success'] ?? false,
                 'message' => $responseData['message'] ?? null,
-                'data' => $responseData['data'] ?? null
+                'data' => $responseData['data'] ?? null,
+                'response_status_code' => $apiResponse->getStatusCode()
             ]);
             
-            if ($responseData['success'] ?? false) {
+            // Force campaign update to get the latest metrics
+            $campaign->updateMetrics();
+            $campaign->refresh();
+            
+            // Consider the campaign successful if API returned success OR if we have any delivered messages
+            $isSuccessful = ($responseData['success'] ?? false) || ($campaign->delivered_count > 0);
+            
+            if ($isSuccessful) {
                 // Debug log to track credit deduction
                 \Illuminate\Support\Facades\Log::info('About to deduct SMS credits in web controller', [
                     'user_id' => $user->id,
                     'campaign_id' => $campaign->id,
-                    'credits_needed' => $creditsNeeded
+                    'credits_needed' => $creditsNeeded,
+                    'user_credits_before' => $user->sms_credits
                 ]);
                 
                 // Use our centralized method for credit deduction
@@ -496,23 +505,31 @@ class SmsController extends Controller
                         'credits_needed' => $creditsNeeded,
                         'error' => $creditResult['message']
                     ]);
-                    
-                    // Don't fail the request as SMS is already sent, but log the error
                 }
                 
                 // Update campaign with team credit info if applicable
                 if (isset($creditResult['team_id']) && $creditResult['team_id']) {
                     $campaign->update([
                         'team_id' => $creditResult['team_id'],
-                        'team_credits_used' => $creditResult['team_credits_used']
+                        'team_credits_used' => $creditResult['team_credits_used'],
+                        'credits_used' => $creditsNeeded // Ensure credits_used is set correctly
+                    ]);
+                } else {
+                    // Just update the credits used
+                    $campaign->update([
+                        'credits_used' => $creditsNeeded
                     ]);
                 }
+                
+                // Refresh user to get the latest credit balance
+                $user->refresh();
                 
                 \Illuminate\Support\Facades\Log::info('SMS campaign sent successfully', [
                     'campaign_id' => $campaign->id,
                     'personal_credits_used' => $creditResult['personal_credits_used'] ?? 0,
                     'team_credits_used' => $creditResult['team_credits_used'] ?? 0,
-                    'user_credits_after' => $user->fresh()->sms_credits
+                    'user_credits_before' => $creditResult['initial_credits'] ?? 'unknown',
+                    'user_credits_after' => $user->sms_credits
                 ]);
                 
                 // Redirect with success message
