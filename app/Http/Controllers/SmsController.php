@@ -477,25 +477,59 @@ class SmsController extends Controller
             ]);
             
             if ($responseData['success'] ?? false) {
+                // Track if we're using team credits and how much
+                $teamCreditsNeeded = 0;
+                $teamId = null;
+                
                 // Deduct credits - prioritize using the user's personal credits first
                 $deductCredits = min($user->sms_credits, $creditsNeeded);
                 $user->update([
                     'sms_credits' => $user->sms_credits - $deductCredits
                 ]);
                 
-                // If the user is using team credits, handle that separately
-                // Note: Currently we're not implementing the actual deduction from team owners
-                // because that would require additional complexity to track usage
+                // If the user is a team member and needed more credits than they personally had
+                $remainingCreditsNeeded = $creditsNeeded - $deductCredits;
+                if ($remainingCreditsNeeded > 0) {
+                    // Find the team that is sharing credits with this user
+                    $team = $user->teams()
+                        ->where('share_sms_credits', true)
+                        ->first();
+                    
+                    if ($team) {
+                        $teamOwner = $team->owner;
+                        $teamId = $team->id;
+                        
+                        // Deduct the remaining credits from the team owner
+                        if ($teamOwner && $teamOwner->sms_credits >= $remainingCreditsNeeded) {
+                            $teamOwner->update([
+                                'sms_credits' => $teamOwner->sms_credits - $remainingCreditsNeeded
+                            ]);
+                            $teamCreditsNeeded = $remainingCreditsNeeded;
+                            
+                            // Log the team credit usage
+                            \Illuminate\Support\Facades\Log::info('Team credits used', [
+                                'team_id' => $team->id,
+                                'team_owner_id' => $teamOwner->id,
+                                'credits_used' => $remainingCreditsNeeded,
+                                'user_id' => $user->id
+                            ]);
+                        }
+                    }
+                }
                 
                 // Update campaign status if needed
                 if (!$scheduledAt || $scheduledAt <= now()) {
                     $campaign->update([
                         'status' => 'processing',
+                        'team_id' => $teamId,
+                        'team_credits_used' => $teamCreditsNeeded
                     ]);
                 }
                 
                 \Illuminate\Support\Facades\Log::info('SMS campaign sent successfully', [
-                    'campaign_id' => $campaign->id
+                    'campaign_id' => $campaign->id,
+                    'personal_credits_used' => $deductCredits,
+                    'team_credits_used' => $teamCreditsNeeded
                 ]);
                 
                 // Redirect with success message

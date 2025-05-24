@@ -5,6 +5,9 @@ namespace App\Providers;
 use App\Http\Middleware\TeamAccess;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Spatie\Permission\Middlewares\RoleMiddleware;
+use Spatie\Permission\Middlewares\PermissionMiddleware;
+use Spatie\Permission\Middlewares\RoleOrPermissionMiddleware;
 
 class RouteMiddlewareProvider extends RouteServiceProvider
 {
@@ -14,6 +17,9 @@ class RouteMiddlewareProvider extends RouteServiceProvider
     public function register(): void
     {
         Route::middleware('team.access', TeamAccess::class);
+        Route::middleware('role', RoleMiddleware::class);
+        Route::middleware('permission', PermissionMiddleware::class);
+        Route::middleware('role_or_permission', RoleOrPermissionMiddleware::class);
     }
 
     /**

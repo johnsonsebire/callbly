@@ -394,7 +394,8 @@ class SmsService
             // Determine recipient status based on the SMS result
             $status = 'pending';
             if ($result['success'] ?? false) {
-                $status = 'sent';
+                // Change status to 'delivered' instead of 'sent' to properly reflect successful delivery
+                $status = 'delivered';
             } elseif (isset($result['error'])) {
                 $status = 'failed';
             }
@@ -413,7 +414,7 @@ class SmsService
             $recipientRecord->save();
             
             // If the message was sent successfully, update the campaign statistics
-            if ($status === 'sent') {
+            if ($status === 'delivered') {
                 // Update campaign with single recipient
                 $this->updateCampaignStatistics($campaignId, $result, 1);
             }
