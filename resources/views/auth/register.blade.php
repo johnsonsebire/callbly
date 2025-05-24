@@ -3,6 +3,27 @@
 @section('title', 'Create Account')
 
 @section('content')
+<!-- Team Invitation Message -->
+@if (session('message'))
+<div class="alert alert-info mb-4" role="alert">
+    <div class="d-flex">
+        <div class="me-3">
+            <i class="bi bi-info-circle-fill fs-4"></i>
+        </div>
+        <div>
+            <h4 class="alert-heading fs-5">Team Invitation</h4>
+            <p class="mb-0">{{ session('message') }}</p>
+        </div>
+    </div>
+</div>
+@endif
+
+@if (session('error'))
+<div class="alert alert-danger mb-4">
+    {{ session('error') }}
+</div>
+@endif
+
 <div class="text-center mb-4">
     <h1 class="fs-2 fw-bold mb-2">Create Your Account</h1>
     <p class="text-muted">Fill in the form below to get started</p>
@@ -27,7 +48,10 @@
         <label for="email" class="form-label fw-bold">
             {{ __('Email Address') }} <span class="text-danger">*</span>
         </label>
-        <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email">
+        <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') ?? request('email') }}" required autocomplete="email" {{ request('email') ? 'readonly' : '' }}>
+        @if(request('email'))
+            <div class="form-text">This email address matches your team invitation.</div>
+        @endif
         @error('email')
             <div class="invalid-feedback">
                 {{ $message }}

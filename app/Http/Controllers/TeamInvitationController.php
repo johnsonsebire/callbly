@@ -106,25 +106,37 @@ class TeamInvitationController extends Controller
                 ->with('error', 'This invitation has expired or is invalid.');
         }
 
-        // For guests, show login page with the invitation token stored in session
-        if (!auth()->check()) {
-            session(['team_invitation_token' => $token]);
-            return redirect()->route('login', ['email' => $invitation->email])
-                ->with('message', 'Please log in or create an account to join the team.');
-        }
-
-        // If user is logged in and invitation matches their email
-        if (auth()->user()->email === $invitation->email) {
-            return view('teams.invitations.accept', [
+        // Store invitation token in session for later use
+        session(['team_invitation_token' => $token]);
+        
+        // Check if user is already logged in
+        if (auth()->check()) {
+            // If user is logged in and invitation matches their email
+            if (auth()->user()->email === $invitation->email) {
+                return view('teams.invitations.accept', [
+                    'invitation' => $invitation,
+                ]);
+            }
+            
+            // If user is logged in but with wrong email
+            return view('teams.invitations.wrong-account', [
                 'invitation' => $invitation,
+                'invitedEmail' => $invitation->email,
             ]);
         }
-
-        // If user is logged in but with wrong email
-        return view('teams.invitations.wrong-account', [
-            'invitation' => $invitation,
-            'invitedEmail' => $invitation->email,
-        ]);
+        
+        // For guests, check if the invited email has an existing account
+        $existingUser = User::where('email', $invitation->email)->first();
+        
+        if ($existingUser) {
+            // Redirect to login with message if user already has an account
+            return redirect()->route('login', ['email' => $invitation->email])
+                ->with('message', 'You have been invited to join the team "' . $invitation->team->name . '". Please log in to accept the invitation.');
+        } else {
+            // Redirect to register with message if user doesn't have an account
+            return redirect()->route('register', ['email' => $invitation->email])
+                ->with('message', 'You have been invited to join the team "' . $invitation->team->name . '". Please create an account to accept the invitation.');
+        }
     }
     
     /**
