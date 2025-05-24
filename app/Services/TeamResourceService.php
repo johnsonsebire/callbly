@@ -6,8 +6,10 @@ use App\Models\Contact;
 use App\Models\ContactGroup;
 use App\Models\SenderName;
 use App\Models\User;
+use App\Models\Team;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class TeamResourceService
 {
@@ -36,6 +38,103 @@ class TeamResourceService
         }
 
         return $total;
+    }
+
+    /**
+     * Deduct SMS credits with proper handling of shared team credits
+     * 
+     * @param User $user The user sending the message
+     * @param int $creditsNeeded Total credits needed for the operation
+     * @return array Details of the deduction operation
+     */
+    public function deductSharedSmsCredits(User $user, int $creditsNeeded): array
+    {
+        // Initialize result
+        $result = [
+            'success' => false,
+            'personal_credits_used' => 0,
+            'team_credits_used' => 0,
+            'team_id' => null,
+            'team_owner_id' => null,
+            'message' => ''
+        ];
+
+        // Check if user has enough credits (including team credits)
+        $availableCredits = $this->getAvailableSmsCredits($user);
+        if ($availableCredits < $creditsNeeded) {
+            $result['message'] = "Insufficient credits. Need {$creditsNeeded}, but only have {$availableCredits}.";
+            return $result;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // First use personal credits
+            $personalCreditsToUse = min($user->sms_credits, $creditsNeeded);
+            if ($personalCreditsToUse > 0) {
+                $user->sms_credits -= $personalCreditsToUse;
+                $user->save();
+                $result['personal_credits_used'] = $personalCreditsToUse;
+            }
+
+            // If we need more credits than personal credits available, use team credits
+            $remainingCreditsNeeded = $creditsNeeded - $personalCreditsToUse;
+            if ($remainingCreditsNeeded > 0) {
+                // Find a team that shares credits with this user
+                $team = $user->teams()
+                    ->where('share_sms_credits', true)
+                    ->first();
+
+                if ($team && $team->owner) {
+                    $teamOwner = $team->owner;
+                    
+                    // Ensure team owner has enough credits
+                    if ($teamOwner->sms_credits >= $remainingCreditsNeeded) {
+                        $teamOwner->sms_credits -= $remainingCreditsNeeded;
+                        $teamOwner->save();
+                        
+                        $result['team_credits_used'] = $remainingCreditsNeeded;
+                        $result['team_id'] = $team->id;
+                        $result['team_owner_id'] = $teamOwner->id;
+                    } else {
+                        // If team owner doesn't have enough credits, roll back and return error
+                        DB::rollBack();
+                        $result['message'] = "Team owner doesn't have enough credits for the remaining {$remainingCreditsNeeded} credits needed.";
+                        return $result;
+                    }
+                } else {
+                    // No team with shared credits found
+                    DB::rollBack();
+                    $result['message'] = "No team with shared credits found for the remaining {$remainingCreditsNeeded} credits needed.";
+                    return $result;
+                }
+            }
+
+            DB::commit();
+            $result['success'] = true;
+            $result['message'] = "Successfully deducted credits.";
+            
+            // Log the credit deduction
+            Log::info('SMS credits deducted', [
+                'user_id' => $user->id,
+                'personal_credits_used' => $result['personal_credits_used'],
+                'team_credits_used' => $result['team_credits_used'],
+                'team_id' => $result['team_id'],
+                'team_owner_id' => $result['team_owner_id']
+            ]);
+            
+            return $result;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error deducting SMS credits', [
+                'user_id' => $user->id,
+                'credits_needed' => $creditsNeeded,
+                'error' => $e->getMessage()
+            ]);
+            
+            $result['message'] = "Error deducting credits: " . $e->getMessage();
+            return $result;
+        }
     }
 
     /**

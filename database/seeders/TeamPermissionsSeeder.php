@@ -31,11 +31,11 @@ class TeamPermissionsSeeder extends Seeder
         }
 
         // Get the super-admin role
-        $superAdminRole = Role::findByName('super-admin', 'web');
+        $superAdminRole = Role::findByName('super admin', 'web');
         
         // Add all team permissions to super-admin role
         $superAdminRole->givePermissionTo($teamPermissions);
 
-        $this->command->info('Team permissions assigned to super-admin role successfully.');
+        $this->command->info('Team permissions assigned to super admin role successfully.');
     }
 }

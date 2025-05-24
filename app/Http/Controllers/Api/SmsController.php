@@ -123,14 +123,28 @@ class SmsController extends Controller
                     'delivered_count' => 1
                 ]);
 
-                // Deduct credits from user's personal balance first
-                $personalCreditsToDeduct = min($user->sms_credits, $creditsNeeded);
-                $user->update([
-                    'sms_credits' => $user->sms_credits - $personalCreditsToDeduct
-                ]);
+                // Use our new credit deduction service to handle both personal and team credits
+                $teamResourceService = app(\App\Services\TeamResourceService::class);
+                $creditResult = $teamResourceService->deductSharedSmsCredits($user, $creditsNeeded);
                 
-                // Note: The remaining credits would be deducted from team credits
-                // but we're not implementing the actual team credit deduction here
+                if (!$creditResult['success']) {
+                    Log::error('Failed to deduct SMS credits', [
+                        'user_id' => $user->id,
+                        'campaign_id' => $campaign->id,
+                        'credits_needed' => $creditsNeeded,
+                        'error' => $creditResult['message']
+                    ]);
+                    
+                    // Don't fail the request as SMS is already sent, but log the error
+                }
+                
+                // Update campaign with team credit info if applicable
+                if ($creditResult['team_id']) {
+                    $campaign->update([
+                        'team_id' => $creditResult['team_id'],
+                        'team_credits_used' => $creditResult['team_credits_used']
+                    ]);
+                }
 
                 return response()->json([
                     'success' => true,
@@ -138,6 +152,8 @@ class SmsController extends Controller
                     'data' => [
                         'campaign_id' => $campaign->id,
                         'reference' => $result['reference'],
+                        'personal_credits_used' => $creditResult['personal_credits_used'],
+                        'team_credits_used' => $creditResult['team_credits_used']
                     ]
                 ]);
             } else {
@@ -293,14 +309,28 @@ class SmsController extends Controller
                     'failed_count' => $result['failed_count'] ?? 0,
                 ]);
 
-                // Deduct credits from user's personal balance first
-                $personalCreditsToDeduct = min($user->sms_credits, $creditsNeeded);
-                $user->update([
-                    'sms_credits' => $user->sms_credits - $personalCreditsToDeduct
-                ]);
+                // Use our new credit deduction service to handle both personal and team credits
+                $teamResourceService = app(\App\Services\TeamResourceService::class);
+                $creditResult = $teamResourceService->deductSharedSmsCredits($user, $creditsNeeded);
                 
-                // Note: The remaining credits would be deducted from team credits
-                // but we're not implementing the actual team credit deduction here
+                if (!$creditResult['success']) {
+                    Log::error('Failed to deduct SMS credits for bulk message', [
+                        'user_id' => $user->id,
+                        'campaign_id' => $campaign->id,
+                        'credits_needed' => $creditsNeeded,
+                        'error' => $creditResult['message']
+                    ]);
+                    
+                    // Don't fail the request as SMS is already sent, but log the error
+                }
+                
+                // Update campaign with team credit info if applicable
+                if ($creditResult['team_id']) {
+                    $campaign->update([
+                        'team_id' => $creditResult['team_id'],
+                        'team_credits_used' => $creditResult['team_credits_used']
+                    ]);
+                }
 
                 return response()->json([
                     'success' => true,
@@ -310,6 +340,8 @@ class SmsController extends Controller
                         'reference' => $result['reference'],
                         'recipients_count' => $recipientsCount,
                         'estimated_cost' => $creditsNeeded,
+                        'personal_credits_used' => $creditResult['personal_credits_used'],
+                        'team_credits_used' => $creditResult['team_credits_used']
                     ]
                 ]);
             } else {

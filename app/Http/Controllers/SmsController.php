@@ -477,59 +477,33 @@ class SmsController extends Controller
             ]);
             
             if ($responseData['success'] ?? false) {
-                // Track if we're using team credits and how much
-                $teamCreditsNeeded = 0;
-                $teamId = null;
+                // Use our new centralized method for credit deduction
+                $teamResourceService = app(\App\Services\TeamResourceService::class);
+                $creditResult = $teamResourceService->deductSharedSmsCredits($user, $creditsNeeded);
                 
-                // Deduct credits - prioritize using the user's personal credits first
-                $deductCredits = min($user->sms_credits, $creditsNeeded);
-                $user->update([
-                    'sms_credits' => $user->sms_credits - $deductCredits
-                ]);
-                
-                // If the user is a team member and needed more credits than they personally had
-                $remainingCreditsNeeded = $creditsNeeded - $deductCredits;
-                if ($remainingCreditsNeeded > 0) {
-                    // Find the team that is sharing credits with this user
-                    $team = $user->teams()
-                        ->where('share_sms_credits', true)
-                        ->first();
+                if (!$creditResult['success']) {
+                    \Illuminate\Support\Facades\Log::error('Failed to deduct SMS credits', [
+                        'user_id' => $user->id,
+                        'campaign_id' => $campaign->id,
+                        'credits_needed' => $creditsNeeded,
+                        'error' => $creditResult['message']
+                    ]);
                     
-                    if ($team) {
-                        $teamOwner = $team->owner;
-                        $teamId = $team->id;
-                        
-                        // Deduct the remaining credits from the team owner
-                        if ($teamOwner && $teamOwner->sms_credits >= $remainingCreditsNeeded) {
-                            $teamOwner->update([
-                                'sms_credits' => $teamOwner->sms_credits - $remainingCreditsNeeded
-                            ]);
-                            $teamCreditsNeeded = $remainingCreditsNeeded;
-                            
-                            // Log the team credit usage
-                            \Illuminate\Support\Facades\Log::info('Team credits used', [
-                                'team_id' => $team->id,
-                                'team_owner_id' => $teamOwner->id,
-                                'credits_used' => $remainingCreditsNeeded,
-                                'user_id' => $user->id
-                            ]);
-                        }
-                    }
+                    // Don't fail the request as SMS is already sent, but log the error
                 }
                 
-                // Update campaign status if needed
-                if (!$scheduledAt || $scheduledAt <= now()) {
+                // Update campaign with team credit info if applicable
+                if ($creditResult['team_id']) {
                     $campaign->update([
-                        'status' => 'processing',
-                        'team_id' => $teamId,
-                        'team_credits_used' => $teamCreditsNeeded
+                        'team_id' => $creditResult['team_id'],
+                        'team_credits_used' => $creditResult['team_credits_used']
                     ]);
                 }
                 
                 \Illuminate\Support\Facades\Log::info('SMS campaign sent successfully', [
                     'campaign_id' => $campaign->id,
-                    'personal_credits_used' => $deductCredits,
-                    'team_credits_used' => $teamCreditsNeeded
+                    'personal_credits_used' => $creditResult['personal_credits_used'],
+                    'team_credits_used' => $creditResult['team_credits_used']
                 ]);
                 
                 // Redirect with success message
