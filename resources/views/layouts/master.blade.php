@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
+@php
+Use Illuminate\Support\Str;
+@endphp 
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -33,6 +37,37 @@
         
         .app-header-logo img.logo-white {
             display: block;
+        }
+        
+        /* Mobile navigation styles */
+        #kt_app_header_mobile_toggle {
+            display: none;
+        }
+        
+        @media (max-width: 991.98px) {
+            #kt_app_header_mobile_toggle {
+                display: inline-flex;
+            }
+            
+            .mobile-nav-header {
+                padding: 10px 15px;
+                border-bottom: 1px solid #eee;
+            }
+            
+            .mobile-nav-item {
+                padding: 10px 15px;
+                border-bottom: 1px solid #f5f5f5;
+            }
+            
+            .mobile-nav-item.active {
+                background-color: #f8f9fa;
+            }
+            
+            .mobile-nav-item i {
+                width: 20px;
+                text-align: center;
+                margin-right: 10px;
+            }
         }
     </style>
 
@@ -70,6 +105,83 @@
             <!--begin::Wrapper-->
             <div class="app-wrapper flex-column flex-row-fluid" id="kt_app_wrapper">
                 @include('layouts.partials.sidebar')
+                
+                <!-- Mobile Navigation Drawer -->
+                <div id="kt_app_sidebar_mobile" class="bg-white offcanvas offcanvas-start d-lg-none" tabindex="-1">
+                    <div class="offcanvas-header mobile-nav-header d-flex align-items-center justify-content-between">
+                        <a href="{{ route('dashboard') }}" class="d-flex align-items-center">
+                            <img alt="Callbly Logo" src="{{ asset('assets/media/logos/callbly-favicon.png') }}" class="h-30px me-2" />
+                            <span class="fs-4 fw-bold text-dark">Callbly</span>
+                        </a>
+                        <div class="btn btn-icon btn-sm btn-active-color-primary" data-bs-dismiss="offcanvas">
+                            <i class="ki-outline ki-cross fs-2x"></i>
+                        </div>
+                    </div>
+                    <div class="offcanvas-body p-0">
+                        <div class="d-flex flex-column pt-5">
+                            @foreach(app(\App\Services\NavigationService::class)->getBackendNavigation() as $item)
+                                @if(isset($item['children']))
+                                    <!-- Parent menu item with children -->
+                                    <div class="mobile-nav-item parent-item">
+                                        <div class="d-flex align-items-center justify-content-between fs-6 fw-bold" 
+                                             data-bs-toggle="collapse" 
+                                             data-bs-target="#mobile_nav_item_{{ Str::slug($item['label']) }}">
+                                            <div>
+                                                <i class="{{ $item['icon'] }}"></i>
+                                                <span>{{ $item['label'] }}</span>
+                                            </div>
+                                            <i class="ki-outline ki-arrow-down fs-7"></i>
+                                        </div>
+                                    </div>
+                                    <!-- Children submenu -->
+                                    <div class="collapse ps-5" id="mobile_nav_item_{{ Str::slug($item['label']) }}">
+                                        @foreach($item['children'] as $child)
+                                            <div class="mobile-nav-item {{ $child['active'] ? 'active' : '' }}">
+                                                <a href="{{ $child['url'] }}" class="d-flex align-items-center text-dark text-hover-primary">
+                                                    <i class="bullet bullet-dot me-2"></i>
+                                                    <span>{{ $child['label'] }}</span>
+                                                </a>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <!-- Single menu item without children -->
+                                    <div class="mobile-nav-item {{ $item['active'] ? 'active' : '' }}">
+                                        <a href="{{ $item['url'] }}" class="d-flex align-items-center text-dark text-hover-primary">
+                                            <i class="{{ $item['icon'] }}"></i>
+                                            <span>{{ $item['label'] }}</span>
+                                        </a>
+                                    </div>
+                                @endif
+                            @endforeach
+                            
+                            <!-- User account section -->
+                            <div class="border-top my-5 pt-5 px-5">
+                                <div class="d-flex align-items-center mb-5">
+                                    <div class="symbol symbol-40px me-3">
+                                        <img src="{{ auth()->user()->avatar_url ?? asset('assets/media/avatars/blank.png') }}" alt="user" />
+                                    </div>
+                                    <div class="d-flex flex-column">
+                                        <div class="fw-bold">{{ auth()->user()->name }}</div>
+                                        <div class="text-muted fs-7">{{ auth()->user()->email }}</div>
+                                    </div>
+                                </div>
+                                
+                                <a href="{{ url('profile') }}" class="btn btn-light-primary btn-sm w-100 mb-2">
+                                    <i class="ki-outline ki-user fs-6 me-2"></i>My Profile
+                                </a>
+                                
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-light-danger btn-sm w-100">
+                                        <i class="ki-outline ki-logout fs-6 me-2"></i>Sign Out
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Mobile Navigation -->
 
                 <!--begin::Main-->
                 <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
@@ -112,6 +224,20 @@
     <!--begin::Javascript-->
     <script src="{{ asset('assets/plugins/global/plugins.bundle.js') }}"></script>
     <script src="{{ asset('assets/js/scripts.bundle.js') }}"></script>
+    
+    <!-- Mobile Navigation Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the mobile sidebar toggle
+            const sidebarMobileToggle = document.getElementById('kt_app_sidebar_mobile_toggle');
+            if (sidebarMobileToggle) {
+                sidebarMobileToggle.addEventListener('click', function() {
+                    const mobileSidebar = new bootstrap.Offcanvas(document.getElementById('kt_app_sidebar_mobile'));
+                    mobileSidebar.show();
+                });
+            }
+        });
+    </script>
     
     <!-- Logo Switch Script -->
     <script>
