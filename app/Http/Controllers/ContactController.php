@@ -26,13 +26,35 @@ class ContactController extends Controller
     {
         $user = Auth::user();
         
-        // Get both personal contacts and contacts shared from team owners
+        // Get personal contacts
         $personalContacts = Contact::where('user_id', $user->id)->paginate(10);
         
-        // Check if user has access to shared contacts from teams
-        $hasSharedContacts = $user->canUseTeamResource('contacts');
+        // Get shared contacts from team owners
+        $sharedContacts = collect();
+        $hasSharedContacts = false;
         
-        return view('contacts.index', compact('personalContacts', 'hasSharedContacts'));
+        // Check if user has access to shared contacts from teams
+        if ($user->canUseTeamResource('contacts')) {
+            $hasSharedContacts = true;
+            
+            // Get teams where the user is a member and contacts are shared
+            $teamsWithSharedContacts = $user->memberOfTeams()
+                ->where('share_contacts', true)
+                ->get();
+                
+            // For each team, get the owner's contacts
+            foreach ($teamsWithSharedContacts as $team) {
+                $ownerContacts = Contact::where('user_id', $team->owner_id)
+                    ->get();
+                    
+                $sharedContacts = $sharedContacts->concat($ownerContacts);
+            }
+            
+            // Paginate the shared contacts collection
+            $contacts = $sharedContacts->sortBy('first_name')->values();
+        }
+        
+        return view('contacts.index', compact('personalContacts', 'hasSharedContacts', 'contacts'));
     }
 
     /**

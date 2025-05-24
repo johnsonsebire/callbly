@@ -1,7 +1,7 @@
 @props(['team'])
 
 <div id="team-settings-wrapper">
-    <!-- Status Messages Container (Hidden by Default) -->
+    <!-- Status Messages Container -->
     <div id="settings-status-container" class="mb-5" style="display: none;">
         <div id="settings-success" class="alert alert-success d-flex align-items-center p-5" style="display: none;">
             <i class="ki-duotone ki-shield-tick fs-2hx text-success me-4"><span class="path1"></span><span class="path2"></span></i>
@@ -68,10 +68,20 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Hide any existing alerts from the server
-    document.querySelectorAll('.alert:not(#settings-success):not(#settings-error)').forEach(alert => {
-        alert.style.display = 'none';
-    });
+    // Immediately hide all flash message alerts on the page
+    const hideAllAlerts = () => {
+        document.querySelectorAll('.alert-success, .alert-danger').forEach(alert => {
+            if (!alert.closest('#settings-status-container')) {
+                alert.style.display = 'none';
+            }
+        });
+    };
+    
+    // Hide all alerts when the page loads
+    hideAllAlerts();
+    
+    // Hide alerts again after a slight delay to catch any that might be rendered after DOMContentLoaded
+    setTimeout(hideAllAlerts, 100);
 
     const form = document.getElementById('team-settings-form');
     if (!form) return; // Exit if form doesn't exist
@@ -104,6 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Hide status messages when making new changes
             statusContainer.style.display = 'none';
+            hideAllAlerts();
         });
     });
 
@@ -111,7 +122,9 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // Create a JSON payload instead of FormData
+        // Hide all existing alerts
+        hideAllAlerts();
+        
         const formData = new FormData();
         formData.append('_token', document.querySelector('input[name="_token"]').value);
         formData.append('_method', 'PUT');

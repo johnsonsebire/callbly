@@ -115,21 +115,4 @@ class SenderName extends Model
               });
         })->approved();
     }
-
-    /**
-     * Get the name attribute.
-     */
-    public function getNameAttribute($value): string
-    {
-        // Ensure sender names are not capitalized
-        return strtolower($value);
-    }
-
-    /**
-     * Set the name attribute.
-     */
-    public function setNameAttribute($value): void
-    {
-        $this->attributes['name'] = strtolower($value);
-    }
 }

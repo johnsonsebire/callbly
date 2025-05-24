@@ -46,18 +46,27 @@ class TeamController extends Controller
         ]);
 
         $team = DB::transaction(function () use ($validated, $request) {
+            // Get the current user with their existing roles
+            $user = auth()->user();
+            
             $team = Team::create([
                 'name' => $validated['name'],
                 'description' => $validated['description'],
-                'owner_id' => auth()->id(),
+                'owner_id' => $user->id,
                 'personal_team' => false
             ]);
 
+            // Store existing roles before attaching to team
+            $existingRoles = $user->roles()->pluck('name')->toArray();
+            
             $team->users()->attach(
-                auth()->id(),
+                $user->id,
                 ['role' => 'owner']
             );
 
+            // No need to explicitly maintain roles as they are stored in a separate table
+            // and not affected by the team creation process
+            
             return $team;
         });
 
