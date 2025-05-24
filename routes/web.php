@@ -236,7 +236,7 @@ Route::middleware('auth')->group(function () {
     });
     
     // Super Admin Sender Name Approval Routes
-    Route::middleware(['auth','role:super-admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware(['auth','role:super-admin|super admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('sender-names', [\App\Http\Controllers\Admin\SenderNameApprovalController::class, 'index'])
             ->name('sender-names.index');
         Route::put('sender-names/{sender_name}', [\App\Http\Controllers\Admin\SenderNameApprovalController::class, 'update'])
