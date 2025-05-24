@@ -92,12 +92,55 @@ class SmsCampaign extends Model
             ')
             ->first();
 
+        // Calculate the appropriate status based on recipient statuses
+        $newStatus = $this->calculateStatus(
+            $metrics->total_count ?? 0,
+            $metrics->delivered_count ?? 0,
+            $metrics->failed_count ?? 0,
+            $metrics->pending_count ?? 0
+        );
+
         $this->update([
             'recipients_count' => $metrics->total_count ?? 0,
             'delivered_count' => $metrics->delivered_count ?? 0,
             'failed_count' => $metrics->failed_count ?? 0,
-            'credits_used' => $this->calculateCreditsUsed()
+            'credits_used' => $this->calculateCreditsUsed(),
+            'status' => $newStatus
         ]);
+    }
+
+    /**
+     * Calculate campaign status based on recipient statuses
+     */
+    protected function calculateStatus(int $totalCount, int $deliveredCount, int $failedCount, int $pendingCount): string
+    {
+        // Edge case: no recipients
+        if ($totalCount === 0) {
+            return 'pending';
+        }
+
+        // If all messages failed
+        if ($failedCount === $totalCount) {
+            return 'failed';
+        }
+
+        // If some or all messages delivered and none pending
+        if ($deliveredCount > 0 && $pendingCount === 0) {
+            return 'completed';
+        }
+
+        // If all messages pending
+        if ($pendingCount === $totalCount) {
+            return 'pending';
+        }
+
+        // Mixed status with some pending
+        if ($pendingCount > 0) {
+            return 'processing';
+        }
+
+        // Default fallback
+        return 'sent';
     }
 
     /**

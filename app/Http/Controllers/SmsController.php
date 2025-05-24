@@ -452,6 +452,7 @@ class SmsController extends Controller
                 'name' => $campaign->name,
                 'scheduled_at' => $scheduledAt ? $scheduledAt->format('Y-m-d H:i:s') : null,
                 'campaign_id' => $campaign->id, // Pass the existing campaign ID
+                '_internal_call' => true, // Add flag to prevent double credit deduction
             ]);
             
             // Set the authenticated user for the request
