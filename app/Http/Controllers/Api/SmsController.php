@@ -311,8 +311,19 @@ class SmsController extends Controller
                     'failed_count' => $result['failed_count'] ?? 0,
                 ]);
 
+                // Explicitly check for the internal call flag
+                // Using both has() and input() methods to be thorough
+                $isInternalCall = $request->has('_internal_call') || $request->input('_internal_call') === true;
+                
+                Log::info('Credit deduction check', [
+                    'is_internal_call' => $isInternalCall,
+                    'request_has_flag' => $request->has('_internal_call'),
+                    'request_input_flag' => $request->input('_internal_call'),
+                    'request_all' => $request->all()
+                ]);
+
                 // Only deduct credits if this is a direct API call, not from the web controller
-                if (!$request->has('_internal_call')) {
+                if (!$isInternalCall) {
                     // Use our credit deduction service to handle both personal and team credits
                     $teamResourceService = app(\App\Services\TeamResourceService::class);
                     $creditResult = $teamResourceService->deductSharedSmsCredits($user, $creditsNeeded);

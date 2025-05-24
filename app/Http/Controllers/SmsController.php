@@ -478,7 +478,14 @@ class SmsController extends Controller
             ]);
             
             if ($responseData['success'] ?? false) {
-                // Use our new centralized method for credit deduction
+                // Debug log to track credit deduction
+                \Illuminate\Support\Facades\Log::info('About to deduct SMS credits in web controller', [
+                    'user_id' => $user->id,
+                    'campaign_id' => $campaign->id,
+                    'credits_needed' => $creditsNeeded
+                ]);
+                
+                // Use our centralized method for credit deduction
                 $teamResourceService = app(\App\Services\TeamResourceService::class);
                 $creditResult = $teamResourceService->deductSharedSmsCredits($user, $creditsNeeded);
                 
@@ -494,7 +501,7 @@ class SmsController extends Controller
                 }
                 
                 // Update campaign with team credit info if applicable
-                if ($creditResult['team_id']) {
+                if (isset($creditResult['team_id']) && $creditResult['team_id']) {
                     $campaign->update([
                         'team_id' => $creditResult['team_id'],
                         'team_credits_used' => $creditResult['team_credits_used']
@@ -503,8 +510,9 @@ class SmsController extends Controller
                 
                 \Illuminate\Support\Facades\Log::info('SMS campaign sent successfully', [
                     'campaign_id' => $campaign->id,
-                    'personal_credits_used' => $creditResult['personal_credits_used'],
-                    'team_credits_used' => $creditResult['team_credits_used']
+                    'personal_credits_used' => $creditResult['personal_credits_used'] ?? 0,
+                    'team_credits_used' => $creditResult['team_credits_used'] ?? 0,
+                    'user_credits_after' => $user->fresh()->sms_credits
                 ]);
                 
                 // Redirect with success message
