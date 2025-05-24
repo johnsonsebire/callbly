@@ -308,6 +308,14 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withPivot('role', 'permissions')
             ->withTimestamps();
     }
+    
+    /**
+     * Get all of the teams where the user is a member (not owner).
+     */
+    public function memberOfTeams()
+    {
+        return $this->teams()->whereNot('owner_id', $this->id);
+    }
 
     /**
      * Get the user's primary team.
