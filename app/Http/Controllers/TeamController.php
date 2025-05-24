@@ -97,6 +97,12 @@ class TeamController extends Controller
     {
         // Check if user can update team using ownsTeam method
         if (!auth()->user()->ownsTeam($team)) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only team owners can update team settings.'
+                ], 403);
+            }
             abort(403, 'Only team owners can update team settings.');
         }
 
@@ -108,35 +114,63 @@ class TeamController extends Controller
             'share_sender_names' => ['sometimes', 'boolean']
         ]);
 
-        DB::transaction(function () use ($team, $validated) {
-            $team->update($validated);
+        try {
+            DB::transaction(function () use ($team, $validated) {
+                // Update the team settings
+                $team->update($validated);
 
-            if (isset($validated['share_sender_names'])) {
-                if ($validated['share_sender_names']) {
-                    $senderNames = SenderName::where('user_id', $team->owner_id)
-                                           ->approved()
-                                           ->get();
-                    $team->syncResources($senderNames, 'sender_name');
-                } else {
-                    $team->teamResources()
-                         ->where('resource_type', 'sender_name')
-                         ->delete();
+                // Handle sender names sharing
+                if (isset($validated['share_sender_names'])) {
+                    if ($validated['share_sender_names']) {
+                        $senderNames = SenderName::where('user_id', $team->owner_id)
+                                            ->approved()
+                                            ->get();
+                        $team->syncResources($senderNames, 'sender_name');
+                    } else {
+                        $team->teamResources()
+                            ->where('resource_type', 'sender_name')
+                            ->delete();
+                    }
                 }
+
+                // Handle contacts sharing
+                if (isset($validated['share_contacts'])) {
+                    if ($validated['share_contacts']) {
+                        $contacts = Contact::where('user_id', $team->owner_id)->get();
+                        $team->syncResources($contacts, 'contact');
+                    } else {
+                        $team->teamResources()
+                            ->where('resource_type', 'contact')
+                            ->delete();
+                    }
+                }
+            });
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Team settings updated successfully.'
+                ]);
             }
 
-            if (isset($validated['share_contacts'])) {
-                if ($validated['share_contacts']) {
-                    $contacts = Contact::where('user_id', $team->owner_id)->get();
-                    $team->syncResources($contacts, 'contact');
-                } else {
-                    $team->teamResources()
-                         ->where('resource_type', 'contact')
-                         ->delete();
-                }
+            return back()->with('success', 'Team settings updated successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Team update error: ' . $e->getMessage(), [
+                'team_id' => $team->id,
+                'user_id' => auth()->id(),
+                'data' => $validated
+            ]);
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update team settings.',
+                    'error' => $e->getMessage()
+                ], 500);
             }
-        });
-
-        return back()->with('success', 'Team settings updated successfully.');
+            
+            return back()->with('error', 'Failed to update team settings.');
+        }
     }
 
     /**
