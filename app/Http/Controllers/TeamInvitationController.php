@@ -106,11 +106,11 @@ class TeamInvitationController extends Controller
                 ->with('error', 'This invitation has expired or is invalid.');
         }
 
-        // For guests, show the public invitation view
+        // For guests, show login page with the invitation token stored in session
         if (!auth()->check()) {
-            return view('teams.invitations.show', [
-                'invitation' => $invitation,
-            ]);
+            session(['team_invitation_token' => $token]);
+            return redirect()->route('login', ['email' => $invitation->email])
+                ->with('message', 'Please log in or create an account to join the team.');
         }
 
         // If user is logged in and invitation matches their email
@@ -123,6 +123,7 @@ class TeamInvitationController extends Controller
         // If user is logged in but with wrong email
         return view('teams.invitations.wrong-account', [
             'invitation' => $invitation,
+            'invitedEmail' => $invitation->email,
         ]);
     }
     

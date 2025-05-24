@@ -73,6 +73,19 @@ class NavigationService
         $user = Auth::user();
         $currentRouteName = Route::currentRouteName();
         
+        // If user is null, return a minimal navigation
+        if (!$user) {
+            return [
+                [
+                    'label' => 'Home',
+                    'icon' => 'fas fa-home',
+                    'url' => '/',
+                    'active' => false,
+                    'order' => 1
+                ]
+            ];
+        }
+        
         $navigation = [
             [
                 'label' => 'Dashboard',
@@ -276,7 +289,7 @@ class NavigationService
         ];
         
         // Add admin menu items for admin users
-        if ($user->isAdmin()) {
+        if ($user && $user->isAdmin()) {
             $navigation[] = [
                 'label' => 'Admin',
                 'icon' => 'fas fa-shield-alt',
