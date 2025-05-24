@@ -27,7 +27,7 @@
         <div class="mb-5">
             <div class="form-check form-switch form-check-custom form-check-solid mb-3">
                 <input class="form-check-input" type="checkbox" name="share_sms_credits" id="share_sms_credits" 
-                      {{ $team->share_sms_credits ? 'checked' : '' }}>
+                      value="1" {{ $team->share_sms_credits ? 'checked' : '' }}>
                 <label class="form-check-label fw-semibold text-gray-800" for="share_sms_credits">
                     Share SMS Credits
                 </label>
@@ -38,7 +38,7 @@
         <div class="mb-5">
             <div class="form-check form-switch form-check-custom form-check-solid mb-3">
                 <input class="form-check-input" type="checkbox" name="share_contacts" id="share_contacts" 
-                      {{ $team->share_contacts ? 'checked' : '' }}>
+                      value="1" {{ $team->share_contacts ? 'checked' : '' }}>
                 <label class="form-check-label fw-semibold text-gray-800" for="share_contacts">
                     Share Contacts
                 </label>
@@ -49,7 +49,7 @@
         <div class="mb-5">
             <div class="form-check form-switch form-check-custom form-check-solid mb-3">
                 <input class="form-check-input" type="checkbox" name="share_sender_names" id="share_sender_names" 
-                      {{ $team->share_sender_names ? 'checked' : '' }}>
+                      value="1" {{ $team->share_sender_names ? 'checked' : '' }}>
                 <label class="form-check-label fw-semibold text-gray-800" for="share_sender_names">
                     Share Sender Names
                 </label>
@@ -111,13 +111,15 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        const formData = new FormData(form);
+        // Create a JSON payload instead of FormData
+        const formData = new FormData();
+        formData.append('_token', document.querySelector('input[name="_token"]').value);
+        formData.append('_method', 'PUT');
         
-        // Add unchecked switches as false values
+        // Append boolean values properly
         switches.forEach(switchInput => {
-            if (!formData.has(switchInput.name)) {
-                formData.append(switchInput.name, '0');
-            }
+            // Set explicit boolean values 
+            formData.append(switchInput.name, switchInput.checked ? '1' : '0');
         });
         
         // Disable form elements during submission
@@ -137,27 +139,24 @@ document.addEventListener('DOMContentLoaded', function() {
             body: formData,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'Accept': 'application/json'
             }
         })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(data => {
-                    throw new Error(data.message || 'Failed to update team settings');
-                });
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            // Show success message
-            statusContainer.style.display = 'block';
-            successAlert.style.display = 'flex';
-            
-            // Update original states
-            switches.forEach(switchInput => {
-                originalStates[switchInput.id] = switchInput.checked;
-            });
+            if (data.success) {
+                // Show success message
+                statusContainer.style.display = 'block';
+                successAlert.style.display = 'flex';
+                
+                // Update original states to current state
+                switches.forEach(switchInput => {
+                    originalStates[switchInput.id] = switchInput.checked;
+                });
+            } else {
+                // Show error message if success is false
+                throw new Error(data.message || 'Failed to update team settings');
+            }
         })
         .catch(error => {
             console.error('Error:', error);

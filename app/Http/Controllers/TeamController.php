@@ -106,15 +106,32 @@ class TeamController extends Controller
             abort(403, 'Only team owners can update team settings.');
         }
 
-        $validated = $request->validate([
-            'name' => ['sometimes', 'string', 'max:255'],
-            'description' => ['sometimes', 'nullable', 'string'],
-            'share_sms_credits' => ['sometimes', 'boolean'],
-            'share_contacts' => ['sometimes', 'boolean'],
-            'share_sender_names' => ['sometimes', 'boolean']
-        ]);
-
         try {
+            // Process form data with proper boolean casting
+            $data = $request->only(['name', 'description', 'share_sms_credits', 'share_contacts', 'share_sender_names']);
+            
+            // Explicitly cast checkbox values to boolean
+            if (isset($data['share_sms_credits'])) {
+                $data['share_sms_credits'] = filter_var($data['share_sms_credits'], FILTER_VALIDATE_BOOLEAN);
+            }
+            
+            if (isset($data['share_contacts'])) {
+                $data['share_contacts'] = filter_var($data['share_contacts'], FILTER_VALIDATE_BOOLEAN);
+            }
+            
+            if (isset($data['share_sender_names'])) {
+                $data['share_sender_names'] = filter_var($data['share_sender_names'], FILTER_VALIDATE_BOOLEAN);
+            }
+            
+            // Validate after casting
+            $validated = validator($data, [
+                'name' => ['sometimes', 'string', 'max:255'],
+                'description' => ['sometimes', 'nullable', 'string'],
+                'share_sms_credits' => ['sometimes', 'boolean'],
+                'share_contacts' => ['sometimes', 'boolean'],
+                'share_sender_names' => ['sometimes', 'boolean']
+            ])->validate();
+
             DB::transaction(function () use ($team, $validated) {
                 // Update the team settings
                 $team->update($validated);
@@ -158,7 +175,7 @@ class TeamController extends Controller
             \Log::error('Team update error: ' . $e->getMessage(), [
                 'team_id' => $team->id,
                 'user_id' => auth()->id(),
-                'data' => $validated
+                'data' => $request->all()
             ]);
             
             if ($request->ajax() || $request->wantsJson()) {
