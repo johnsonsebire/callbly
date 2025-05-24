@@ -39,9 +39,12 @@ class DashboardController extends Controller
             ->take(5);
         
         return view('dashboard.dashboard', [
-            'smsBalance' => $user->sms_credits ?? 0,
-            'ussdBalance' => $user->ussd_credits ?? 0,
-            'activeContacts' => $user->contacts()->count() ?? 0,
+            // Use getAvailableSmsCredits to include shared credits from team owners
+            'smsBalance' => $user->getAvailableSmsCredits(),
+            // Use getAvailableUssdCredits to include shared credits from team owners
+            'ussdBalance' => $user->getAvailableUssdCredits(),
+            // Use getAvailableContacts to include contacts shared from team owners
+            'activeContacts' => $user->getAvailableContacts()->count(),
             'balance' => $user->formatAmount($user->wallet_balance ?? 0),
             'recentActivities' => $recentSmsActivities
         ]);

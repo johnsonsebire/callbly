@@ -13,6 +13,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use App\Notifications\CustomResetPasswordNotification;
+use App\Services\TeamResourceService;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -98,6 +99,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function senderNames(): HasMany
     {
         return $this->hasMany(SenderName::class);
+    }
+    
+    /**
+     * Get all available sender names for the user (including shared from teams)
+     */
+    public function getAvailableSenderNames()
+    {
+        return app(TeamResourceService::class)->getAvailableSenderNames($this);
     }
 
     /**
@@ -234,6 +243,14 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Contact::class);
     }
+    
+    /**
+     * Get all available contacts for the user (including shared from teams)
+     */
+    public function getAvailableContacts()
+    {
+        return app(TeamResourceService::class)->getAvailableContacts($this);
+    }
 
     /**
      * Get the contact groups for the user
@@ -356,5 +373,43 @@ class User extends Authenticatable implements MustVerifyEmail
             'name' => $name,
             'personal_team' => true,
         ]);
+    }
+    
+    /**
+     * Get the total available SMS credits for the user (personal + shared from teams)
+     */
+    public function getAvailableSmsCredits(): int
+    {
+        return app(TeamResourceService::class)->getAvailableSmsCredits($this);
+    }
+    
+    /**
+     * Get the total available USSD credits for the user (personal + shared from teams)
+     */
+    public function getAvailableUssdCredits(): int
+    {
+        return app(TeamResourceService::class)->getAvailableUssdCredits($this);
+    }
+    
+    /**
+     * Check if the user can use a specific team resource type
+     */
+    public function canUseTeamResource(string $resourceType): bool
+    {
+        return app(TeamResourceService::class)->canUseTeamResource($this, $resourceType);
+    }
+    
+    /**
+     * Check if the user has access to a team with shared resources
+     */
+    public function hasTeamWithSharedResources(): bool
+    {
+        foreach ($this->teams as $team) {
+            if ($team->share_sms_credits || $team->share_contacts || $team->share_sender_names) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 }

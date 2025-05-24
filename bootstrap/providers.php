@@ -18,4 +18,5 @@ return [
     App\Providers\PaystackServiceProvider::class,
     App\Providers\ReCaptchaServiceProvider::class,
     App\Providers\SmsServiceProvider::class,
+    App\Providers\TeamServiceProvider::class,
 ];

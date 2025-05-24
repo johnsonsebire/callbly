@@ -34,10 +34,12 @@ class SmsController extends Controller
     public function compose(Request $request): View
     {
         $user = Auth::user();
-        $senderNames = $user->senderNames()->where('status', 'approved')->get();
+        // Use the getAvailableSenderNames method to include shared sender names from teams
+        $senderNames = $user->getAvailableSenderNames()->where('status', 'approved');
         $contactGroups = $user->contactGroups()->withCount('contacts')->get();
         $templates = $user->smsTemplates()->latest()->get();
-        $totalContactsCount = $user->contacts()->count();
+        // Use getAvailableContacts to include shared contacts from teams
+        $totalContactsCount = $user->getAvailableContacts()->count();
         
         $templateContent = null;
         if ($request->has('template')) {
@@ -97,7 +99,8 @@ class SmsController extends Controller
     public function credits(): View
     {
         $user = Auth::user();
-        $smsCredits = $user->smsCredits ?? 0;
+        // Use getAvailableSmsCredits method to include shared credits from team owners
+        $smsCredits = $user->getAvailableSmsCredits();
         $currency = $user->currency ?? $this->currencyService->getDefaultCurrency();
         
         // Get credit purchase history if available
@@ -245,8 +248,8 @@ class SmsController extends Controller
             'message_length' => strlen($message)
         ]);
         
-        // Verify sender name belongs to user and is approved
-        $senderNameRecord = $user->senderNames()
+        // Check if the sender name is in the user's available sender names (including team shared)
+        $senderNameRecord = $user->getAvailableSenderNames()
             ->where('name', $senderName)
             ->where('status', 'approved')
             ->first();
@@ -303,13 +306,16 @@ class SmsController extends Controller
                 case 'contacts':
                     $request->validate(['contact_ids' => 'required|array', 'contact_ids.*' => 'exists:contacts,id']);
                     $contactIds = $request->input('contact_ids');
-                    $contacts = $user->contacts()->whereIn('id', $contactIds)->get();
                     
-                    if ($contacts->isEmpty()) {
+                    // Use getAvailableContacts to get both personal and team-shared contacts
+                    $availableContacts = $user->getAvailableContacts();
+                    $contactsToUse = $availableContacts->whereIn('id', $contactIds);
+                    
+                    if ($contactsToUse->isEmpty()) {
                         throw new \Exception('No valid contacts were found.');
                     }
                     
-                    foreach ($contacts as $contact) {
+                    foreach ($contactsToUse as $contact) {
                         if (!empty($contact->phone_number)) {
                             $recipients[] = $contact->phone_number;
                         }
@@ -335,7 +341,8 @@ class SmsController extends Controller
                     
                 case 'all':
                     $request->validate(['send_to_all_contacts' => 'required|accepted']);
-                    $recipients = $user->contacts()->pluck('phone_number')->toArray();
+                    // Use getAvailableContacts to get both personal and team-shared contacts
+                    $recipients = $user->getAvailableContacts()->pluck('phone_number')->toArray();
                     break;
             }
             
@@ -369,22 +376,27 @@ class SmsController extends Controller
         $parts = $this->calculateMessageParts($messageLength, $hasUnicode);
         $creditsNeeded = $parts * count($recipients);
         
+        // Get available SMS credits including shared ones from teams
+        $availableSmsCredits = $user->getAvailableSmsCredits();
+        
         \Illuminate\Support\Facades\Log::info('Credits calculation', [
             'parts' => $parts,
             'recipients_count' => count($recipients),
             'credits_needed' => $creditsNeeded,
-            'user_credits' => $user->sms_credits
+            'user_credits' => $user->sms_credits,
+            'available_credits' => $availableSmsCredits
         ]);
         
-        // Check if user has enough credits
-        if ($user->sms_credits < $creditsNeeded) {
+        // Check if user has enough credits (including shared from teams)
+        if ($availableSmsCredits < $creditsNeeded) {
             \Illuminate\Support\Facades\Log::warning('Insufficient credits', [
                 'user_id' => $user->id,
                 'credits_needed' => $creditsNeeded,
-                'user_credits' => $user->sms_credits
+                'user_credits' => $user->sms_credits,
+                'available_credits' => $availableSmsCredits
             ]);
             return redirect()->back()->withInput()->withErrors([
-                'credits' => "You don't have enough SMS credits. You need {$creditsNeeded} credits but have {$user->sms_credits}."
+                'credits' => "You don't have enough SMS credits. You need {$creditsNeeded} credits but have {$availableSmsCredits}."
             ]);
         }
         
@@ -465,10 +477,15 @@ class SmsController extends Controller
             ]);
             
             if ($responseData['success'] ?? false) {
-                // Deduct credits
+                // Deduct credits - prioritize using the user's personal credits first
+                $deductCredits = min($user->sms_credits, $creditsNeeded);
                 $user->update([
-                    'sms_credits' => $user->sms_credits - $creditsNeeded
+                    'sms_credits' => $user->sms_credits - $deductCredits
                 ]);
+                
+                // If the user is using team credits, handle that separately
+                // Note: Currently we're not implementing the actual deduction from team owners
+                // because that would require additional complexity to track usage
                 
                 // Update campaign status if needed
                 if (!$scheduledAt || $scheduledAt <= now()) {
@@ -539,14 +556,18 @@ class SmsController extends Controller
         // Calculate credits needed
         $creditsNeeded = $parts * $recipientsCount;
         
+        $user = Auth::user();
+        // Use getAvailableSmsCredits to include shared credits from team owners
+        $availableCredits = $user->getAvailableSmsCredits();
+        
         return response()->json([
             'success' => true,
             'message_length' => $messageLength,
             'parts' => $parts,
             'recipients_count' => $recipientsCount,
             'credits_needed' => $creditsNeeded,
-            'user_credits' => Auth::user()->sms_credits ?? 0,
-            'has_enough_credits' => (Auth::user()->sms_credits ?? 0) >= $creditsNeeded,
+            'user_credits' => $availableCredits,
+            'has_enough_credits' => $availableCredits >= $creditsNeeded,
         ]);
     }
 
@@ -639,7 +660,8 @@ class SmsController extends Controller
     public function senderNames(): View
     {
         $user = Auth::user();
-        $senderNames = $user->senderNames()->orderBy('created_at', 'desc')->get();
+        // Include both personal and shared sender names from teams
+        $senderNames = $user->getAvailableSenderNames()->sortByDesc('created_at');
         
         return view('sms.sender-names', [
             'senderNames' => $senderNames

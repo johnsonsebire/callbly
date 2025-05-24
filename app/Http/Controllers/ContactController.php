@@ -25,8 +25,14 @@ class ContactController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $contacts = Contact::where('user_id', $user->id)->paginate(10);
-        return view('contacts.index', compact('contacts'));
+        
+        // Get both personal contacts and contacts shared from team owners
+        $personalContacts = Contact::where('user_id', $user->id)->paginate(10);
+        
+        // Check if user has access to shared contacts from teams
+        $hasSharedContacts = $user->canUseTeamResource('contacts');
+        
+        return view('contacts.index', compact('personalContacts', 'hasSharedContacts'));
     }
 
     /**

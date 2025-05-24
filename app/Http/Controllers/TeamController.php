@@ -24,7 +24,7 @@ class TeamController extends Controller
         $ownedTeams = $user->ownedTeams;
         $teams = $user->teams;
 
-        return view('teams.index', compact('ownedTeams', 'teams'));
+        return view('teams.index', compact('ownedTeams', 'teams', 'user'));
     }
 
     /**
