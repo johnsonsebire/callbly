@@ -28,6 +28,7 @@ class Team extends Model
         'share_sms_credits',
         'share_contacts',
         'share_sender_names',
+        'share_contact_groups',
     ];
 
     /**
@@ -40,6 +41,7 @@ class Team extends Model
         'share_sms_credits' => 'boolean',
         'share_contacts' => 'boolean',
         'share_sender_names' => 'boolean',
+        'share_contact_groups' => 'boolean',
     ];
 
     /**

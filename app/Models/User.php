@@ -261,6 +261,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get all available contact groups for the user (including shared from teams)
+     */
+    public function getAvailableContactGroups()
+    {
+        return app(TeamResourceService::class)->getAvailableContactGroups($this);
+    }
+
+    /**
      * Get the wallet transactions for the user
      */
     public function walletTransactions(): HasMany

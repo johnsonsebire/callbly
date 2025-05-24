@@ -15,18 +15,36 @@ class ContactGroupController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Auth::user()->contactGroups();
+        $user = Auth::user();
         
-        // Filter by search term
+        // Get all available contact groups (personal + shared from teams)
+        $allGroups = $user->getAvailableContactGroups();
+        
+        // Filter by search term if provided
         if ($request->filled('search')) {
             $searchTerm = $request->search;
-            $query->where('name', 'like', "%$searchTerm%")
-                  ->orWhere('description', 'like', "%$searchTerm%");
+            $allGroups = $allGroups->filter(function($group) use ($searchTerm) {
+                return Str::contains(strtolower($group->name), strtolower($searchTerm)) || 
+                       Str::contains(strtolower($group->description ?? ''), strtolower($searchTerm));
+            });
         }
         
-        $groups = $query->withCount('contacts')->latest()->paginate(20);
+        // Check if user has access to shared contact groups
+        $hasSharedGroups = $user->canUseTeamResource('contact_groups');
         
-        return view('contact-groups.index', compact('groups'));
+        // Paginate the collection manually
+        $perPage = 20;
+        $currentPage = $request->input('page', 1);
+        
+        $groups = new \Illuminate\Pagination\LengthAwarePaginator(
+            $allGroups->forPage($currentPage, $perPage),
+            $allGroups->count(),
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+        
+        return view('contact-groups.index', compact('groups', 'hasSharedGroups'));
     }
     
     /**

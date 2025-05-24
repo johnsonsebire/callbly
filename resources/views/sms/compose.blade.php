@@ -92,81 +92,125 @@
                                             </ul>
                                             <div class="tab-content" id="recipientsTabContent">
                                                 <div class="tab-pane fade show active" id="manual" role="tabpanel" aria-labelledby="manual-tab">
-                                                    <textarea name="recipients" id="recipients" rows="6" class="form-control @error('recipients') is-invalid @enderror" placeholder="Enter phone numbers separated by commas, new lines, or spaces">{{ old('recipients') }}</textarea>
-                                                    <div class="form-text">Example: 233244123456, 233244123457 (without + sign)</div>
-                                                    <div id="recipientCount" class="mt-1 fw-bold">0 recipient(s)</div>
-                                                    @error('recipients')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                                    <div class="mb-3">
+                                                        <label for="recipients" class="form-label">Enter Phone Numbers</label>
+                                                        <textarea name="recipients" id="recipients" rows="4" class="form-control @error('recipients') is-invalid @enderror" placeholder="Enter one phone number per line or separated by commas">{{ old('recipients') }}</textarea>
+                                                        <div class="form-text text-muted">
+                                                            <small id="recipientCount">0 recipient(s)</small>
+                                                        </div>
+                                                        @error('recipients')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                                    </div>
                                                 </div>
                                                 <div class="tab-pane fade" id="select-contacts" role="tabpanel" aria-labelledby="select-contacts-tab">
-                                                    @php
-                                                        $contacts = auth()->user()->contacts()->orderBy('first_name')->get();
-                                                    @endphp
-                                                    
-                                                    @if($contacts->count() > 0)
-                                                        <div class="mb-3">
-                                                            <div class="input-group mb-3">
-                                                                <input type="text" id="contactSearchInput" class="form-control" placeholder="Search contacts..." aria-label="Search contacts">
-                                                                <button class="btn btn-outline-secondary" type="button" id="clearContactSearch">Clear</button>
+                                                    <div class="mb-3">
+                                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                                            <label class="form-label mb-0">Select Contacts</label>
+                                                            <div class="input-group input-group-sm w-50">
+                                                                <input type="text" id="contactSearchInput" class="form-control" placeholder="Search contacts...">
+                                                                <button class="btn btn-outline-secondary" type="button" id="clearContactSearch">
+                                                                    <i class="ki-outline ki-cross-circle fs-7"></i>
+                                                                </button>
+                                                                <button class="btn btn-outline-primary" type="button" id="selectAllContacts">
+                                                                    Select All
+                                                                </button>
                                                             </div>
-                                                            
-                                                            <div class="contact-list-container border rounded p-2" style="max-height: 300px; overflow-y: auto;">
-                                                                <div class="list-group">
-                                                                    @foreach($contacts as $contact)
-                                                                        <label class="list-group-item contact-item">
-                                                                            <input class="form-check-input me-1 contact-checkbox" type="checkbox" name="contact_ids[]" value="{{ $contact->id }}" data-phone="{{ $contact->phone_number }}">
-                                                                            <span class="contact-name">{{ $contact->first_name }} {{ $contact->last_name }}</span>
-                                                                            <span class="contact-phone text-muted ms-2">{{ $contact->phone_number }}</span>
-                                                                        </label>
-                                                                    @endforeach
+                                                        </div>
+                                                        <div class="card">
+                                                            <div class="card-body p-0" style="max-height: 250px; overflow-y: auto;">
+                                                                <div class="list-group list-group-flush">
+                                                                    @php 
+                                                                        // Get all available contacts (including shared from teams)
+                                                                        $availableContacts = auth()->user()->getAvailableContacts()->sortBy('first_name');
+                                                                    @endphp
+                                                                    
+                                                                    @if($availableContacts->isEmpty())
+                                                                        <div class="list-group-item py-3 text-center">
+                                                                            <p class="mb-0 text-muted">No contacts found. <a href="{{ route('contacts.create') }}">Add a contact</a>.</p>
+                                                                        </div>
+                                                                    @else
+                                                                        @foreach($availableContacts as $contact)
+                                                                            <div class="list-group-item py-2 contact-item">
+                                                                                <div class="form-check">
+                                                                                    <input class="form-check-input contact-checkbox" type="checkbox" name="contact_ids[]" value="{{ $contact->id }}" id="contact_{{ $contact->id }}">
+                                                                                    <label class="form-check-label d-flex justify-content-between" for="contact_{{ $contact->id }}">
+                                                                                        <span class="contact-name">{{ $contact->first_name }} {{ $contact->last_name }}</span>
+                                                                                        <span class="contact-phone text-muted">{{ $contact->phone_number }}</span>
+                                                                                    </label>
+                                                                                </div>
+                                                                            </div>
+                                                                        @endforeach
+                                                                    @endif
                                                                 </div>
                                                             </div>
-                                                            <div class="d-flex justify-content-between align-items-center mt-2">
-                                                                <div id="selectedContactsCount" class="fw-bold">0 contact(s) selected</div>
-                                                                <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllContacts">Select All</button>
-                                                            </div>
                                                         </div>
-                                                    @else
-                                                        <div class="alert alert-info">
-                                                            You don't have any contacts yet. <a href="{{ route('contacts.create') }}">Add contacts</a> first.
+                                                        <div class="mt-2 text-end">
+                                                            <span id="selectedContactsCount" class="badge bg-primary">0 contact(s) selected</span>
                                                         </div>
-                                                    @endif
+                                                        @error('contact_ids')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                                    </div>
                                                 </div>
                                                 <div class="tab-pane fade" id="groups" role="tabpanel" aria-labelledby="groups-tab">
-                                                    @if($contactGroups->count() > 0)
-                                                        <div class="mb-3">
-                                                            <div class="list-group">
-                                                                @foreach($contactGroups as $group)
-                                                                    <label class="list-group-item">
-                                                                        <input class="form-check-input me-1 contact-group-checkbox" type="checkbox" name="contact_group_ids[]" value="{{ $group->id }}" data-contacts="{{ $group->contacts_count }}" {{ (request()->has('group_id') && request('group_id') == $group->id) ? 'checked' : '' }}>
-                                                                        {{ $group->name }} <span class="badge bg-secondary">{{ $group->contacts_count }} contacts</span>
-                                                                    </label>
-                                                                @endforeach
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Select Contact Groups</label>
+                                                        
+                                                        @php 
+                                                            // Get both personal and team-shared contact groups
+                                                            $availableGroups = auth()->user()->contactGroups()->withCount('contacts')->get();
+                                                            
+                                                            // We should also get contact groups from teams where sharing is enabled
+                                                            // This logic would need to be implemented in the TeamResourceService
+                                                        @endphp
+                                                        
+                                                        @if($availableGroups->isEmpty())
+                                                            <div class="alert alert-info">
+                                                                <p class="mb-0">You don't have any contact groups. <a href="{{ route('contact-groups.create') }}">Create a group</a> first.</p>
                                                             </div>
-                                                            <div class="mt-2 fw-bold" id="groupRecipientsCount">0 recipient(s) selected</div>
-                                                        </div>
-                                                    @else
-                                                        <div class="alert alert-info">
-                                                            You don't have any contact groups yet. <a href="{{ route('contact-groups.create') }}">Create a contact group</a> first.
-                                                        </div>
-                                                    @endif
+                                                        @else
+                                                            <div class="card">
+                                                                <div class="card-body p-0" style="max-height: 250px; overflow-y: auto;">
+                                                                    <div class="list-group list-group-flush">
+                                                                        @foreach($availableGroups as $group)
+                                                                            <div class="list-group-item py-2">
+                                                                                <div class="form-check">
+                                                                                    <input class="form-check-input contact-group-checkbox" type="checkbox" name="contact_group_ids[]" value="{{ $group->id }}" id="group_{{ $group->id }}" data-contacts="{{ $group->contacts_count }}">
+                                                                                    <label class="form-check-label d-flex justify-content-between" for="group_{{ $group->id }}">
+                                                                                        <span>{{ $group->name }}</span>
+                                                                                        <span class="badge bg-light text-dark">{{ $group->contacts_count }} contacts</span>
+                                                                                    </label>
+                                                                                </div>
+                                                                            </div>
+                                                                        @endforeach
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="mt-2 text-end">
+                                                                <span id="groupRecipientsCount" class="badge bg-primary">0 recipient(s) selected</span>
+                                                            </div>
+                                                        @endif
+                                                        @error('contact_group_ids')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                                    </div>
                                                 </div>
                                                 <div class="tab-pane fade" id="all-contacts" role="tabpanel" aria-labelledby="all-contacts-tab">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" value="1" name="send_to_all_contacts" id="sendToAllContacts">
-                                                        <label class="form-check-label" for="sendToAllContacts">
-                                                            Send to all my contacts
-                                                        </label>
-                                                    </div>
-                                                    <div class="alert alert-warning mt-2">
-                                                        <i class="ki-outline ki-information-5 fs-2 me-2"></i>
-                                                        This will send the message to all contacts in your address book ({{ $totalContactsCount ?? 0 }} contacts).
+                                                    <div class="mb-3">
+                                                        <div class="alert alert-warning">
+                                                            <p class="mb-0"><strong>Warning:</strong> This will send the message to all your contacts ({{ $totalContactsCount ?? 0 }} contacts). Use with caution.</p>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox" name="send_to_all_contacts" id="sendToAllContacts" value="1" {{ old('send_to_all_contacts') ? 'checked' : '' }}>
+                                                            <label class="form-check-label" for="sendToAllContacts">
+                                                                Yes, I want to send this message to all my contacts
+                                                            </label>
+                                                        </div>
+                                                        @error('send_to_all_contacts')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                                                     </div>
                                                 </div>
                                                 <div class="tab-pane fade" id="file-upload" role="tabpanel" aria-labelledby="file-tab">
                                                     <div class="mb-3">
                                                         <label for="recipients_file" class="form-label">Upload Recipients File</label>
                                                         <input type="file" name="recipients_file" id="recipients_file" class="form-control @error('recipients_file') is-invalid @enderror">
-                                                        <div class="form-text">Upload a CSV or TXT file with one phone number per line</div>
+                                                        <div class="form-text text-muted">
+                                                            Upload a CSV or TXT file with one phone number per line.
+                                                        </div>
                                                         @error('recipients_file')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                                     </div>
                                                 </div>
