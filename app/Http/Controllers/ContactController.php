@@ -27,10 +27,10 @@ class ContactController extends Controller
         $user = Auth::user();
         
         // Get personal contacts
-        $personalContacts = Contact::where('user_id', $user->id)->paginate(10);
+        $personalContacts = Contact::where('user_id', $user->id)->paginate(10, ['*'], 'personal_page');
         
-        // Get shared contacts from team owners
-        $sharedContacts = collect();
+        // Initialize shared contacts
+        $contacts = collect();
         $hasSharedContacts = false;
         
         // Check if user has access to shared contacts from teams
@@ -41,17 +41,32 @@ class ContactController extends Controller
             $teamsWithSharedContacts = $user->memberOfTeams()
                 ->where('share_contacts', true)
                 ->get();
-                
+            
             // For each team, get the owner's contacts
             foreach ($teamsWithSharedContacts as $team) {
-                $ownerContacts = Contact::where('user_id', $team->owner_id)
-                    ->get();
-                    
-                $sharedContacts = $sharedContacts->concat($ownerContacts);
+                $ownerContacts = Contact::where('user_id', $team->owner_id)->get();
+                $contacts = $contacts->concat($ownerContacts);
             }
             
-            // Paginate the shared contacts collection
-            $contacts = $sharedContacts->sortBy('first_name')->values();
+            // Convert collection to paginator for proper pagination
+            $currentPage = request()->input('shared_page', 1);
+            $perPage = 10;
+            $contacts = new \Illuminate\Pagination\LengthAwarePaginator(
+                $contacts->forPage($currentPage, $perPage),
+                $contacts->count(),
+                $perPage,
+                $currentPage,
+                ['path' => request()->url(), 'pageName' => 'shared_page']
+            );
+        } else {
+            // Even when no shared contacts, initialize with empty paginator
+            $contacts = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect(),
+                0,
+                10,
+                1,
+                ['path' => request()->url(), 'pageName' => 'shared_page']
+            );
         }
         
         return view('contacts.index', compact('personalContacts', 'hasSharedContacts', 'contacts'));

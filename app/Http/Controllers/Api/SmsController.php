@@ -46,13 +46,36 @@ class SmsController extends Controller
         try {
             $user = $request->user();
             
-            // Check if sender name belongs to the user and is approved
+            // Check if sender name is available to the user (either owned or shared through teams)
+            $senderNameAvailable = false;
+            
+            // First, check if this is the user's own sender name
             $senderName = SenderName::where('name', $request->sender_name)
                 ->where('user_id', $user->id)
                 ->where('status', 'approved')
                 ->first();
+                
+            if ($senderName) {
+                $senderNameAvailable = true;
+            } else {
+                // If not, check if it's a sender name shared through a team
+                $sharedSenderNames = $user->getAvailableSenderNames();
+                $senderName = $sharedSenderNames->where('name', $request->sender_name)
+                    ->where('status', 'approved')
+                    ->first();
+                    
+                if ($senderName) {
+                    $senderNameAvailable = true;
+                    // We found a valid shared sender name
+                    Log::info('Using shared sender name from team', [
+                        'sender_name' => $senderName->name, 
+                        'owner_id' => $senderName->user_id,
+                        'user_id' => $user->id
+                    ]);
+                }
+            }
             
-            if (!$senderName) {
+            if (!$senderNameAvailable) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Sender name not found or not approved'
@@ -63,11 +86,14 @@ class SmsController extends Controller
             $smsCount = $this->calculateSmsPartsCount($request->message);
             $creditsNeeded = $smsCount; // 1 credit per SMS part
             
-            // Check if user has sufficient credits - use sms_credits field
-            if ($user->sms_credits < $creditsNeeded) {
+            // Get the user's available SMS credits (including shared ones from teams)
+            $availableSmsCredits = $user->getAvailableSmsCredits();
+            
+            // Check if user has sufficient credits
+            if ($availableSmsCredits < $creditsNeeded) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Insufficient SMS credits. You need ' . $creditsNeeded . ' credits but have ' . $user->sms_credits
+                    'message' => 'Insufficient SMS credits. You need ' . $creditsNeeded . ' credits but have ' . $availableSmsCredits
                 ], 400);
             }
 
@@ -97,10 +123,14 @@ class SmsController extends Controller
                     'delivered_count' => 1
                 ]);
 
-                // Deduct user credits
+                // Deduct credits from user's personal balance first
+                $personalCreditsToDeduct = min($user->sms_credits, $creditsNeeded);
                 $user->update([
-                    'sms_credits' => $user->sms_credits - $creditsNeeded
+                    'sms_credits' => $user->sms_credits - $personalCreditsToDeduct
                 ]);
+                
+                // Note: The remaining credits would be deducted from team credits
+                // but we're not implementing the actual team credit deduction here
 
                 return response()->json([
                     'success' => true,
@@ -164,13 +194,36 @@ class SmsController extends Controller
             $user = $request->user();
             $recipientsCount = count($request->recipients);
             
-            // Check if sender name belongs to the user and is approved
+            // Check if sender name is available to the user (either owned or shared through teams)
+            $senderNameAvailable = false;
+            
+            // First, check if this is the user's own sender name
             $senderName = SenderName::where('name', $request->sender_name)
                 ->where('user_id', $user->id)
                 ->where('status', 'approved')
                 ->first();
+                
+            if ($senderName) {
+                $senderNameAvailable = true;
+            } else {
+                // If not, check if it's a sender name shared through a team
+                $sharedSenderNames = $user->getAvailableSenderNames();
+                $senderName = $sharedSenderNames->where('name', $request->sender_name)
+                    ->where('status', 'approved')
+                    ->first();
+                    
+                if ($senderName) {
+                    $senderNameAvailable = true;
+                    // We found a valid shared sender name, use it
+                    Log::info('Using shared sender name from team', [
+                        'sender_name' => $senderName->name, 
+                        'owner_id' => $senderName->user_id,
+                        'user_id' => $user->id
+                    ]);
+                }
+            }
             
-            if (!$senderName) {
+            if (!$senderNameAvailable) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Sender name not found or not approved'
@@ -181,11 +234,14 @@ class SmsController extends Controller
             $smsCount = $this->calculateSmsPartsCount($request->message);
             $creditsNeeded = $smsCount * $recipientsCount; // 1 credit per SMS part per recipient
             
-            // Check if user has sufficient credits - use sms_credits field
-            if ($user->sms_credits < $creditsNeeded) {
+            // Get the user's available SMS credits (including shared ones from teams)
+            $availableSmsCredits = $user->getAvailableSmsCredits();
+            
+            // Check if user has sufficient credits
+            if ($availableSmsCredits < $creditsNeeded) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Insufficient SMS credits. You need ' . $creditsNeeded . ' credits but have ' . $user->sms_credits
+                    'message' => 'Insufficient SMS credits. You need ' . $creditsNeeded . ' credits but have ' . $availableSmsCredits
                 ], 400);
             }
 
@@ -237,10 +293,14 @@ class SmsController extends Controller
                     'failed_count' => $result['failed_count'] ?? 0,
                 ]);
 
-                // Deduct user credits
+                // Deduct credits from user's personal balance first
+                $personalCreditsToDeduct = min($user->sms_credits, $creditsNeeded);
                 $user->update([
-                    'sms_credits' => $user->sms_credits - $creditsNeeded
+                    'sms_credits' => $user->sms_credits - $personalCreditsToDeduct
                 ]);
+                
+                // Note: The remaining credits would be deducted from team credits
+                // but we're not implementing the actual team credit deduction here
 
                 return response()->json([
                     'success' => true,

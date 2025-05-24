@@ -71,7 +71,7 @@
                                                         <div class="d-flex align-items-center mb-5">
                                                             <div class="border border-dashed border-gray-300 rounded px-3 py-2 d-flex align-items-center me-3">
                                                                 <i class="ki-outline ki-profile-user fs-2 text-gray-500 me-2"></i>
-                                                                <span class="text-gray-700">{{ $team->users->count() + 1 }} Members</span>
+                                                                <span class="text-gray-700">{{ $team->users->count() }} Members</span>
                                                             </div>
                                                             @if($team->personal_team)
                                                                 <div class="border border-dashed border-gray-300 rounded px-3 py-2 d-flex align-items-center">
