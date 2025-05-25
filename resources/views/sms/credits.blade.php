@@ -65,6 +65,11 @@
                     <div class="d-flex flex-column">
                         <h4 class="mb-1 text-primary">Current Billing Tier: {{ auth()->user()->billingTier->name }}</h4>
                         <span>SMS Rate: <strong>{{ auth()->user()->currency->symbol }}{{ number_format(auth()->user()->getSmsRate(), 3) }}</strong> per SMS in {{ auth()->user()->currency->code }}</span>
+                        <span class="mt-2">You can purchase credits in two ways:</span>
+                        <ul class="mb-0">
+                            <li>Direct payment via Paystack using the packages below</li>
+                            <li>Using your wallet balance - <a href="{{ route('wallet.purchase-sms') }}" class="fw-bold">Click here to buy with wallet</a></li>
+                        </ul>
                         <span class="mt-2">Purchase more credits at once to qualify for better pricing tiers. <a href="{{ route('sms.billing-tier') }}" class="fw-bold">View all tiers</a></span>
                     </div>
                 </div>

@@ -166,8 +166,6 @@ class WalletController extends Controller
         
         // Get SMS rate based on user's tier
         $userTier = $user->billing_tier ? strtolower($user->billing_tier->name) : 'basic';
-        
-        // Get tier-specific rate or default to basic tier rate (0.035)
         $smsRate = config("sms.rate.{$userTier}", config('sms.rate.default'));
         
         // Calculate total cost
@@ -208,6 +206,12 @@ class WalletController extends Controller
             // Add SMS credits to user
             $user->sms_credits += $request->credits;
             $user->save();
+
+            // Check if purchase amount qualifies for tier upgrade
+            if ($totalCost >= 1500) {
+                app(\App\Services\Currency\CurrencyService::class)
+                    ->updateUserBillingTier($user, $totalCost);
+            }
             
             DB::commit();
             

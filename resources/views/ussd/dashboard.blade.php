@@ -187,7 +187,11 @@
                     <!-- Empty State -->
                     <div class="card">
                         <div class="card-body text-center py-5">
-                            <img src="{{ asset('img/empty-state.svg') }}" alt="No services" class="img-fluid mb-4" style="max-height: 200px;">
+                            <div class="mb-4">
+                                <span class="d-inline-flex align-items-center justify-content-center bg-light-primary rounded-circle" style="width:80px; height:80px;">
+                                    <i class="ki-outline ki-tablet-ok fs-1 text-primary"></i>
+                                </span>
+                            </div>
                             <h4>No USSD Services Yet</h4>
                             <p class="text-muted mb-4">Get started by creating your first USSD service</p>
                             <a href="{{ route('ussd.create') }}" class="btn btn-primary">

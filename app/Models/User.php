@@ -277,6 +277,24 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get SMS credit purchase transactions for the user
+     */
+    public function creditPurchases(): HasMany
+    {
+        return $this->walletTransactions()
+            ->where(function($query) {
+                $query->where(function($q) {
+                    $q->where('type', 'debit')
+                      ->where('description', 'like', '%SMS credits%');
+                })->orWhere(function($q) {
+                    $q->where('metadata->product_type', 'sms_credits')
+                      ->where('status', 'completed');
+                });
+            })
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
      * Get the wallet for the user
      */
     public function wallet()

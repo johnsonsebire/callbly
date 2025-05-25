@@ -258,68 +258,22 @@
                 <h2 class="fw-bold">New Call</h2>
                 <!--end::Modal title-->
                 <!--begin::Close-->
-                <div class="btn btn-icon btn-sm btn-active-icon-primary" data-kt-calls-modal-action="close">
+                <button type="button" class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal" aria-label="Close">
                     <i class="ki-outline ki-cross fs-1"></i>
-                </div>
+                </button>
                 <!--end::Close-->
             </div>
             <!--end::Modal header-->
             <!--begin::Modal body-->
-            <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
-                <!--begin::Form-->
-                <form id="kt_modal_add_call_form" class="form" action="#">
-                    <!--begin::Input group-->
-                    <div class="fv-row mb-7">
-                        <!--begin::Label-->
-                        <label class="required fw-semibold fs-6 mb-2">From Number</label>
-                        <!--end::Label-->
-                        <!--begin::Input-->
-                        <input type="text" name="from_number" class="form-control form-control-solid mb-3 mb-lg-0" placeholder="Enter caller number" />
-                        <!--end::Input-->
-                    </div>
-                    <!--end::Input group-->
-                    <!--begin::Input group-->
-                    <div class="fv-row mb-7">
-                        <!--begin::Label-->
-                        <label class="required fw-semibold fs-6 mb-2">To Number</label>
-                        <!--end::Label-->
-                        <!--begin::Input-->
-                        <input type="text" name="to_number" class="form-control form-control-solid mb-3 mb-lg-0" placeholder="Enter receiver number" />
-                        <!--end::Input-->
-                    </div>
-                    <!--end::Input group-->
-                    <!--begin::Input group-->
-                    <div class="fv-row mb-7">
-                        <!--begin::Label-->
-                        <label class="fw-semibold fs-6 mb-2">Record Call</label>
-                        <!--end::Label-->
-                        <!--begin::Switch-->
-                        <div class="form-check form-switch form-check-custom form-check-solid">
-                            <input class="form-check-input" type="checkbox" name="recording_enabled" value="1" id="recording_enabled" />
-                            <label class="form-check-label" for="recording_enabled">
-                                Enable call recording
-                            </label>
-                        </div>
-                        <!--end::Switch-->
-                    </div>
-                    <!--end::Input group-->
-                    <!--begin::Actions-->
-                    <div class="text-center pt-15">
-                        <button type="reset" class="btn btn-light me-3" data-kt-calls-modal-action="cancel">
-                            Discard
-                        </button>
-                        <button type="submit" class="btn btn-primary" data-kt-calls-modal-action="submit">
-                            <span class="indicator-label">
-                                Submit
-                            </span>
-                            <span class="indicator-progress">
-                                Please wait... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                            </span>
-                        </button>
-                    </div>
-                    <!--end::Actions-->
-                </form>
-                <!--end::Form-->
+            <div class="modal-body scroll-y mx-5 mx-xl-15 my-7 text-center">
+                <div class="mb-4">
+                    <span class="d-inline-flex align-items-center justify-content-center bg-light-primary rounded-circle" style="width:80px; height:80px;">
+                        <i class="ki-outline ki-call fs-1 text-primary"></i>
+                    </span>
+                </div>
+                <h3 class="fw-bold mb-3">Web Calling Coming Soon</h3>
+                <p class="text-muted mb-4">We're working on enabling web-based calling. If you require calling services for your business, please contact our team at <a href="mailto:support@callbly.com">support@callbly.com</a> and we'll be happy to assist you.</p>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
             </div>
             <!--end::Modal body-->
         </div>
@@ -396,91 +350,11 @@
             });
         }
 
-        var handleNewCallForm = function() {
-            const form = document.getElementById('kt_modal_add_call_form');
-            const submitButton = form.querySelector('[data-kt-calls-modal-action="submit"]');
-            const modal = new bootstrap.Modal(document.getElementById('kt_modal_add_call'));
-
-            submitButton.addEventListener('click', function (e) {
-                e.preventDefault();
-
-                submitButton.setAttribute('data-kt-indicator', 'on');
-                submitButton.disabled = true;
-
-                const fromNumber = form.querySelector('[name="from_number"]').value;
-                const toNumber = form.querySelector('[name="to_number"]').value;
-                const recordingEnabled = form.querySelector('[name="recording_enabled"]').checked;
-
-                fetch('{{ route("contact-center.initiate-call") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({
-                        from_number: fromNumber,
-                        to_number: toNumber,
-                        recording_enabled: recordingEnabled
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    submitButton.removeAttribute('data-kt-indicator');
-                    submitButton.disabled = false;
-
-                    if (data.success) {
-                        form.reset();
-                        modal.hide();
-                        
-                        // Show success message and reload table
-                        Swal.fire({
-                            text: data.message,
-                            icon: "success",
-                            buttonsStyling: false,
-                            confirmButtonText: "Ok, got it!",
-                            customClass: {
-                                confirmButton: "btn btn-primary"
-                            }
-                        }).then(function (result) {
-                            if (result.isConfirmed) {
-                                location.reload(); // Reload to show new call in table
-                            }
-                        });
-                    } else {
-                        Swal.fire({
-                            text: data.message,
-                            icon: "error",
-                            buttonsStyling: false,
-                            confirmButtonText: "Ok, got it!",
-                            customClass: {
-                                confirmButton: "btn btn-primary"
-                            }
-                        });
-                    }
-                })
-                .catch(error => {
-                    submitButton.removeAttribute('data-kt-indicator');
-                    submitButton.disabled = false;
-
-                    Swal.fire({
-                        text: "Sorry, it seems there are some errors detected, please try again.",
-                        icon: "error",
-                        buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
-                        customClass: {
-                            confirmButton: "btn btn-primary"
-                        }
-                    });
-                });
-            });
-        }
-
         // Public methods
         return {
             init: function () {
                 initCallTable();
                 initMinutesChart();
-                handleNewCallForm();
             }
         }
     }();

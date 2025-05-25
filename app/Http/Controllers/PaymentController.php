@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Str;
+use App\Notifications\SmsPurchaseInvoiceNotification;
+use App\Models\Wallet;
 
 class PaymentController extends Controller
 {
@@ -203,25 +206,52 @@ class PaymentController extends Controller
         $metadata = $transaction['metadata'] ?? [];
         $billingTier = $user->billingTier;
         
-        // Get original amount in user's currency
+        // Get original amount in base currency (GHS)
         $originalAmount = $metadata['currency_data']['original_amount'] ?? 0;
         
         // Calculate SMS credits based on billing tier
         $smsCredits = $billingTier->calculateSmsCredits($originalAmount);
         
-        // Add credits to user
-        $user->sms_credits += $smsCredits;
-        $user->save();
-        
-        // Log the transaction
-        Log::info('SMS credits added to user', [
-            'user_id' => $user->id,
-            'added_credits' => $smsCredits,
-            'total_credits' => $user->sms_credits,
-            'payment_reference' => $transaction['reference'],
-            'amount' => $originalAmount,
-            'currency' => $user->currency->code,
-        ]);
+        DB::transaction(function () use ($user, $smsCredits, $originalAmount, $transaction) {
+            // Add credits to user
+            $user->sms_credits += $smsCredits;
+            $user->save();
+            
+            // Check if purchase qualifies for tier upgrade
+            if ($originalAmount >= 1500) {
+                app(\App\Services\Currency\CurrencyService::class)
+                    ->updateUserBillingTier($user, $originalAmount);
+            }
+            
+            // Log the transaction
+            Log::info('SMS credits added to user', [
+                'user_id' => $user->id,
+                'added_credits' => $smsCredits,
+                'total_credits' => $user->sms_credits,
+                'amount' => $originalAmount,
+                'payment_reference' => $transaction['reference'],
+            ]);
+            
+            // Create a wallet transaction record for tracking
+            $walletTransaction = WalletTransaction::create([
+                'user_id' => $user->id,
+                'wallet_id' => $user->wallet->id,
+                'type' => 'debit',
+                'amount' => $originalAmount,
+                'reference' => 'SMS_' . Str::uuid()->toString(),
+                'description' => 'Purchase of ' . number_format($smsCredits) . ' SMS credits via Paystack',
+                'status' => 'completed',
+                'metadata' => [
+                    'sms_credits' => $smsCredits,
+                    'paystack_reference' => $transaction['reference'],
+                    'rate' => $user->billingTier->price_per_sms,
+                    'tier' => strtolower($user->billingTier->name),
+                ]
+            ]);
+            
+            // Send purchase invoice notification
+            $user->notify(new SmsPurchaseInvoiceNotification($walletTransaction));
+        });
     }
 
     /**

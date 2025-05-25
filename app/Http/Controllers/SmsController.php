@@ -28,7 +28,65 @@ class SmsController extends Controller
 
     public function dashboard(): View 
     {
-        return view('sms.dashboard');
+        $user = Auth::user();
+
+        // Get delivery statistics
+        $totalSent = $user->smsCampaigns()->sum('recipients_count');
+        $deliveredCount = $user->smsCampaigns()->sum('delivered_count');
+        $deliveryRate = $totalSent > 0 ? round(($deliveredCount / $totalSent) * 100, 1) : 0;
+
+        // Get today's statistics
+        $todayStats = $user->smsCampaigns()
+            ->whereDate('created_at', now()->toDateString())
+            ->selectRaw('
+                COUNT(*) as count,
+                SUM(recipients_count) as total_recipients,
+                SUM(delivered_count) as delivered_count,
+                SUM(credits_used) as credits_used
+            ')
+            ->first();
+
+        $todayCount = $todayStats->total_recipients ?? 0;
+        $todaySuccessRate = $todayStats->total_recipients > 0 
+            ? round(($todayStats->delivered_count / $todayStats->total_recipients) * 100, 1) 
+            : 0;
+        $todayCreditsUsed = $todayStats->credits_used ?? 0;
+
+        // Get active campaigns count
+        $activeCampaigns = $user->smsCampaigns()
+            ->whereIn('status', ['pending', 'processing'])
+            ->count();
+
+        // Get approved sender IDs count
+        $approvedSenderIds = $user->getAvailableSenderNames()
+            ->where('status', 'approved')
+            ->count();
+
+        // Get recent campaigns
+        $campaigns = $user->smsCampaigns()
+            ->with('recipients')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // Get recent templates
+        $templates = $user->smsTemplates()
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('sms.dashboard', compact(
+            'deliveryRate',
+            'deliveredCount',
+            'totalSent',
+            'todayCount',
+            'todaySuccessRate',
+            'todayCreditsUsed',
+            'activeCampaigns',
+            'approvedSenderIds',
+            'campaigns',
+            'templates'
+        ));
     }
 
     public function compose(Request $request): View
