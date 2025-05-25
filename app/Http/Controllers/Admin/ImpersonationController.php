@@ -20,7 +20,7 @@ class ImpersonationController extends Controller
     public function impersonate(Request $request, $id)
     {
         // Make sure only super-admin can impersonate
-        if (!$request->user()->hasRole('super-admin')) {
+        if (!$request->user()->hasRole('super-admin|super admin')) {
             return redirect()
                 ->route('dashboard')
                 ->with('error', 'You do not have permission to impersonate users.');
