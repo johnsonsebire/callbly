@@ -269,3 +269,6 @@ Route::middleware('auth')->group(function () {
     // Support Request Route
     Route::post('/support/send', [App\Http\Controllers\SupportController::class, 'send'])->name('support.send');
 });
+
+// Contact form submission route (public, no auth required)
+Route::post('/contact/send', [ContactController::class, 'send'])->name('contact.send');

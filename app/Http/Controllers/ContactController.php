@@ -16,6 +16,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use SplTempFileObject;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ContactFormSubmitted;
 
 class ContactController extends Controller
 {
@@ -486,5 +488,22 @@ class ContactController extends Controller
                 ->header('Content-Type', 'text/csv')
                 ->header('Content-Disposition', "attachment; filename=\"{$filename}.csv\"");
         }
+    }
+    
+    /**
+     * Handle contact form submission and send email to support@callbly.com
+     */
+    public function send(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'message' => 'required|string|max:2000',
+        ]);
+
+        // Send email to support@callbly.com
+        Mail::to('support@callbly.com')->send(new ContactFormSubmitted($validated));
+
+        return back()->with('success', 'Thank you for contacting us! We will get back to you soon.');
     }
 }

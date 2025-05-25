@@ -17,8 +17,11 @@
 		<!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
 		<link href="{{ asset('assets/plugins/global/plugins.bundle.css') }}" rel="stylesheet" type="text/css" />
 		<link href="{{ asset('assets/css/style.bundle.css') }}" rel="stylesheet" type="text/css" />
+		<!-- AOS CSS -->
+		<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 		<!--end::Global Stylesheets Bundle-->
 		
+
 		<!-- Custom CSS for logo switching -->
 		<style>
 			.app-header-logo.scrolled img.logo-default {
@@ -40,6 +43,166 @@
 			.footer-logo span {
 				font-size: 20px;
 			}
+
+			/* Custom CSS for modern look and feel */
+			.hero-section-modern {
+				padding-top: 40px; /* Adjusted padding */
+				padding-bottom: 40px;
+			}
+
+			.hero-section-modern h1 {
+				font-size: clamp(2.5rem, 5vw, 3.5rem); /* Responsive font size */
+				font-weight: 700;
+				color: #ffffff; /* Assuming dark hero background from app.blade.php */
+			}
+
+			.hero-section-modern .lead {
+				font-size: clamp(1rem, 2.5vw, 1.25rem);
+				color: rgba(255, 255, 255, 0.85); /* Softer white for subtext */
+				margin-bottom: 30px;
+				max-width: 600px;
+				margin-left: auto;
+				margin-right: auto;
+			}
+
+			.hero-section-modern .btn-primary-modern {
+				background-color: #3ABFF8; /* Callbly accent */
+				border-color: #3ABFF8;
+				padding: 12px 30px;
+				font-size: 1.1rem;
+				font-weight: 600;
+				transition: all 0.3s ease;
+			}
+			.hero-section-modern .btn-primary-modern:hover {
+				background-color: #2aaadf;
+				border-color: #2aaadf;
+				transform: translateY(-2px);
+				box-shadow: 0 4px 15px rgba(58, 191, 248, 0.4);
+			}
+
+			.section-title h2, .section-title h3 { /* Target both h2 and h3 for section titles */
+				font-size: clamp(2rem, 4vw, 2.5rem);
+				font-weight: 700;
+				margin-bottom: 15px;
+				color: #212529; /* Dark text for light sections */
+			}
+			.section-title .lead, .section-title .fs-5 { /* Target both lead and fs-5 for subtitles */
+				font-size: clamp(1rem, 2vw, 1.1rem);
+				color: #6c757d; /* Muted text */
+				margin-bottom: 40px;
+			}
+
+			.feature-card-modern {
+				background-color: #fff;
+				border: 1px solid #e9ecef;
+				border-radius: 0.75rem;
+				padding: 30px;
+				transition: transform 0.3s ease, box-shadow 0.3s ease;
+				height: 100%;
+				display: flex;
+				flex-direction: column;
+			}
+			.feature-card-modern:hover {
+				transform: translateY(-10px);
+				box-shadow: 0 1rem 3rem rgba(0,0,0,.1);
+			}
+			.feature-card-modern .icon-box {
+				width: 60px;
+				height: 60px;
+				background-color: rgba(58, 191, 248, 0.1); /* Light accent color */
+				color: #3ABFF8; /* Accent color */
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				margin-bottom: 20px;
+				font-size: 1.8rem; /* Icon size */
+				flex-shrink: 0;
+			}
+			.feature-card-modern h4 {
+				font-size: 1.3rem;
+				font-weight: 600;
+				margin-bottom: 10px;
+			}
+			.feature-card-modern p, .feature-card-modern .fs-6 {
+				flex-grow: 1;
+			}
+
+			/* Pricing Table Modernization */
+			.pricing-table-modern .card {
+				border: 1px solid #e9ecef;
+				border-radius: 0.75rem;
+				box-shadow: 0 0.5rem 1rem rgba(0,0,0,.05);
+				transition: transform 0.3s ease, box-shadow 0.3s ease;
+				height: 100%;
+			}
+			.pricing-table-modern .card:hover {
+				transform: translateY(-5px);
+				box-shadow: 0 1rem 3rem rgba(0,0,0,.1);
+			}
+
+			.pricing-table-modern .card-header {
+				background-color: #f8f9fa;
+				border-bottom: 1px solid #e9ecef;
+				padding: 2rem 1.5rem; /* Increased top/bottom padding */
+				display: flex;
+				flex-direction: column;
+				justify-content: center; /* Vertically centers the flex items */
+				align-items: center;   /* Horizontally centers the flex items */
+				text-align: center;    /* Ensures text within title/description is centered */
+				min-height: 140px;     /* Consistent header height */
+			}
+
+			.pricing-table-modern .card-header .card-title {
+				font-size: 1.6rem; /* Adjusted size */
+				font-weight: 700;  /* Bolder */
+				margin-bottom: 0.5rem; /* Space between title and description */
+			}
+			.pricing-table-modern .card-header .card-text {
+				font-size: 0.9rem;
+				color: #6c757d; /* Default color for description */
+				line-height: 1.3;
+			}
+			.pricing-table-modern .price { font-size: 2.5rem; font-weight: 700; color: #3ABFF8; }
+			.pricing-table-modern .price .period { font-size: 0.9rem; color: #6c757d; font-weight: 400; }
+			.pricing-table-modern .list-unstyled li { padding: 0.5rem 0; color: #495057; display: flex; align-items: center; }
+			.pricing-table-modern .list-unstyled .ki-outline { margin-right: 8px; font-size: 1.2em; }
+			.pricing-table-modern .list-unstyled .ki-check-circle { color: #28a745; }
+			.pricing-table-modern .list-unstyled .ki-cross-circle { color: #dc3545; }
+			.pricing-table-modern .card.popular { border: 2px solid #3ABFF8; }
+			.pricing-table-modern .card.popular .card-header {
+				background-color: #3ABFF8;
+			}
+			.pricing-table-modern .card.popular .card-header .card-title {
+				color: #fff !important;
+			}
+			.pricing-table-modern .card.popular .card-header .card-text,
+			.pricing-table-modern .card.popular .card-header .text-muted { /* Catch both if text-muted is used */
+				color: rgba(255, 255, 255, 0.9) !important; /* Softer white for description */
+			}
+			.pricing-table-modern .card.popular .price { color: #005f8b; } /* Darker blue for popular price if header is light blue */
+
+
+			/* Testimonials Carousel */
+			.testimonial-card-modern { background-color: #fff; padding: 30px; border-radius: 0.75rem; text-align: center; border: 1px solid #e9ecef; margin-bottom: 20px; }
+			.testimonial-card-modern img.avatar { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 15px; object-fit: cover; margin-left:auto; margin-right:auto; }
+			.testimonial-card-modern .name { font-weight: 600; font-size: 1.1rem; }
+			.testimonial-card-modern .company { font-size: 0.9rem; color: #6c757d; }
+			.testimonial-card-modern .quote { font-style: italic; color: #495057; margin-bottom: 15px; font-size: 1rem; }
+			.testimonial-card-modern .stars .ki-star { color: #ffc107; }
+			#testimonialCarousel .carousel-control-prev-icon, #testimonialCarousel .carousel-control-next-icon { background-color: #3ABFF8; border-radius: 50%; }
+
+			/* CTA Section Modern */
+			.cta-section-modern { background: linear-gradient(135deg, #0078AA 0%, #3ABFF8 100%); color: #fff; padding: 60px 20px; border-radius: 1rem; }
+			.cta-section-modern h2 { font-size: clamp(1.8rem, 3.5vw, 2.5rem); font-weight: 700; color: #fff; }
+			.cta-section-modern p { font-size: clamp(1rem, 2vw, 1.1rem); opacity: 0.9; margin-bottom: 30px; }
+			.cta-section-modern .btn-cta-modern { background-color: #fff; color: #0078AA; border-color: #fff; padding: 12px 30px; font-size: 1.1rem; font-weight: 600; transition: all 0.3s ease; }
+			.cta-section-modern .btn-cta-modern:hover { background-color: rgba(255,255,255,0.9); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 120, 170, 0.3); }
+
+			/* Client Logos */
+			.client-logos-modern img { max-height: 35px; filter: brightness(0) invert(1); opacity: 0.7; transition: opacity 0.3s ease; margin: 10px 15px; }
+			.client-logos-modern img:hover { opacity: 1; }
+
 		</style>
 		
 		<script>// Frame-busting to prevent site from being loaded within a frame without permission (click-jacking) if (window.top != window.self) { window.top.location.replace(window.self.location.href); }</script>
@@ -137,57 +300,51 @@
 				<div class="landing-dark-bg pt-20">
 					<!--begin::Container-->
 					<div class="container">
-                    <div class="row py-10 py-lg-20">
-                        <div class="col-lg-6 pe-lg-16 mb-10 mb-lg-0">
-                            <div class="rounded landing-dark-border p-9 mb-10">
-                                <h2 class="text-white">Would you need a Custom License?</h2>
-                                <span class="fw-normal fs-4 text-gray-700">Email us to
-                                <a href="mailto:support@callbly.com" class="text-white opacity-50 text-hover-primary">support@callbly.com</a></span>
-                            </div>
-                            <div class="rounded landing-dark-border p-9">
-                                <h2 class="text-white">How About a Custom Project?</h2>
-                                <span class="fw-normal fs-4 text-gray-700">Use Our Custom Development Service. 
-                                <a href="#" class="text-white opacity-50 text-hover-primary">Click to Get a Quote</a></span>
-                            </div>
-                        </div>
-                        <div class="col-lg-6 ps-lg-16">
-                            <div class="d-flex justify-content-center">
-                                <div class="d-flex fw-semibold flex-column me-20">
-                                    <h4 class="fw-bold text-gray-500 mb-6">More for Callbly</h4>
-                                    <a href="#" class="text-white opacity-50 text-hover-primary fs-5 mb-6">FAQ</a>
-                                    <a href="#" class="text-white opacity-50 text-hover-primary fs-5 mb-6">Documentation</a>
-                                    <a href="#" class="text-white opacity-50 text-hover-primary fs-5 mb-6">Video Tutorials</a>
-                                    <a href="#" class="text-white opacity-50 text-hover-primary fs-5 mb-6">Changelog</a>
-                                    <a href="#" class="text-white opacity-50 text-hover-primary fs-5 mb-6">Support Forum</a>
-                                    <a href="#" class="text-white opacity-50 text-hover-primary fs-5">Blog</a>
-                                </div>
-                                <div class="d-flex fw-semibold flex-column ms-lg-20">
-                                    <h4 class="fw-bold text-gray-500 mb-6">Stay Connected</h4>
-                                    <a href="#" class="mb-6">
-                                        <img src="{{ asset('assets/media/svg/brand-logos/facebook-4.svg') }}" class="h-20px me-2" alt="" />
-                                        <span class="text-white opacity-50 text-hover-primary fs-5 mb-6">Facebook</span>
-                                    </a>
-                                    <a href="#" class="mb-6">
-                                        <img src="{{ asset('assets/media/svg/brand-logos/github.svg') }}" class="h-20px me-2" alt="" />
-                                        <span class="text-white opacity-50 text-hover-primary fs-5 mb-6">Github</span>
-                                    </a>
-                                    <a href="#" class="mb-6">
-                                        <img src="{{ asset('assets/media/svg/brand-logos/twitter.svg') }}" class="h-20px me-2" alt="" />
-                                        <span class="text-white opacity-50 text-hover-primary fs-5 mb-6">Twitter</span>
-                                    </a>
-                                    <a href="#" class="mb-6">
-                                        <img src="{{ asset('assets/media/svg/brand-logos/dribbble-icon-1.svg') }}" class="h-20px me-2" alt="" />
-                                        <span class="text-white opacity-50 text-hover-primary fs-5 mb-6">Dribbble</span>
-                                    </a>
-                                    <a href="#" class="mb-6">
-                                        <img src="{{ asset('assets/media/svg/brand-logos/instagram-2-1.svg') }}" class="h-20px me-2" alt="" />
-                                        <span class="text-white opacity-50 text-hover-primary fs-5 mb-6">Instagram</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+						<!--begin::Row-->
+						<div class="row py-10 py-lg-20">
+							<!--begin::Col-->
+							<div class="col-lg-5 pe-lg-10 mb-10 mb-lg-0">
+								<a href="/" class="app-header-logo">
+									<img alt="Callbly Logo" src="{{ asset('assets/media/logos/callbly-white.png') }}" class="h-40px mb-5" />
+								</a>
+								<p class="fw-normal fs-5 text-gray-700">Callbly re-imagines business communication with cutting-edge cloud telephony solutions, empowering you to connect, engage, and grow.</p>
+								<div class="d-flex mt-6">
+									<a href="#" class="btn btn-icon btn-active-color-primary me-3"><img src="{{ asset('assets/media/svg/brand-logos/facebook-4.svg') }}" class="h-20px" alt="Callbly Facebook"/></a>
+									<a href="#" class="btn btn-icon btn-active-color-primary me-3"><img src="{{ asset('assets/media/svg/brand-logos/twitter.svg') }}" class="h-20px" alt="Callbly Twitter"/></a>
+									<a href="#" class="btn btn-icon btn-active-color-primary me-3"><img src="{{ asset('assets/media/svg/brand-logos/instagram-2-1.svg') }}" class="h-20px" alt="Callbly Instagram"/></a>
+									<a href="#" class="btn btn-icon btn-active-color-primary me-3"><img src="{{ asset('assets/media/svg/brand-logos/github.svg') }}" class="h-20px" alt="Callbly Github"/></a>
+								</div>
+							</div>
+							<!--end::Col-->
+							<!--begin::Col-->
+							<div class="col-lg-7 ps-lg-10">
+								<div class="row">
+									<div class="col-md-4 mb-5 mb-md-0">
+										<h4 class="fw-bold text-gray-500 mb-6">Product</h4>
+										<a href="#services" class="text-white opacity-50 text-hover-primary fs-5 mb-2 d-block">Services</a>
+										<a href="#pricing" class="text-white opacity-50 text-hover-primary fs-5 mb-2 d-block">Pricing</a>
+										<a href="#" class="text-white opacity-50 text-hover-primary fs-5 mb-2 d-block">Features</a>
+										<a href="#" class="text-white opacity-50 text-hover-primary fs-5 d-block">Integrations</a>
+									</div>
+									<div class="col-md-4 mb-5 mb-md-0">
+										<h4 class="fw-bold text-gray-500 mb-6">Company</h4>
+										<a href="#" class="text-white opacity-50 text-hover-primary fs-5 mb-2 d-block">About Us</a>
+										<a href="#" class="text-white opacity-50 text-hover-primary fs-5 mb-2 d-block">Blog</a>
+										<a href="#" class="text-white opacity-50 text-hover-primary fs-5 mb-2 d-block">Careers</a>
+										<a href="mailto:support@callbly.com" class="text-white opacity-50 text-hover-primary fs-5 d-block">Contact Us</a>
+									</div>
+									<div class="col-md-4">
+										<h4 class="fw-bold text-gray-500 mb-6">Resources</h4>
+										<a href="#" class="text-white opacity-50 text-hover-primary fs-5 mb-2 d-block">FAQ</a>
+										<a href="#" class="text-white opacity-50 text-hover-primary fs-5 mb-2 d-block">Documentation</a>
+										<a href="#" class="text-white opacity-50 text-hover-primary fs-5 mb-2 d-block">Support</a>
+									</div>
+								</div>
+							</div>
+							<!--end::Col-->
+						</div>
+						<!--end::Row-->
+					</div>
 					<!--end::Container-->
 					<!--begin::Separator-->
 					<div class="landing-dark-separator"></div>
@@ -198,9 +355,10 @@
 						<div class="d-flex flex-column flex-md-row flex-stack py-7 py-lg-10">
 							<!--begin::Copyright-->
 							<div class="d-flex align-items-center order-2 order-md-1">
-								 <a href="/" class="footer-logo">
+								 <a href="/" class="footer-logo me-4">
                                     <img alt="Callbly Logo" src="{{ asset('assets/media/logos/callbly-white.png') }}" class="h-30px" />
                                 </a>
+								<span class="text-gray-700 fw-semibold fs-6 ms-2">© {{ date('Y') }} Callbly. All rights reserved.</span>
 							</div>
 							<!--end::Copyright-->
 							<!--begin::Menu-->
@@ -269,6 +427,14 @@
 		<!--begin::Custom Javascript(used for this page only)-->
 		<script src="{{ asset('assets/js/custom/landing.js') }}"></script>
 		<script src="{{ asset('assets/js/custom/pages/pricing/general.js') }}"></script>
+		<!-- AOS JS -->
+		<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+		<script>
+			AOS.init({
+				duration: 800, // values from 0 to 3000, with step 50ms
+				once: true, // whether animation should happen only once - while scrolling down
+			});
+		</script>
 		<!--end::Custom Javascript-->
 		<!--end::Javascript-->
 	</body>
