@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Illuminate\Support\Collection;
 
+
 class ContactsExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
 {
     protected $contacts;

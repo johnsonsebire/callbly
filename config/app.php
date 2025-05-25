@@ -165,6 +165,8 @@ return [
         'Storage' => Illuminate\Support\Facades\Storage::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'TeamResource' => TeamResource::class,
+        'Str' => Illuminate\Support\Str::class,
+        'Carbon' => Illuminate\Support\Carbon::class,
     ],
 
 ];
