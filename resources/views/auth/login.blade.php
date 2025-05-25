@@ -69,8 +69,7 @@
         </label>
     </div>
 
-    <!-- Add dynamic reCAPTCHA -->
-    @recaptcha
+   
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <button type="submit" class="btn btn-primary">
