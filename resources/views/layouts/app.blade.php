@@ -44,6 +44,30 @@
 				font-size: 20px;
 			}
 
+			/* Fix for white line between sections */
+			.landing-curve {
+				line-height: 0;
+				font-size: 0;
+			}
+			
+			.landing-curve svg {
+				display: block;
+				width: 100%;
+				height: auto;
+			}
+			
+			/* Ensure no gaps between sections */
+			.landing-dark-bg {
+				margin-top: -1px;
+			}
+			
+			/* Remove bottom margins on larger screens to prevent gaps */
+			@media (min-width: 992px) {
+				.landing-curve.mb-lg-20 {
+					margin-bottom: 0 !important;
+				}
+			}
+
 			/* Custom CSS for modern look and feel */
 			.hero-section-modern {
 				padding-top: 40px; /* Adjusted padding */
@@ -190,19 +214,220 @@
 			.testimonial-card-modern .company { font-size: 0.9rem; color: #6c757d; }
 			.testimonial-card-modern .quote { font-style: italic; color: #495057; margin-bottom: 15px; font-size: 1rem; }
 			.testimonial-card-modern .stars .ki-star { color: #ffc107; }
-			#testimonialCarousel .carousel-control-prev-icon, #testimonialCarousel .carousel-control-next-icon { background-color: #3ABFF8; border-radius: 50%; }
 
-			/* CTA Section Modern */
-			.cta-section-modern { background: linear-gradient(135deg, #0078AA 0%, #3ABFF8 100%); color: #fff; padding: 60px 20px; border-radius: 1rem; }
-			.cta-section-modern h2 { font-size: clamp(1.8rem, 3.5vw, 2.5rem); font-weight: 700; color: #fff; }
-			.cta-section-modern p { font-size: clamp(1rem, 2vw, 1.1rem); opacity: 0.9; margin-bottom: 30px; }
-			.cta-section-modern .btn-cta-modern { background-color: #fff; color: #0078AA; border-color: #fff; padding: 12px 30px; font-size: 1.1rem; font-weight: 600; transition: all 0.3s ease; }
-			.cta-section-modern .btn-cta-modern:hover { background-color: rgba(255,255,255,0.9); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 120, 170, 0.3); }
-
-			/* Client Logos */
-			.client-logos-modern img { max-height: 35px; filter: brightness(0) invert(1); opacity: 0.7; transition: opacity 0.3s ease; margin: 10px 15px; }
-			.client-logos-modern img:hover { opacity: 1; }
-
+			/* CTA Section with Beautiful Blue Gradient */
+			.cta-section-modern {
+				background: linear-gradient(135deg, #3ABFF8 0%, #1e90ff 50%, #0066cc 100%);
+				padding: 60px 40px;
+				border-radius: 1rem;
+				box-shadow: 0 20px 40px rgba(58, 191, 248, 0.3);
+				position: relative;
+				overflow: hidden;
+			}
+			
+			.cta-section-modern::before {
+				content: '';
+				position: absolute;
+				top: -50%;
+				left: -50%;
+				width: 200%;
+				height: 200%;
+				background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+				animation: shimmer 6s ease-in-out infinite;
+			}
+			
+			@keyframes shimmer {
+				0%, 100% { transform: translateX(-100%) translateY(-100%) rotate(0deg); }
+				50% { transform: translateX(0%) translateY(0%) rotate(180deg); }
+			}
+			
+			.cta-section-modern h2 {
+				color: #ffffff;
+				font-size: clamp(2rem, 4vw, 2.5rem);
+				font-weight: 700;
+				margin-bottom: 1rem;
+				position: relative;
+				z-index: 2;
+			}
+			
+			.cta-section-modern p {
+				color: rgba(255, 255, 255, 0.9);
+				font-size: clamp(1rem, 2vw, 1.2rem);
+				margin-bottom: 2rem;
+				max-width: 600px;
+				margin-left: auto;
+				margin-right: auto;
+				position: relative;
+				z-index: 2;
+			}
+			
+			.btn-cta-modern {
+				background: linear-gradient(45deg, #ffffff 0%, #f8f9fa 100%);
+				color: #3ABFF8;
+				border: none;
+				padding: 15px 40px;
+				font-size: 1.1rem;
+				font-weight: 600;
+				border-radius: 0.5rem;
+				transition: all 0.3s ease;
+				position: relative;
+				z-index: 2;
+				box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+			}
+			
+			.btn-cta-modern:hover {
+				background: linear-gradient(45deg, #f8f9fa 0%, #e9ecef 100%);
+				color: #0066cc;
+				transform: translateY(-3px);
+				box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+			}
+			
+			/* Responsive adjustments for CTA */
+			@media (max-width: 768px) {
+				.cta-section-modern {
+					padding: 40px 20px;
+					margin: 0 15px;
+				}
+			}
+			
+			/* Modern Carousel Arrow Buttons */
+			#testimonialCarousel {
+				position: relative;
+			}
+			
+			#testimonialCarousel .carousel-control-prev,
+			#testimonialCarousel .carousel-control-next {
+				position: absolute;
+				top: 50%;
+				transform: translateY(-50%);
+				width: 50px;
+				height: 50px;
+				background: rgba(255, 255, 255, 0.95);
+				border: 2px solid #e9ecef;
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				transition: all 0.3s ease;
+				box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+				z-index: 2;
+				opacity: 1;
+			}
+			
+			#testimonialCarousel .carousel-control-prev:hover,
+			#testimonialCarousel .carousel-control-next:hover {
+				background: #3ABFF8;
+				border-color: #3ABFF8;
+				transform: translateY(-50%) scale(1.05);
+				box-shadow: 0 6px 20px rgba(58, 191, 248, 0.3);
+			}
+			
+			#testimonialCarousel .carousel-control-prev {
+				left: -25px;
+			}
+			
+			#testimonialCarousel .carousel-control-next {
+				right: -25px;
+			}
+			
+			#testimonialCarousel .carousel-control-prev-icon,
+			#testimonialCarousel .carousel-control-next-icon {
+				background: none;
+				width: 24px;
+				height: 24px;
+				position: relative;
+			}
+			
+			/* Replace default icons with KTIcons */
+			#testimonialCarousel .carousel-control-prev-icon {
+				background-image: none;
+			}
+			
+			#testimonialCarousel .carousel-control-next-icon {
+				background-image: none;
+			}
+			
+			#testimonialCarousel .carousel-control-prev-icon::before {
+				content: '';
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				font-family: 'KTIcons';
+				font-size: 18px;
+				font-weight: 600;
+				color: #6c757d;
+				transition: color 0.3s ease;
+			}
+			
+			#testimonialCarousel .carousel-control-next-icon::before {
+				content: '';
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				font-family: 'KTIcons';
+				font-size: 18px;
+				font-weight: 600;
+				color: #6c757d;
+				transition: color 0.3s ease;
+			}
+			
+			#testimonialCarousel .carousel-control-prev:hover .carousel-control-prev-icon::before,
+			#testimonialCarousel .carousel-control-next:hover .carousel-control-next-icon::before {
+				color: #fff;
+			}
+			
+			/* Use actual KTIcon elements instead */
+			#testimonialCarousel .carousel-control-prev .ki-arrow-left,
+			#testimonialCarousel .carousel-control-next .ki-arrow-right {
+				font-size: 18px;
+				color: #6c757d;
+				transition: color 0.3s ease;
+			}
+			
+			#testimonialCarousel .carousel-control-prev:hover .ki-arrow-left,
+			#testimonialCarousel .carousel-control-next:hover .ki-arrow-right {
+				color: #fff;
+			}
+			
+			/* Responsive adjustments for arrows */
+			@media (max-width: 768px) {
+				#testimonialCarousel .carousel-control-prev,
+				#testimonialCarousel .carousel-control-next {
+					width: 40px;
+					height: 40px;
+				}
+				
+				#testimonialCarousel .carousel-control-prev {
+					left: -20px;
+				}
+				
+				#testimonialCarousel .carousel-control-next {
+					right: -20px;
+				}
+				
+				#testimonialCarousel .carousel-control-prev .ki-arrow-left,
+				#testimonialCarousel .carousel-control-next .ki-arrow-right {
+					font-size: 16px;
+				}
+			}
+			
+			@media (max-width: 576px) {
+				#testimonialCarousel .carousel-control-prev,
+				#testimonialCarousel .carousel-control-next {
+					position: static;
+					margin: 20px 10px 0;
+					display: inline-flex;
+				}
+				
+				#testimonialCarousel .carousel-controls-mobile {
+					display: flex;
+					justify-content: center;
+					gap: 20px;
+					margin-top: 20px;
+				}
+			}
 		</style>
 		
 		<script>// Frame-busting to prevent site from being loaded within a frame without permission (click-jacking) if (window.top != window.self) { window.top.location.replace(window.self.location.href); }</script>
@@ -346,9 +571,6 @@
 						<!--end::Row-->
 					</div>
 					<!--end::Container-->
-					<!--begin::Separator-->
-					<div class="landing-dark-separator"></div>
-					<!--end::Separator-->
 					<!--begin::Container-->
 					<div class="container">
 						<!--begin::Wrapper-->

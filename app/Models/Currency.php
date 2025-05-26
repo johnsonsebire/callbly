@@ -66,11 +66,12 @@ class Currency extends Model
      *
      * @param float $amount
      * @param bool $includeSymbol
+     * @param int $decimals Number of decimal places (default: 2)
      * @return string
      */
-    public function format(float $amount, bool $includeSymbol = true): string
+    public function format(float $amount, bool $includeSymbol = true, int $decimals = 2): string
     {
-        $formattedAmount = number_format($amount, 2);
+        $formattedAmount = number_format($amount, $decimals);
         return $includeSymbol ? "{$this->symbol}{$formattedAmount}" : $formattedAmount;
     }
 }

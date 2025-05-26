@@ -47,9 +47,13 @@
                                 </div>
                             </div>
                             <div class="flex-equal text-end ms-1">
-                                @foreach($navigationService->getAuthNavigation() as $item)
-                                <a href="{{ $item['url'] }}" class="{{ $item['class'] }}">{{ $item['label'] }}</a>
-                                @endforeach
+                                <div class="d-flex align-items-center justify-content-end">
+                                    @foreach($navigationService->getAuthNavigation() as $item)
+                                        <a href="{{ $item['url'] }}" class="{{ $item['class'] }} @if($loop->last) ms-2 @else me-2 @endif d-inline-flex align-items-center">
+                                            {{ $item['label'] }}
+                                        </a>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
                     </div>

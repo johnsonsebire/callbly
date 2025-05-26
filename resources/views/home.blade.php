@@ -2,6 +2,68 @@
 
 @section('title', 'Callbly - Modern Cloud Telephony Solutions')
 
+@push('styles')
+<style>
+/* Hero Button White Text Styling */
+.btn-primary-modern {
+    background: linear-gradient(135deg, #3ABFF8 0%, #1E40AF 100%);
+    border: none;
+    color: #ffffff !important;
+    font-weight: 600;
+    padding: 12px 32px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(58, 191, 248, 0.3);
+}
+
+.btn-primary-modern:hover {
+    background: linear-gradient(135deg, #22D3EE 0%, #1D4ED8 100%);
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(58, 191, 248, 0.4);
+}
+
+.btn-primary-modern:focus,
+.btn-primary-modern:active {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #0EA5E9 0%, #1E3A8A 100%);
+    box-shadow: 0 2px 10px rgba(58, 191, 248, 0.5);
+}
+
+/* Mobile responsive adjustments for auth buttons */
+@media (max-width: 991.98px) {
+    .flex-equal .d-flex {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .flex-equal .d-flex a {
+        font-size: 14px;
+        padding: 8px 16px;
+        min-width: auto;
+        white-space: nowrap;
+    }
+    
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .flex-equal .d-flex {
+        justify-content: center !important;
+        margin-top: 8px;
+    }
+    
+    .flex-equal .d-flex a {
+        font-size: 13px;
+        padding: 6px 12px;
+    }
+}
+</style>
+@endpush
+
 @section('hero')
 <!--begin::Landing hero-->
 					<div class="d-flex flex-column flex-center w-100 min-h-350px min-h-lg-500px px-9 hero-section-modern">
@@ -193,20 +255,20 @@
                                 <div class="d-flex flex-column container pricing-table-modern">
                                     <!--begin::Heading-->
                                     <div class="mb-13 text-center section-title" data-aos="fade-up">
-                                        <h1 class="fs-2hx fw-bold text-dark mb-5" id="pricing" data-kt-scroll-offset="{default: 100, lg: 150}">Choose Your Plan</h1>
-                                        <div class="lead">Select a plan that best suits your business communication needs</div>
+                                        <h1 class="fs-2hx fw-bold text-dark mb-5" id="pricing" data-kt-scroll-offset="{default: 100, lg: 150}">SMS Billing Tiers</h1>
+                                        <div class="lead">Enjoy better rates as you send more SMS messages</div>
                                     </div>
                                     <!--end::Heading-->
 
                                     <!--begin::Row-->
                                     <div class="row g-5 g-lg-10 mb-10">
-                                        <!--begin::Col-->
-                                        <div class="col-xl-4" data-aos="fade-up" data-aos-delay="100">
+                                        <!--begin::Col - Basic Tier-->
+                                        <div class="col-xl-3" data-aos="fade-up" data-aos-delay="100">
                                             <div class="card h-100">
                                                 <!--begin::Header-->
                                                 <div class="card-header text-center">
-                                                    <h3 class="card-title fw-bolder text-dark">Starter</h3>
-                                                    <div class="card-text text-muted">For small businesses just getting started</div>
+                                                    <h3 class="card-title fw-bolder text-dark">Basic</h3>
+                                                    <div class="card-text text-muted">For businesses just getting started</div>
                                                 </div>
                                                 <!--end::Header-->
 
@@ -214,8 +276,8 @@
                                                 <div class="card-body pt-10">
                                                     <!--begin::Price-->
                                                     <div class="text-center">
-                                                        <span class="price">{{ app(\App\Services\Currency\CurrencyService::class)->format(5000, app(\App\Services\Currency\CurrencyService::class)->getDefaultCurrency()) }}</span>
-                                                        <span class="period">/month</span>
+                                                        <span class="price">{{ app(\App\Services\Currency\CurrencyService::class)->format(0.035, app(\App\Services\Currency\CurrencyService::class)->getDefaultCurrency(), true, 3) }}</span>
+                                                        <span class="period">/SMS</span>
                                                     </div>
                                                     <!--end::Price-->
 
@@ -223,23 +285,23 @@
                                                     <ul class="list-unstyled mt-8 mb-0">
                                                         <li class="d-flex align-items-center mb-2">
                                                             <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">1 Virtual Number</span>
+                                                            <span class="fw-semibold fs-6 text-gray-800">All SMS Features</span>
                                                         </li>
                                                         <li class="d-flex align-items-center mb-2">
                                                             <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">100 Minutes Monthly</span>
+                                                            <span class="fw-semibold fs-6 text-gray-800">Custom Sender Names</span>
                                                         </li>
                                                         <li class="d-flex align-items-center mb-2">
                                                             <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">Basic Call Analytics</span>
+                                                            <span class="fw-semibold fs-6 text-gray-800">Delivery Reports</span>
                                                         </li>
                                                         <li class="d-flex align-items-center mb-2">
-                                                            <i class="ki-outline ki-cross-circle fs-1 text-danger me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-400">Advanced IVR</span>
+                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
+                                                            <span class="fw-semibold fs-6 text-gray-800">API Access</span>
                                                         </li>
-                                                         <li class="d-flex align-items-center">
-                                                            <i class="ki-outline ki-cross-circle fs-1 text-danger me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-400">Bulk SMS</span>
+                                                        <li class="d-flex align-items-center">
+                                                            <i class="ki-outline ki-information fs-1 text-primary me-2"></i>
+                                                            <span class="fw-semibold fs-6 text-gray-600">Purchase: ₵0 - ₵1,499</span>
                                                         </li>
                                                     </ul>
                                                     <!--end::Features-->
@@ -255,13 +317,68 @@
                                         </div>
                                         <!--end::Col-->
 
-                                        <!--begin::Col-->
-                                        <div class="col-xl-4" data-aos="fade-up" data-aos-delay="200">
+                                        <!--begin::Col - Plus Tier-->
+                                        <div class="col-xl-3" data-aos="fade-up" data-aos-delay="200">
+                                            <div class="card h-100">
+                                                <!--begin::Header-->
+                                                <div class="card-header text-center">
+                                                    <h3 class="card-title fw-bolder text-dark">Plus</h3>
+                                                    <div class="card-text text-muted">Better rates for regular users</div>
+                                                </div>
+                                                <!--end::Header-->
+
+                                                <!--begin::Card body-->
+                                                <div class="card-body pt-10">
+                                                    <!--begin::Price-->
+                                                    <div class="text-center">
+                                                        <span class="price">{{ app(\App\Services\Currency\CurrencyService::class)->format(0.032, app(\App\Services\Currency\CurrencyService::class)->getDefaultCurrency(), true, 3) }}</span>
+                                                        <span class="period">/SMS</span>
+                                                    </div>
+                                                    <!--end::Price-->
+
+                                                    <!--begin::Features-->
+                                                    <ul class="list-unstyled mt-8 mb-0">
+                                                        <li class="d-flex align-items-center mb-2">
+                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
+                                                            <span class="fw-semibold fs-6 text-gray-800">All Basic Features</span>
+                                                        </li>
+                                                        <li class="d-flex align-items-center mb-2">
+                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
+                                                            <span class="fw-semibold fs-6 text-gray-800">8.6% Cost Savings</span>
+                                                        </li>
+                                                        <li class="d-flex align-items-center mb-2">
+                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
+                                                            <span class="fw-semibold fs-6 text-gray-800">Priority Support</span>
+                                                        </li>
+                                                        <li class="d-flex align-items-center mb-2">
+                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
+                                                            <span class="fw-semibold fs-6 text-gray-800">Advanced Analytics</span>
+                                                        </li>
+                                                        <li class="d-flex align-items-center">
+                                                            <i class="ki-outline ki-information fs-1 text-primary me-2"></i>
+                                                            <span class="fw-semibold fs-6 text-gray-600">Purchase: ₵1,500 - ₵2,999</span>
+                                                        </li>
+                                                    </ul>
+                                                    <!--end::Features-->
+
+                                                    <!--begin::Action-->
+                                                    <div class="text-center mt-8">
+                                                        <a href="{{ route('register') }}" class="btn btn-primary">Get Started</a>
+                                                    </div>
+                                                    <!--end::Action-->
+                                                </div>
+                                                <!--end::Card body-->
+                                            </div>
+                                        </div>
+                                        <!--end::Col-->
+
+                                        <!--begin::Col - Premium Tier-->
+                                        <div class="col-xl-3" data-aos="fade-up" data-aos-delay="300">
                                             <div class="card h-100 popular">
                                                 <!--begin::Header-->
                                                 <div class="card-header text-center">
-                                                    <h3 class="card-title fw-bolder">Business</h3>
-                                                    <div class="card-text text-muted">Perfect for growing businesses</div>
+                                                    <h3 class="card-title fw-bolder">Premium</h3>
+                                                    <div class="card-text text-muted">Great value for high volume</div>
                                                     <span class="position-absolute top-0 start-50 translate-middle badge badge-primary">Popular</span>
                                                 </div>
                                                 <!--end::Header-->
@@ -270,8 +387,8 @@
                                                 <div class="card-body pt-10">
                                                     <!--begin::Price-->
                                                     <div class="text-center">
-                                                        <span class="price">{{ app(\App\Services\Currency\CurrencyService::class)->format(15000, app(\App\Services\Currency\CurrencyService::class)->getDefaultCurrency()) }}</span>
-                                                        <span class="period">/month</span>
+                                                        <span class="price">{{ app(\App\Services\Currency\CurrencyService::class)->format(0.029, app(\App\Services\Currency\CurrencyService::class)->getDefaultCurrency(), true, 3) }}</span>
+                                                        <span class="period">/SMS</span>
                                                     </div>
                                                     <!--end::Price-->
 
@@ -279,23 +396,23 @@
                                                     <ul class="list-unstyled mt-8 mb-0">
                                                         <li class="d-flex align-items-center mb-2">
                                                             <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">5 Virtual Numbers</span>
+                                                            <span class="fw-semibold fs-6 text-gray-800">All Plus Features</span>
                                                         </li>
                                                         <li class="d-flex align-items-center mb-2">
                                                             <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">500 Minutes Monthly</span>
+                                                            <span class="fw-semibold fs-6 text-gray-800">17% Cost Savings</span>
                                                         </li>
                                                         <li class="d-flex align-items-center mb-2">
                                                             <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">Advanced Call Analytics</span>
+                                                            <span class="fw-semibold fs-6 text-gray-800">Dedicated Account Manager</span>
                                                         </li>
                                                         <li class="d-flex align-items-center mb-2">
                                                             <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">Basic IVR System</span>
+                                                            <span class="fw-semibold fs-6 text-gray-800">Custom Integrations</span>
                                                         </li>
                                                         <li class="d-flex align-items-center">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">Bulk SMS (Add-on)</span>
+                                                            <i class="ki-outline ki-information fs-1 text-primary me-2"></i>
+                                                            <span class="fw-semibold fs-6 text-gray-600">Purchase: ₵3,000 - ₵5,999</span>
                                                         </li>
                                                     </ul>
                                                     <!--end::Features-->
@@ -311,13 +428,13 @@
                                         </div>
                                         <!--end::Col-->
 
-                                        <!--begin::Col-->
-                                        <div class="col-xl-4" data-aos="fade-up" data-aos-delay="300">
+                                        <!--begin::Col - Gold Tier-->
+                                        <div class="col-xl-3" data-aos="fade-up" data-aos-delay="400">
                                             <div class="card h-100">
                                                 <!--begin::Header-->
                                                 <div class="card-header text-center">
-                                                    <h3 class="card-title fw-bolder text-dark">Enterprise</h3>
-                                                    <div class="card-text text-muted">For large organizations with advanced needs</div>
+                                                    <h3 class="card-title fw-bolder text-dark">Gold</h3>
+                                                    <div class="card-text text-muted">Best rates for enterprise</div>
                                                 </div>
                                                 <!--end::Header-->
 
@@ -325,8 +442,8 @@
                                                 <div class="card-body pt-10">
                                                     <!--begin::Price-->
                                                     <div class="text-center">
-                                                        <span class="price">{{ app(\App\Services\Currency\CurrencyService::class)->format(50000, app(\App\Services\Currency\CurrencyService::class)->getDefaultCurrency()) }}</span>
-                                                        <span class="period">/month</span>
+                                                        <span class="price">{{ app(\App\Services\Currency\CurrencyService::class)->format(0.025, app(\App\Services\Currency\CurrencyService::class)->getDefaultCurrency(), true, 3) }}</span>
+                                                        <span class="period">/SMS</span>
                                                     </div>
                                                     <!--end::Price-->
 
@@ -334,23 +451,23 @@
                                                     <ul class="list-unstyled mt-8 mb-0">
                                                         <li class="d-flex align-items-center mb-2">
                                                             <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">Unlimited Virtual Numbers</span>
+                                                            <span class="fw-semibold fs-6 text-gray-800">All Premium Features</span>
                                                         </li>
                                                         <li class="d-flex align-items-center mb-2">
                                                             <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">2000+ Minutes Monthly</span>
+                                                            <span class="fw-semibold fs-6 text-gray-800">29% Cost Savings</span>
                                                         </li>
                                                         <li class="d-flex align-items-center mb-2">
                                                             <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">Custom Call Analytics</span>
+                                                            <span class="fw-semibold fs-6 text-gray-800">24/7 Premium Support</span>
                                                         </li>
                                                         <li class="d-flex align-items-center mb-2">
                                                             <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">Advanced IVR System</span>
+                                                            <span class="fw-semibold fs-6 text-gray-800">SLA Guarantee</span>
                                                         </li>
                                                         <li class="d-flex align-items-center">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">Dedicated Support</span>
+                                                            <i class="ki-outline ki-information fs-1 text-primary me-2"></i>
+                                                            <span class="fw-semibold fs-6 text-gray-600">Purchase: ₵6,000+</span>
                                                         </li>
                                                     </ul>
                                                     <!--end::Features-->
@@ -367,6 +484,20 @@
                                         <!--end::Col-->
                                     </div>
                                     <!--end::Row-->
+
+                                    <!--begin::Tier Info-->
+                                    <div class="row justify-content-center">
+                                        <div class="col-lg-8">
+                                            <div class="alert alert-info d-flex align-items-center p-5">
+                                                <i class="ki-outline ki-information-5 fs-2tx text-info me-4"></i>
+                                                <div class="d-flex flex-column">
+                                                    <h4 class="mb-1 text-info">How It Works</h4>
+                                                    <span>Your billing tier is automatically upgraded based on your purchase volume. Once upgraded, you maintain your tier level for all future SMS sending.</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!--end::Tier Info-->
                                 </div>
                                 <!--end::Plans-->
                             </div>
@@ -439,11 +570,11 @@
                                         </div>
                                     </div>
                                     <button class="carousel-control-prev" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="prev">
-                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <i class="ki-outline ki-arrow-left" aria-hidden="true"></i>
                                         <span class="visually-hidden">Previous</span>
                                     </button>
                                     <button class="carousel-control-next" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="next">
-                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <i class="ki-outline ki-arrow-right" aria-hidden="true"></i>
                                         <span class="visually-hidden">Next</span>
                                     </button>
                                 </div>
@@ -488,6 +619,33 @@
                                 </div>
                                 <div class="row justify-content-center">
                                     <div class="col-lg-8">
+                                        {{-- Display success/error messages --}}
+                                        @if(session('success'))
+                                            <div class="alert alert-success d-flex align-items-center p-5 mb-10" data-aos="fade-up">
+                                                <i class="ki-outline ki-shield-tick fs-2hx text-success me-4"></i>
+                                                <div class="d-flex flex-column">
+                                                    <h4 class="mb-1 text-success">Success</h4>
+                                                    <span>{{ session('success') }}</span>
+                                                </div>
+                                                <button type="button" class="position-absolute position-sm-relative m-2 m-sm-0 top-0 end-0 btn btn-icon ms-sm-auto" data-bs-dismiss="alert">
+                                                    <i class="ki-outline ki-cross fs-2 text-success"></i>
+                                                </button>
+                                            </div>
+                                        @endif
+
+                                        @if(session('error'))
+                                            <div class="alert alert-danger d-flex align-items-center p-5 mb-10" data-aos="fade-up">
+                                                <i class="ki-outline ki-shield-cross fs-2hx text-danger me-4"></i>
+                                                <div class="d-flex flex-column">
+                                                    <h4 class="mb-1 text-danger">Error</h4>
+                                                    <span>{{ session('error') }}</span>
+                                                </div>
+                                                <button type="button" class="position-absolute position-sm-relative m-2 m-sm-0 top-0 end-0 btn btn-icon ms-sm-auto" data-bs-dismiss="alert">
+                                                    <i class="ki-outline ki-cross fs-2 text-danger"></i>
+                                                </button>
+                                            </div>
+                                        @endif
+
                                         <form method="POST" action="{{ route('contact.send') }}" class="card p-5 border-1 bg-white">
                                             @csrf
                                             <div class="mb-4">

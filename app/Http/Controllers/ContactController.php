@@ -499,11 +499,20 @@ class ContactController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'message' => 'required|string|max:2000',
+            'g-recaptcha-response' => 'required|recaptcha',
+        ], [
+            'g-recaptcha-response.required' => 'Please complete the reCAPTCHA verification.',
+            'g-recaptcha-response.recaptcha' => 'reCAPTCHA verification failed. Please try again.',
         ]);
 
-        // Send email to support@callbly.com
-        Mail::to('support@callbly.com')->send(new ContactFormSubmitted($validated));
+        try {
+            // Send email to support@callbly.com
+            Mail::to('support@callbly.com')->send(new ContactFormSubmitted($validated));
 
-        return back()->with('success', 'Thank you for contacting us! We will get back to you soon.');
+            return back()->with('success', 'Thank you for contacting us! We will get back to you soon.');
+        } catch (\Exception $e) {
+            Log::error('Contact form email failed: ' . $e->getMessage());
+            return back()->with('error', 'There was an error sending your message. Please try again or email us directly at support@callbly.com.');
+        }
     }
 }

@@ -78,9 +78,10 @@ class CurrencyService
      * @param float $amount
      * @param Currency|string|null $currency
      * @param bool $includeSymbol
+     * @param int $decimals Number of decimal places (default: 2)
      * @return string
      */
-    public function format(float $amount, $currency = null, bool $includeSymbol = true): string
+    public function format(float $amount, $currency = null, bool $includeSymbol = true, int $decimals = 2): string
     {
         if ($currency === null) {
             $currency = $this->getDefaultCurrency();
@@ -88,7 +89,7 @@ class CurrencyService
             $currency = $this->getCurrencyByCode($currency);
         }
         
-        return $currency->format($amount, $includeSymbol);
+        return $currency->format($amount, $includeSymbol, $decimals);
     }
 
     /**
