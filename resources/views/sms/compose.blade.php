@@ -716,12 +716,13 @@
             characterCount.textContent = length + ' characters';
             charsCount.textContent = length;
             
-            // Calculate message parts (160 chars for single SMS, 153 for multi-part)
+            // Calculate message parts - FIXED FORMULA
             let parts = 1;
             if (length <= 160) {
                 parts = 1;
             } else {
-                parts = Math.ceil((length - 160) / 153) + 1;
+                // For multi-part messages, each part can hold 153 characters
+                parts = Math.ceil(length / 153);
             }
             
             // Update message parts display
@@ -800,7 +801,7 @@
             if (length <= 160) {
                 parts = 1;
             } else {
-                parts = Math.ceil((length - 160) / 153) + 1;
+                parts = Math.ceil(length / 153);
             }
             
             const estimatedCredits = parts * recipientCount;

@@ -352,11 +352,12 @@ class NaloSmsProvider implements SmsProviderInterface
         
         $messageLength = mb_strlen($message);
         
-        // Calculate number of parts needed
+        // Calculate number of parts needed - FIXED FORMULA
         if ($messageLength <= $maxSingleSmsLength) {
             $parts = 1;
         } else {
-            $parts = ceil(($messageLength - $maxSingleSmsLength) / $maxMultipartSmsLength) + 1;
+            // For multi-part messages, calculate correctly
+            $parts = ceil($messageLength / $maxMultipartSmsLength);
         }
         
         // Calculate credits based on parts and recipient count

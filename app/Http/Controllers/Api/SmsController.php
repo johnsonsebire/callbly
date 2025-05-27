@@ -30,7 +30,7 @@ class SmsController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'recipient' => 'required|string',
-            'message' => 'required|string|max:160',
+            'message' => 'required|string', // Removed max:160 to allow multi-part messages
             'sender_name' => 'required|string|exists:sender_names,name',
             'scheduled_at' => 'nullable|date|after:now',
         ]);
@@ -193,11 +193,11 @@ class SmsController extends Controller
         $validator = Validator::make($request->all(), [
             'recipients' => 'required|array|min:1',
             'recipients.*' => 'required|string',
-            'message' => 'required|string|max:160',
+            'message' => 'required|string', // Removed max:160 to allow multi-part messages
             'sender_name' => 'required|string|exists:sender_names,name',
             'name' => 'required|string|max:255',
             'scheduled_at' => 'nullable|date|after:now',
-            'campaign_id' => 'nullable|integer|exists:sms_campaigns,id', // Add campaign_id parameter
+            'campaign_id' => 'nullable|integer|exists:sms_campaigns,id',
         ]);
 
         if ($validator->fails()) {
