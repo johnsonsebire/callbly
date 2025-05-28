@@ -95,6 +95,7 @@
                                         <th class="min-w-120px">Phone</th>
                                         <th class="min-w-150px">Email</th>
                                         <th class="min-w-120px">Company</th>
+                                        <th class="min-w-100px">Status</th>
                                         <th class="min-w-150px">Groups</th>
                                         <th class="min-w-150px text-end">Actions</th>
                                     </tr>
@@ -109,47 +110,79 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <div class="symbol symbol-45px me-3">
-                                                        <span class="symbol-label bg-light-primary text-primary">
-                                                            {{ substr($contact->full_name, 0, 1) }}
-                                                        </span>
+                                                    <div class="symbol symbol-45px me-5">
+                                                        <div class="symbol-label bg-light-primary text-primary fs-6 fw-bold">
+                                                            {{ strtoupper(substr($contact->first_name, 0, 1) . substr($contact->last_name, 0, 1)) }}
+                                                        </div>
                                                     </div>
-                                                    <div class="d-flex flex-column">
-                                                        <a href="{{ route('contacts.show', $contact) }}" class="text-dark text-hover-primary fw-bold">{{ $contact->full_name }}</a>
+                                                    <div class="d-flex justify-content-start flex-column">
+                                                        <a href="{{ route('contacts.show', $contact) }}" class="text-dark fw-bold text-hover-primary mb-1 fs-6">
+                                                            {{ $contact->full_name }}
+                                                        </a>
+                                                        @if($contact->job_title)
+                                                            <span class="text-muted fw-semibold text-muted d-block fs-7">
+                                                                {{ $contact->job_title }}
+                                                            </span>
+                                                        @endif
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>{{ $contact->phone_number }}</td>
-                                            <td>{{ $contact->email }}</td>
-                                            <td>{{ $contact->company }}</td>
                                             <td>
-                                                @foreach($contact->groups as $group)
-                                                    <span class="badge badge-light-primary fs-7 fw-semibold me-1">{{ $group->name }}</span>
-                                                @endforeach
+                                                <div class="d-flex align-items-center">
+                                                    {{ $contact->phone_number }}
+                                                    @if($contact->whatsapp_number || ($contact->phone_number && $contact->preferred_contact_method === 'whatsapp'))
+                                                        <a href="#" onclick="openWhatsApp('{{ $contact->whatsapp_number ?: $contact->phone_number }}')" class="btn btn-icon btn-sm btn-success ms-2" title="Send WhatsApp message">
+                                                            <i class="fab fa-whatsapp fs-6"></i>
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td>{{ $contact->email ?: '-' }}</td>
+                                            <td>{{ $contact->company ?: '-' }}</td>
+                                            <td>
+                                                <x-crm-badges :contact="$contact" />
+                                            </td>
+                                            <td>
+                                                @if($contact->groups && $contact->groups->count() > 0)
+                                                    @foreach($contact->groups as $group)
+                                                        <span class="badge badge-light-secondary me-1 mb-1">{{ $group->name }}</span>
+                                                    @endforeach
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
                                             </td>
                                             <td class="text-end">
-                                                <a href="{{ route('contacts.edit', $contact) }}" class="btn btn-sm btn-light-primary me-1">
-                                                    <i class="ki-outline ki-pencil fs-2"></i>
+                                                <a href="{{ route('contacts.show', $contact) }}" class="btn btn-sm btn-light-info me-1" title="View Details">
+                                                    <i class="ki-outline ki-eye fs-5"></i>
+                                                </a>
+                                                <a href="{{ route('contacts.edit', $contact) }}" class="btn btn-sm btn-light-primary me-1" title="Edit Contact">
+                                                    <i class="ki-outline ki-pencil fs-5"></i>
                                                 </a>
                                                 <form action="{{ route('contacts.destroy', $contact) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Delete this contact?');">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button class="btn btn-sm btn-light-danger me-1">
-                                                        <i class="ki-outline ki-trash fs-2"></i>
+                                                    <button type="submit" class="btn btn-sm btn-light-danger me-1" title="Delete Contact">
+                                                        <i class="ki-outline ki-trash fs-5"></i>
                                                     </button>
                                                 </form>
-                                                <a href="{{ route('sms.compose') }}?contact_id={{ $contact->id }}" class="btn btn-sm btn-light-success">
-                                                    <i class="ki-outline ki-message-text-2 fs-2"></i>
+                                                <a href="{{ route('sms.compose') }}?contact_id={{ $contact->id }}" class="btn btn-sm btn-light-success" title="Send SMS">
+                                                    <i class="ki-outline ki-message-text-2 fs-5"></i>
                                                 </a>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="text-center py-10">
+                                            <td colspan="8" class="text-center py-10">
                                                 <div class="d-flex flex-column align-items-center">
-                                                    <i class="ki-outline ki-people fs-2tx text-gray-300 mb-5"></i>
-                                                    <span class="text-gray-600 fs-5 fw-semibold">No contacts found</span>
-                                                    <span class="text-gray-400 fs-7">Add contacts to get started</span>
+                                                    <div class="symbol symbol-100px symbol-circle mb-7">
+                                                        <div class="symbol-label bg-light-primary">
+                                                            <i class="ki-outline ki-profile-user fs-1 text-primary"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-gray-600 fs-5 mb-5">No contacts found</div>
+                                                    <a href="{{ route('contacts.create') }}" class="btn btn-primary">
+                                                        <i class="ki-outline ki-plus-square fs-3 me-2"></i>Add Your First Contact
+                                                    </a>
                                                 </div>
                                             </td>
                                         </tr>
@@ -216,5 +249,15 @@
             }
         }
     });
+
+    // WhatsApp functionality
+    function openWhatsApp(phoneNumber) {
+        // Clean phone number (remove spaces, dashes, etc.)
+        const cleanNumber = phoneNumber.replace(/[^\d+]/g, '');
+        
+        // Open WhatsApp with the phone number
+        const whatsappUrl = `https://wa.me/${cleanNumber}`;
+        window.open(whatsappUrl, '_blank');
+    }
 </script>
 @endpush

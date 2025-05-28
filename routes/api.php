@@ -48,16 +48,109 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     // Contacts routes
-    Route::get('/contacts/{id}', function ($id) {
-        $contact = \App\Models\Contact::where('id', $id)
-            ->where('user_id', auth()->id())
-            ->first();
+    Route::prefix('contacts')->group(function () {
+        Route::get('/{id}', function ($id) {
+            $contact = \App\Models\Contact::where('id', $id)
+                ->where('user_id', auth()->id())
+                ->first();
+                
+            if (!$contact) {
+                return response()->json(['error' => 'Contact not found'], 404);
+            }
             
-        if (!$contact) {
-            return response()->json(['error' => 'Contact not found'], 404);
-        }
+            return response()->json($contact);
+        });
         
-        return response()->json($contact);
+        // WhatsApp related endpoints
+        Route::post('/{id}/check-whatsapp', function ($id) {
+            $contact = \App\Models\Contact::where('id', $id)
+                ->where('user_id', auth()->id())
+                ->first();
+                
+            if (!$contact) {
+                return response()->json(['error' => 'Contact not found'], 404);
+            }
+            
+            $whatsAppService = app(\App\Services\Contact\WhatsAppDetectionService::class);
+            $hasWhatsApp = $whatsAppService->checkAndUpdateContact($contact);
+            
+            return response()->json([
+                'has_whatsapp' => $hasWhatsApp,
+                'whatsapp_url' => $hasWhatsApp ? $whatsAppService->generateWhatsAppUrl($contact->whatsapp_number ?: $contact->phone_number) : null,
+                'checked_at' => $contact->fresh()->whatsapp_checked_at
+            ]);
+        });
+        
+        Route::get('/{id}/whatsapp-url', function ($id) {
+            $contact = \App\Models\Contact::where('id', $id)
+                ->where('user_id', auth()->id())
+                ->first();
+                
+            if (!$contact) {
+                return response()->json(['error' => 'Contact not found'], 404);
+            }
+            
+            $phoneNumber = $contact->whatsapp_number ?: $contact->phone_number;
+            if (!$phoneNumber) {
+                return response()->json(['error' => 'No phone number available'], 400);
+            }
+            
+            $whatsAppService = app(\App\Services\Contact\WhatsAppDetectionService::class);
+            $message = request('message', '');
+            
+            return response()->json([
+                'whatsapp_url' => $whatsAppService->generateWhatsAppUrl($phoneNumber, $message),
+                'whatsapp_web_url' => $whatsAppService->generateWhatsAppWebUrl($phoneNumber, $message)
+            ]);
+        });
+        
+        // Bulk WhatsApp check
+        Route::post('/bulk-check-whatsapp', function () {
+            $contactIds = request('contact_ids', []);
+            
+            if (empty($contactIds)) {
+                return response()->json(['error' => 'No contact IDs provided'], 400);
+            }
+            
+            $contacts = \App\Models\Contact::whereIn('id', $contactIds)
+                ->where('user_id', auth()->id())
+                ->get();
+                
+            $whatsAppService = app(\App\Services\Contact\WhatsAppDetectionService::class);
+            $results = $whatsAppService->bulkCheckContacts($contacts);
+            
+            return response()->json([
+                'results' => $results,
+                'total_checked' => count($results)
+            ]);
+        });
+        
+        // Get contacts needing follow-up
+        Route::get('/follow-up/pending', function () {
+            $contacts = \App\Models\Contact::where('user_id', auth()->id())
+                ->needsFollowUp()
+                ->with('groups')
+                ->get();
+                
+            return response()->json($contacts);
+        });
+        
+        // CRM statistics
+        Route::get('/stats/crm', function () {
+            $userId = auth()->id();
+            
+            $stats = [
+                'total_contacts' => \App\Models\Contact::where('user_id', $userId)->count(),
+                'new_leads' => \App\Models\Contact::where('user_id', $userId)->byLeadStatus('new')->count(),
+                'qualified_leads' => \App\Models\Contact::where('user_id', $userId)->byLeadStatus('qualified')->count(),
+                'active_leads' => \App\Models\Contact::where('user_id', $userId)->activeLeads()->count(),
+                'high_priority' => \App\Models\Contact::where('user_id', $userId)->highPriority()->count(),
+                'follow_ups_due' => \App\Models\Contact::where('user_id', $userId)->needsFollowUp()->count(),
+                'whatsapp_contacts' => \App\Models\Contact::where('user_id', $userId)->where('has_whatsapp', true)->count(),
+            ];
+            
+            return response()->json($stats);
+        });
     });
     
     // USSD routes

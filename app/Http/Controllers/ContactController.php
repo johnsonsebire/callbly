@@ -65,29 +65,115 @@ class ContactController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            // Basic information
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'phone_number' => 'required|string|max:20',
+            'alternative_phone' => 'nullable|string|max:20',
+            'whatsapp_number' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
-            'date_of_birth' => 'nullable|date',
+            'alternative_email' => 'nullable|email|max:255',
+            
+            // Social media and web presence
+            'website' => 'nullable|url|max:255',
+            'linkedin_profile' => 'nullable|url|max:255',
+            'twitter_handle' => 'nullable|string|max:255',
+            'facebook_profile' => 'nullable|url|max:255',
+            'instagram_handle' => 'nullable|string|max:255',
+            
+            // Professional information
             'company' => 'nullable|string|max:255',
+            'job_title' => 'nullable|string|max:255',
+            'department' => 'nullable|string|max:255',
+            'industry' => 'nullable|string|max:255',
+            'annual_revenue' => 'nullable|numeric|min:0',
+            'company_size' => 'nullable|integer|min:1',
+            
+            // Address information
+            'address' => 'nullable|string',
+            'city' => 'nullable|string|max:255',
+            'state' => 'nullable|string|max:255',
+            'postal_code' => 'nullable|string|max:20',
+            'country' => 'nullable|string|max:255',
+            'timezone' => 'nullable|string|max:255',
+            
+            // CRM fields
+            'lead_status' => 'nullable|in:new,contacted,qualified,proposal,negotiation,closed_won,closed_lost',
+            'priority' => 'nullable|in:low,medium,high,urgent',
+            'lead_source' => 'nullable|string|max:255',
+            'potential_value' => 'nullable|numeric|min:0',
+            'last_contact_date' => 'nullable|date',
+            'next_follow_up_date' => 'nullable|date|after_or_equal:today',
+            'preferred_contact_method' => 'nullable|in:phone,email,whatsapp,sms',
+            
+            // Tags and notes
+            'tags' => 'nullable|array',
+            'tags.*' => 'string|max:255',
             'notes' => 'nullable|string',
+            'internal_notes' => 'nullable|string',
+            'date_of_birth' => 'nullable|date',
             'groups' => 'nullable|array',
         ]);
 
         $contact = Contact::create([
             'user_id' => Auth::id(),
+            // Basic information
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
             'phone_number' => $validated['phone_number'],
+            'alternative_phone' => $validated['alternative_phone'] ?? null,
+            'whatsapp_number' => $validated['whatsapp_number'] ?? null,
             'email' => $validated['email'] ?? null,
-            'date_of_birth' => $validated['date_of_birth'] ?? null,
+            'alternative_email' => $validated['alternative_email'] ?? null,
+            
+            // Social media and web presence
+            'website' => $validated['website'] ?? null,
+            'linkedin_profile' => $validated['linkedin_profile'] ?? null,
+            'twitter_handle' => $validated['twitter_handle'] ?? null,
+            'facebook_profile' => $validated['facebook_profile'] ?? null,
+            'instagram_handle' => $validated['instagram_handle'] ?? null,
+            
+            // Professional information
             'company' => $validated['company'] ?? null,
+            'job_title' => $validated['job_title'] ?? null,
+            'department' => $validated['department'] ?? null,
+            'industry' => $validated['industry'] ?? null,
+            'annual_revenue' => $validated['annual_revenue'] ?? null,
+            'company_size' => $validated['company_size'] ?? null,
+            
+            // Address information
+            'address' => $validated['address'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'state' => $validated['state'] ?? null,
+            'postal_code' => $validated['postal_code'] ?? null,
+            'country' => $validated['country'] ?? 'Ghana',
+            'timezone' => $validated['timezone'] ?? 'Africa/Accra',
+            
+            // CRM fields
+            'lead_status' => $validated['lead_status'] ?? 'new',
+            'priority' => $validated['priority'] ?? 'medium',
+            'lead_source' => $validated['lead_source'] ?? null,
+            'potential_value' => $validated['potential_value'] ?? null,
+            'last_contact_date' => $validated['last_contact_date'] ?? null,
+            'next_follow_up_date' => $validated['next_follow_up_date'] ?? null,
+            'preferred_contact_method' => $validated['preferred_contact_method'] ?? 'phone',
+            
+            // Tags and notes
+            'tags' => $validated['tags'] ?? null,
             'notes' => $validated['notes'] ?? null,
+            'internal_notes' => $validated['internal_notes'] ?? null,
+            'date_of_birth' => $validated['date_of_birth'] ?? null,
         ]);
 
         if (!empty($validated['groups'])) {
             $contact->groups()->attach($validated['groups']);
+        }
+
+        // Check WhatsApp availability if a WhatsApp number was provided
+        if ($contact->whatsapp_number || $contact->phone_number) {
+            dispatch(function () use ($contact) {
+                app(\App\Services\Contact\WhatsAppDetectionService::class)->checkAndUpdateContact($contact);
+            })->afterResponse();
         }
 
         return redirect()->route('contacts.index')
@@ -135,28 +221,117 @@ class ContactController extends Controller
         }
         
         $validated = $request->validate([
+            // Basic information
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'phone_number' => 'required|string|max:20',
+            'alternative_phone' => 'nullable|string|max:20',
+            'whatsapp_number' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
-            'date_of_birth' => 'nullable|date',
+            'alternative_email' => 'nullable|email|max:255',
+            
+            // Social media and web presence
+            'website' => 'nullable|url|max:255',
+            'linkedin_profile' => 'nullable|url|max:255',
+            'twitter_handle' => 'nullable|string|max:255',
+            'facebook_profile' => 'nullable|url|max:255',
+            'instagram_handle' => 'nullable|string|max:255',
+            
+            // Professional information
             'company' => 'nullable|string|max:255',
+            'job_title' => 'nullable|string|max:255',
+            'department' => 'nullable|string|max:255',
+            'industry' => 'nullable|string|max:255',
+            'annual_revenue' => 'nullable|numeric|min:0',
+            'company_size' => 'nullable|integer|min:1',
+            
+            // Address information
+            'address' => 'nullable|string',
+            'city' => 'nullable|string|max:255',
+            'state' => 'nullable|string|max:255',
+            'postal_code' => 'nullable|string|max:20',
+            'country' => 'nullable|string|max:255',
+            'timezone' => 'nullable|string|max:255',
+            
+            // CRM fields
+            'lead_status' => 'nullable|in:new,contacted,qualified,proposal,negotiation,closed_won,closed_lost',
+            'priority' => 'nullable|in:low,medium,high,urgent',
+            'lead_source' => 'nullable|string|max:255',
+            'potential_value' => 'nullable|numeric|min:0',
+            'last_contact_date' => 'nullable|date',
+            'next_follow_up_date' => 'nullable|date|after_or_equal:today',
+            'preferred_contact_method' => 'nullable|in:phone,email,whatsapp,sms',
+            
+            // Tags and notes
+            'tags' => 'nullable|array',
+            'tags.*' => 'string|max:255',
             'notes' => 'nullable|string',
+            'internal_notes' => 'nullable|string',
+            'date_of_birth' => 'nullable|date',
             'groups' => 'nullable|array',
         ]);
 
+        // Store original WhatsApp number to check if it changed
+        $originalWhatsAppNumber = $contact->whatsapp_number;
+
         $contact->update([
+            // Basic information
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
             'phone_number' => $validated['phone_number'],
+            'alternative_phone' => $validated['alternative_phone'] ?? null,
+            'whatsapp_number' => $validated['whatsapp_number'] ?? null,
             'email' => $validated['email'] ?? null,
-            'date_of_birth' => $validated['date_of_birth'] ?? null,
+            'alternative_email' => $validated['alternative_email'] ?? null,
+            
+            // Social media and web presence
+            'website' => $validated['website'] ?? null,
+            'linkedin_profile' => $validated['linkedin_profile'] ?? null,
+            'twitter_handle' => $validated['twitter_handle'] ?? null,
+            'facebook_profile' => $validated['facebook_profile'] ?? null,
+            'instagram_handle' => $validated['instagram_handle'] ?? null,
+            
+            // Professional information
             'company' => $validated['company'] ?? null,
+            'job_title' => $validated['job_title'] ?? null,
+            'department' => $validated['department'] ?? null,
+            'industry' => $validated['industry'] ?? null,
+            'annual_revenue' => $validated['annual_revenue'] ?? null,
+            'company_size' => $validated['company_size'] ?? null,
+            
+            // Address information
+            'address' => $validated['address'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'state' => $validated['state'] ?? null,
+            'postal_code' => $validated['postal_code'] ?? null,
+            'country' => $validated['country'] ?? $contact->country,
+            'timezone' => $validated['timezone'] ?? $contact->timezone,
+            
+            // CRM fields
+            'lead_status' => $validated['lead_status'] ?? $contact->lead_status,
+            'priority' => $validated['priority'] ?? $contact->priority,
+            'lead_source' => $validated['lead_source'] ?? null,
+            'potential_value' => $validated['potential_value'] ?? null,
+            'last_contact_date' => $validated['last_contact_date'] ?? null,
+            'next_follow_up_date' => $validated['next_follow_up_date'] ?? null,
+            'preferred_contact_method' => $validated['preferred_contact_method'] ?? $contact->preferred_contact_method,
+            
+            // Tags and notes
+            'tags' => $validated['tags'] ?? null,
             'notes' => $validated['notes'] ?? null,
+            'internal_notes' => $validated['internal_notes'] ?? null,
+            'date_of_birth' => $validated['date_of_birth'] ?? null,
         ]);
 
         // Sync groups
         $contact->groups()->sync($validated['groups'] ?? []);
+
+        // Re-check WhatsApp availability if WhatsApp number changed
+        if ($originalWhatsAppNumber !== $contact->whatsapp_number) {
+            dispatch(function () use ($contact) {
+                app(\App\Services\Contact\WhatsAppDetectionService::class)->checkAndUpdateContact($contact);
+            })->afterResponse();
+        }
 
         return redirect()->route('contacts.index')
             ->with('success', 'Contact updated successfully.');
