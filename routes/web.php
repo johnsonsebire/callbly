@@ -19,12 +19,30 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TeamInvitationController;
+use App\Http\Controllers\MeetingSchedulingController;
+use App\Http\Controllers\PublicBookingController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 Route::get('/', function () {
     return view('home'); // Use Blade view for home
+});
+
+// Public Meeting Booking Routes (before auth middleware)
+Route::prefix('book')->name('public.')->group(function () {
+    Route::get('/{brandName}', [PublicBookingController::class, 'showCompany'])->name('company');
+    Route::get('/{brandName}/{slug}', [PublicBookingController::class, 'showSchedulingPage'])->name('scheduling-page');
+    Route::get('/{brandName}/{slug}/book/{eventTypeId}', [PublicBookingController::class, 'showBookingForm'])->name('booking-form');
+    Route::post('/create-booking', [PublicBookingController::class, 'createBooking'])->name('booking.create');
+    Route::get('/api/available-slots', [PublicBookingController::class, 'getAvailableSlots'])->name('booking.available-slots');
+    
+    // Booking management routes
+    Route::get('/booking/{bookingReference}/confirmation', [PublicBookingController::class, 'showConfirmation'])->name('booking.confirmation');
+    Route::get('/booking/{bookingReference}/manage', [PublicBookingController::class, 'manageBooking'])->name('booking.manage');
+    Route::post('/booking/{bookingReference}/cancel', [PublicBookingController::class, 'cancelBooking'])->name('booking.cancel');
+    Route::get('/booking/{bookingReference}/reschedule', [PublicBookingController::class, 'showRescheduleForm'])->name('booking.reschedule');
+    Route::post('/booking/{bookingReference}/reschedule', [PublicBookingController::class, 'rescheduleBooking'])->name('booking.reschedule.process');
 });
 
 // Team Invitation Public Routes (must be before auth middleware)
@@ -73,6 +91,32 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Meeting Scheduling Service Routes
+    Route::middleware(['verified'])->prefix('meeting-scheduling')->name('meeting-scheduling.')->group(function () {
+        // Subscription
+        Route::get('/subscribe', [MeetingSchedulingController::class, 'subscribe'])->name('subscribe');
+        Route::post('/subscribe', [MeetingSchedulingController::class, 'processSubscription'])->name('subscribe.process');
+        Route::get('/payment/verify', [MeetingSchedulingController::class, 'verifyPayment'])->name('payment.verify');
+        
+        // Dashboard and main features (requires active subscription)
+        Route::get('/dashboard', [MeetingSchedulingController::class, 'dashboard'])->name('dashboard');
+        Route::get('/profile/setup', [MeetingSchedulingController::class, 'setupProfile'])->name('profile.setup');
+        Route::post('/profile', [MeetingSchedulingController::class, 'storeProfile'])->name('profile.store');
+        
+        // Event Types
+        Route::get('/event-types', [MeetingSchedulingController::class, 'eventTypes'])->name('event-types.index');
+        Route::get('/event-types/create', [MeetingSchedulingController::class, 'createEventType'])->name('event-types.create');
+        Route::post('/event-types', [MeetingSchedulingController::class, 'storeEventType'])->name('event-types.store');
+        
+        // Bookings
+        Route::get('/bookings', [MeetingSchedulingController::class, 'bookings'])->name('bookings.index');
+        Route::get('/bookings/{booking}', [MeetingSchedulingController::class, 'showBooking'])->name('bookings.show');
+        
+        // Google Calendar Integration
+        Route::get('/connect-google', [MeetingSchedulingController::class, 'connectGoogle'])->name('google.connect');
+        Route::get('/google/callback', [MeetingSchedulingController::class, 'googleCallback'])->name('google.callback');
+    });
     
     // SMS Routes
     Route::middleware(['verified'])->group(function () {

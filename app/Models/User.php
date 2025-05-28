@@ -446,4 +446,60 @@ class User extends Authenticatable implements MustVerifyEmail
         
         return false;
     }
+
+    /**
+     * Get the meeting scheduling subscription for the user
+     */
+    public function meetingSchedulingSubscription(): HasOne
+    {
+        return $this->hasOne(MeetingSchedulingSubscription::class);
+    }
+
+    /**
+     * Get the company profile for the user
+     */
+    public function companyProfile(): HasOne
+    {
+        return $this->hasOne(CompanyProfile::class);
+    }
+
+    /**
+     * Get the event types for the user
+     */
+    public function eventTypes(): HasMany
+    {
+        return $this->hasMany(EventType::class);
+    }
+
+    /**
+     * Get the scheduling pages for the user
+     */
+    public function schedulingPages(): HasMany
+    {
+        return $this->hasMany(SchedulingPage::class);
+    }
+
+    /**
+     * Get the meeting bookings hosted by the user
+     */
+    public function meetingBookings(): HasMany
+    {
+        return $this->hasMany(MeetingBooking::class);
+    }
+
+    /**
+     * Get the meeting notifications for the user
+     */
+    public function meetingNotifications(): HasMany
+    {
+        return $this->hasMany(MeetingNotification::class);
+    }
+
+    /**
+     * Check if user has active meeting scheduling subscription
+     */
+    public function hasMeetingSchedulingAccess(): bool
+    {
+        return $this->meetingSchedulingSubscription?->isActive() ?? false;
+    }
 }
