@@ -1,0 +1,141 @@
+/* Import the original template styles first */
+@import './plugins.bundle.css';
+@import './style.bundle.css';
+
+/* Import core Bootstrap for any additional backend needs */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* Backend-specific enhancements and customizations */
+.app-header-logo.scrolled img.logo-default {
+    display: block;
+}
+
+.app-header-logo.scrolled img.logo-white {
+    display: none;
+}
+
+.app-header-logo img.logo-default {
+    display: none;
+}
+
+.app-header-logo img.logo-white {
+    display: block;
+}
+
+/* Mobile navigation styles - preserve template functionality */
+#kt_app_header_mobile_toggle {
+    display: none;
+}
+
+@media (max-width: 991.98px) {
+    #kt_app_header_mobile_toggle {
+        display: inline-flex;
+    }
+    
+    .mobile-nav-header {
+        padding: 10px 15px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .mobile-nav-item {
+        padding: 10px 15px;
+        border-bottom: 1px solid #f5f5f5;
+    }
+    
+    .mobile-nav-item.active {
+        background-color: #f8f9fa;
+    }
+    
+    .mobile-nav-item i {
+        width: 20px;
+        text-align: center;
+        margin-right: 10px;
+    }
+}
+
+/* Dashboard card styling - enhance existing template cards */
+.dashboard-card {
+    background: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.5rem 1.5rem 0.5rem rgba(0, 0, 0, 0.075);
+    border: 1px solid #eff2f5;
+    transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Data table optimizations - enhance existing template tables */
+.dataTables_wrapper {
+    padding: 0;
+}
+
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 1rem;
+}
+
+.table-responsive {
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+/* Form optimizations - enhance existing template forms */
+.form-control:focus {
+    border-color: #3ABFF8;
+    box-shadow: 0 0 0 0.2rem rgba(58, 191, 248, 0.25);
+}
+
+.btn-primary {
+    background-color: #3ABFF8;
+    border-color: #3ABFF8;
+}
+
+.btn-primary:hover {
+    background-color: #2aaadf;
+    border-color: #2aaadf;
+}
+
+/* Sidebar optimizations - preserve template sidebar styling */
+.app-sidebar {
+    background: #1e293b;
+}
+
+.app-sidebar .menu .menu-item .menu-link {
+    transition: all 0.2s ease;
+}
+
+.app-sidebar .menu .menu-item .menu-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Status indicators - enhance template status elements */
+.status-online {
+    color: #10b981;
+}
+
+.status-offline {
+    color: #ef4444;
+}
+
+.status-pending {
+    color: #f59e0b;
+}
+
+/* Loading states - add to template without breaking existing */
+.loading-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}

@@ -1,0 +1,167 @@
+/* Import the original template styles first */
+@import './plugins.bundle.css';
+@import './style.bundle.css';
+
+/* Import core Bootstrap for any additional frontend needs */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* AOS Animation Library */
+@import 'aos/dist/aos.css';
+
+/* Frontend-specific enhancements and customizations */
+.hero-section-modern {
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+
+.hero-section-modern h1 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.hero-section-modern .lead {
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 30px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.hero-section-modern .btn-primary-modern {
+    background-color: #3ABFF8;
+    border-color: #3ABFF8;
+    padding: 12px 30px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.hero-section-modern .btn-primary-modern:hover {
+    background-color: #2aaadf;
+    border-color: #2aaadf;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(58, 191, 248, 0.4);
+}
+
+/* Logo switching styles - preserve existing behavior */
+.app-header-logo.scrolled img.logo-default {
+    display: block;
+}
+
+.app-header-logo.scrolled img.logo-white {
+    display: none;
+}
+
+.app-header-logo img.logo-default {
+    display: none;
+}
+
+.app-header-logo img.logo-white {
+    display: block;
+}
+
+.footer-logo span {
+    font-size: 20px;
+}
+
+/* Landing page optimizations - preserve existing template behavior */
+.landing-curve {
+    line-height: 0;
+    font-size: 0;
+}
+
+.landing-curve svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.landing-dark-bg {
+    margin-top: -1px;
+}
+
+@media (min-width: 992px) {
+    .landing-curve.mb-lg-20 {
+        margin-bottom: 0 !important;
+    }
+}
+
+/* Feature cards - enhancement on top of existing styles */
+.feature-card-modern {
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 0.75rem;
+    padding: 30px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.feature-card-modern:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.1);
+}
+
+.feature-card-modern .icon-box {
+    width: 60px;
+    height: 60px;
+    background-color: rgba(58, 191, 248, 0.1);
+    color: #3ABFF8;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+    flex-shrink: 0;
+}
+
+/* CTA Section enhancements */
+.cta-section-modern {
+    background: linear-gradient(135deg, #3ABFF8 0%, #1e90ff 50%, #0066cc 100%);
+    padding: 60px 40px;
+    border-radius: 1rem;
+    box-shadow: 0 20px 40px rgba(58, 191, 248, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-section-modern::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: shimmer 6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { transform: translateX(-100%) translateY(-100%) rotate(0deg); }
+    50% { transform: translateX(0%) translateY(0%) rotate(180deg); }
+}
+
+.btn-cta-modern {
+    background: linear-gradient(45deg, #ffffff 0%, #f8f9fa 100%);
+    color: #3ABFF8;
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn-cta-modern:hover {
+    background: linear-gradient(45deg, #f8f9fa 0%, #e9ecef 100%);
+    color: #0066cc;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}

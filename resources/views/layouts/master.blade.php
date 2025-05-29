@@ -17,11 +17,14 @@ Use Illuminate\Support\Str;
     <!-- Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
 
-    <!-- Vendor CSS -->
-    <link href="{{ asset('assets/plugins/global/plugins.bundle.css') }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('assets/css/style.bundle.css') }}" rel="stylesheet" type="text/css" />
+    <!-- Preload Critical Assets -->
+    <link rel="preload" href="{{ asset('assets/media/logos/callbly-white.png') }}" as="image">
+    <link rel="preload" href="{{ asset('assets/media/logos/callbly-favicon.png') }}" as="image">
 
-    <!-- Custom CSS -->
+    <!-- Optimized Vite Assets for Backend -->
+    @vite(['resources/css/backend.css', 'resources/js/backend.js'])
+
+    <!-- Critical CSS for immediate rendering -->
     <style>
         .app-header-logo.scrolled img.logo-default {
             display: block;
@@ -68,6 +71,18 @@ Use Illuminate\Support\Str;
                 text-align: center;
                 margin-right: 10px;
             }
+        }
+
+        /* Loading optimization */
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
     </style>
 
@@ -220,48 +235,6 @@ Use Illuminate\Support\Str;
         <!--end::Page-->
     </div>
     <!--end::App-->
-
-    <!--begin::Javascript-->
-    <script src="{{ asset('assets/plugins/global/plugins.bundle.js') }}"></script>
-    <script src="{{ asset('assets/js/scripts.bundle.js') }}"></script>
-    
-    <!-- Mobile Navigation Script -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize the mobile sidebar toggle
-            const sidebarMobileToggle = document.getElementById('kt_app_sidebar_mobile_toggle');
-            if (sidebarMobileToggle) {
-                sidebarMobileToggle.addEventListener('click', function() {
-                    const mobileSidebar = new bootstrap.Offcanvas(document.getElementById('kt_app_sidebar_mobile'));
-                    mobileSidebar.show();
-                });
-            }
-        });
-    </script>
-    
-    <!-- Logo Switch Script -->
-    <script>
-        // Initialize logo switching based on scroll
-        document.addEventListener('DOMContentLoaded', function() {
-            // For frontend pages that have the header logo
-            const headerLogo = document.querySelector('.app-header-logo');
-            if (headerLogo) {
-                window.addEventListener('scroll', function() {
-                    if (window.scrollY > 50) {
-                        headerLogo.classList.add('scrolled');
-                    } else {
-                        headerLogo.classList.remove('scrolled');
-                    }
-                });
-                
-                // Initial check
-                if (window.scrollY > 50) {
-                    headerLogo.classList.add('scrolled');
-                }
-            }
-        });
-    </script>
-    <!--end::Javascript-->
 
     @stack('scripts')
 
