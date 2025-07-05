@@ -185,11 +185,46 @@
                                                         <input class="form-check-input" type="checkbox" name="columns[]" id="colDateOfBirth" value="date_of_birth" checked />
                                                         <label class="form-check-label" for="colDateOfBirth">Date of Birth</label>
                                                     </div>
+                                                    <div class="form-check form-check-custom form-check-solid me-5 mb-3">
+                                                        <input class="form-check-input" type="checkbox" name="columns[]" id="colGender" value="gender" />
+                                                        <label class="form-check-label" for="colGender">Gender</label>
+                                                    </div>
+                                                    <div class="form-check form-check-custom form-check-solid me-5 mb-3">
+                                                        <input class="form-check-input" type="checkbox" name="columns[]" id="colCountry" value="country" />
+                                                        <label class="form-check-label" for="colCountry">Country</label>
+                                                    </div>
+                                                    <div class="form-check form-check-custom form-check-solid me-5 mb-3">
+                                                        <input class="form-check-input" type="checkbox" name="columns[]" id="colRegion" value="region" />
+                                                        <label class="form-check-label" for="colRegion">Region/State</label>
+                                                    </div>
+                                                    <div class="form-check form-check-custom form-check-solid me-5 mb-3">
+                                                        <input class="form-check-input" type="checkbox" name="columns[]" id="colCity" value="city" />
+                                                        <label class="form-check-label" for="colCity">City</label>
+                                                    </div>
                                                     <div class="form-check form-check-custom form-check-solid mb-3">
                                                         <input class="form-check-input" type="checkbox" name="columns[]" id="colNotes" value="notes" />
                                                         <label class="form-check-label" for="colNotes">Notes</label>
                                                     </div>
                                                 </div>
+                                                
+                                                <!-- Custom Fields Section -->
+                                                @if(isset($customFields) && $customFields->count() > 0)
+                                                <div class="separator border-gray-200 my-6"></div>
+                                                <div class="mb-5">
+                                                    <label class="form-label fw-semibold text-primary mb-3">Custom Fields</label>
+                                                    <div class="d-flex flex-wrap">
+                                                        @foreach($customFields as $customField)
+                                                        <div class="form-check form-check-custom form-check-solid me-5 mb-3">
+                                                            <input class="form-check-input" type="checkbox" name="custom_fields[]" 
+                                                                   id="colCustom{{ $customField->id }}" value="{{ $customField->name }}" />
+                                                            <label class="form-check-label" for="colCustom{{ $customField->id }}">
+                                                                {{ $customField->label }}
+                                                            </label>
+                                                        </div>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>

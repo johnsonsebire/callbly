@@ -83,6 +83,10 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
                 $emailKey = $this->columnMapping['email'] ?? null;
                 $companyKey = $this->columnMapping['company'] ?? null;
                 $dateOfBirthKey = $this->columnMapping['date_of_birth'] ?? null;
+                $genderKey = $this->columnMapping['gender'] ?? null;
+                $countryKey = $this->columnMapping['country'] ?? null;
+                $regionKey = $this->columnMapping['region'] ?? null;
+                $cityKey = $this->columnMapping['city'] ?? null;
                 
                 Log::debug("Row keys: " . json_encode($row->keys()->toArray()));
                 Log::debug("Mapping keys: first_name={$firstNameKey}, last_name={$lastNameKey}, phone={$phoneKey}");
@@ -94,6 +98,10 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
                 $email = null;
                 $company = null;
                 $date_of_birth = null;
+                $gender = null;
+                $country = null;
+                $region = null;
+                $city = null;
                 
                 // Direct access by numeric index if that's what we have
                 if (is_numeric($firstNameKey) && isset($row->values()[$firstNameKey])) {
@@ -138,6 +146,57 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
                     }
                 }
                 
+                if ($genderKey) {
+                    if (is_numeric($genderKey) && isset($row->values()[$genderKey])) {
+                        $gender = $row->values()[$genderKey];
+                    } elseif ($row->has($genderKey)) {
+                        $gender = $row[$genderKey];
+                    }
+                }
+                
+                if ($countryKey) {
+                    if (is_numeric($countryKey) && isset($row->values()[$countryKey])) {
+                        $country = $row->values()[$countryKey];
+                    } elseif ($row->has($countryKey)) {
+                        $country = $row[$countryKey];
+                    }
+                }
+                
+                if ($regionKey) {
+                    if (is_numeric($regionKey) && isset($row->values()[$regionKey])) {
+                        $region = $row->values()[$regionKey];
+                    } elseif ($row->has($regionKey)) {
+                        $region = $row[$regionKey];
+                    }
+                }
+                
+                if ($cityKey) {
+                    if (is_numeric($cityKey) && isset($row->values()[$cityKey])) {
+                        $city = $row->values()[$cityKey];
+                    } elseif ($row->has($cityKey)) {
+                        $city = $row[$cityKey];
+                    }
+                }
+                
+                // Process custom fields
+                $customFieldData = [];
+                foreach ($this->columnMapping as $key => $columnHeader) {
+                    if (strpos($key, 'custom_field_') === 0 && !empty($columnHeader)) {
+                        $fieldName = str_replace(['custom_field_', '_column'], '', $key);
+                        $customFieldValue = null;
+                        
+                        if (is_numeric($columnHeader) && isset($row->values()[$columnHeader])) {
+                            $customFieldValue = $row->values()[$columnHeader];
+                        } elseif ($row->has($columnHeader)) {
+                            $customFieldValue = $row[$columnHeader];
+                        }
+                        
+                        if (!empty($customFieldValue)) {
+                            $customFieldData[$fieldName] = $customFieldValue;
+                        }
+                    }
+                }
+                
                 Log::debug("Row $index mapped data", [
                     'first_name' => $first_name,
                     'last_name' => $last_name,
@@ -145,6 +204,11 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
                     'email' => $email,
                     'company' => $company,
                     'date_of_birth' => $date_of_birth,
+                    'gender' => $gender,
+                    'country' => $country,
+                    'region' => $region,
+                    'city' => $city,
+                    'custom_fields' => $customFieldData,
                 ]);
                 
                 // Skip if no phone number
@@ -173,7 +237,12 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
                     'phone_number' => $phone_number,
                     'email' => $email,
                     'company' => $company,
-                    'date_of_birth' => $date_of_birth
+                    'date_of_birth' => $date_of_birth,
+                    'gender' => $gender,
+                    'country' => $country,
+                    'region' => $region,
+                    'city' => $city,
+                    'custom_fields' => $customFieldData,
                 ]);
                 
                 $contact->save();
