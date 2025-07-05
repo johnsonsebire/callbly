@@ -16,6 +16,7 @@ use App\Http\Controllers\VirtualNumberController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ContactGroupController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CustomFieldController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TeamInvitationController;
@@ -119,6 +120,19 @@ Route::middleware('auth')->group(function () {
         Route::post('contacts-import-process', [ContactController::class, 'processImport'])->name('contacts.process-import');
         Route::get('contacts-export', [ContactController::class, 'export'])->name('contacts.export');
         Route::get('contacts-export-process', [ContactController::class, 'processExport'])->name('contacts.process-export');
+        
+        // Custom Fields Routes
+        Route::prefix('custom-fields')->name('custom-fields.')->group(function () {
+            Route::get('/', [CustomFieldController::class, 'index'])->name('index');
+            Route::get('/create', [CustomFieldController::class, 'create'])->name('create');
+            Route::post('/', [CustomFieldController::class, 'store'])->name('store');
+            Route::get('/{customField}', [CustomFieldController::class, 'show'])->name('show');
+            Route::get('/{customField}/edit', [CustomFieldController::class, 'edit'])->name('edit');
+            Route::put('/{customField}', [CustomFieldController::class, 'update'])->name('update');
+            Route::delete('/{customField}', [CustomFieldController::class, 'destroy'])->name('destroy');
+            Route::patch('/{customField}/toggle-status', [CustomFieldController::class, 'toggleStatus'])->name('toggle-status');
+            Route::post('/sort', [CustomFieldController::class, 'sort'])->name('sort');
+        });
         
         // Contact Group Routes
         Route::prefix('contact-groups')->name('contact-groups.')->group(function () {

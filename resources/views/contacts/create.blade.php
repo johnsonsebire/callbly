@@ -51,9 +51,7 @@
                                         <input type="text" class="form-control" id="phone_number" name="phone_number" value="{{ old('phone_number') }}" required>
                                         <div class="form-text">Phone numbers will automatically be formatted with the country code (e.g. 233).</div>
                                     </div>
-                                </div>
-                                
-                                <div class="col-md-6">
+
                                     <div class="mb-3">
                                         <label for="email" class="form-label">Email Address</label>
                                         <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}">
@@ -65,8 +63,35 @@
                                     </div>
 
                                     <div class="mb-3">
+                                        <label for="gender" class="form-label">Gender</label>
+                                        <select class="form-select" id="gender" name="gender">
+                                            <option value="">Select Gender</option>
+                                            <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>Male</option>
+                                            <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>Female</option>
+                                            <option value="other" {{ old('gender') == 'other' ? 'selected' : '' }}>Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="mb-3">
                                         <label for="company" class="form-label">Company</label>
                                         <input type="text" class="form-control" id="company" name="company" value="{{ old('company') }}">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="country" class="form-label">Country</label>
+                                        <input type="text" class="form-control" id="country" name="country" value="{{ old('country') }}">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="region" class="form-label">Region/State</label>
+                                        <input type="text" class="form-control" id="region" name="region" value="{{ old('region') }}">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="city" class="form-label">City</label>
+                                        <input type="text" class="form-control" id="city" name="city" value="{{ old('city') }}">
                                     </div>
 
                                     <div class="mb-3">
@@ -75,6 +100,109 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Custom Fields Section -->
+                            @if($customFields->count() > 0)
+                            <div class="separator border-2 my-10"></div>
+                            <div class="mb-10">
+                                <h3 class="text-dark fw-bold mb-5">Additional Information</h3>
+                                <div class="row">
+                                    @foreach($customFields as $customField)
+                                        <div class="col-md-6 mb-5">
+                                            <label for="custom_{{ $customField->name }}" class="form-label {{ $customField->is_required ? 'required' : '' }}">
+                                                {{ $customField->label }}
+                                            </label>
+                                            
+                                            @if($customField->type === 'text')
+                                                <input type="text" 
+                                                       class="form-control" 
+                                                       id="custom_{{ $customField->name }}" 
+                                                       name="custom_fields[{{ $customField->name }}]" 
+                                                       value="{{ old('custom_fields.'.$customField->name) }}"
+                                                       placeholder="{{ $customField->placeholder }}"
+                                                       {{ $customField->is_required ? 'required' : '' }}>
+                                            @elseif($customField->type === 'email')
+                                                <input type="email" 
+                                                       class="form-control" 
+                                                       id="custom_{{ $customField->name }}" 
+                                                       name="custom_fields[{{ $customField->name }}]" 
+                                                       value="{{ old('custom_fields.'.$customField->name) }}"
+                                                       placeholder="{{ $customField->placeholder }}"
+                                                       {{ $customField->is_required ? 'required' : '' }}>
+                                            @elseif($customField->type === 'phone')
+                                                <input type="tel" 
+                                                       class="form-control" 
+                                                       id="custom_{{ $customField->name }}" 
+                                                       name="custom_fields[{{ $customField->name }}]" 
+                                                       value="{{ old('custom_fields.'.$customField->name) }}"
+                                                       placeholder="{{ $customField->placeholder }}"
+                                                       {{ $customField->is_required ? 'required' : '' }}>
+                                            @elseif($customField->type === 'number')
+                                                <input type="number" 
+                                                       class="form-control" 
+                                                       id="custom_{{ $customField->name }}" 
+                                                       name="custom_fields[{{ $customField->name }}]" 
+                                                       value="{{ old('custom_fields.'.$customField->name) }}"
+                                                       placeholder="{{ $customField->placeholder }}"
+                                                       {{ $customField->is_required ? 'required' : '' }}>
+                                            @elseif($customField->type === 'date')
+                                                <input type="date" 
+                                                       class="form-control" 
+                                                       id="custom_{{ $customField->name }}" 
+                                                       name="custom_fields[{{ $customField->name }}]" 
+                                                       value="{{ old('custom_fields.'.$customField->name) }}"
+                                                       {{ $customField->is_required ? 'required' : '' }}>
+                                            @elseif($customField->type === 'url')
+                                                <input type="url" 
+                                                       class="form-control" 
+                                                       id="custom_{{ $customField->name }}" 
+                                                       name="custom_fields[{{ $customField->name }}]" 
+                                                       value="{{ old('custom_fields.'.$customField->name) }}"
+                                                       placeholder="{{ $customField->placeholder }}"
+                                                       {{ $customField->is_required ? 'required' : '' }}>
+                                            @elseif($customField->type === 'select')
+                                                <select class="form-select" 
+                                                        id="custom_{{ $customField->name }}" 
+                                                        name="custom_fields[{{ $customField->name }}]"
+                                                        {{ $customField->is_required ? 'required' : '' }}>
+                                                    <option value="">Select option</option>
+                                                    @if($customField->options)
+                                                        @foreach($customField->options as $option)
+                                                            <option value="{{ $option }}" {{ old('custom_fields.'.$customField->name) == $option ? 'selected' : '' }}>
+                                                                {{ $option }}
+                                                            </option>
+                                                        @endforeach
+                                                    @endif
+                                                </select>
+                                            @elseif($customField->type === 'textarea')
+                                                <textarea class="form-control" 
+                                                          id="custom_{{ $customField->name }}" 
+                                                          name="custom_fields[{{ $customField->name }}]" 
+                                                          rows="3"
+                                                          placeholder="{{ $customField->placeholder }}"
+                                                          {{ $customField->is_required ? 'required' : '' }}>{{ old('custom_fields.'.$customField->name) }}</textarea>
+                                            @elseif($customField->type === 'checkbox')
+                                                <div class="form-check form-check-custom form-check-solid">
+                                                    <input class="form-check-input" 
+                                                           type="checkbox" 
+                                                           id="custom_{{ $customField->name }}" 
+                                                           name="custom_fields[{{ $customField->name }}]" 
+                                                           value="1"
+                                                           {{ old('custom_fields.'.$customField->name) ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="custom_{{ $customField->name }}">
+                                                        {{ $customField->placeholder ?: 'Yes' }}
+                                                    </label>
+                                                </div>
+                                            @endif
+                                            
+                                            @if($customField->description)
+                                                <div class="form-text">{{ $customField->description }}</div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @endif
 
                             @if(count($groups) > 0)
                             <div class="mb-5">

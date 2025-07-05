@@ -188,6 +188,11 @@ class NavigationService
                         'label' => 'Contact Groups',
                         'url' => route('contact-groups.index'),
                         'active' => $this->checkRoutePattern($currentRouteName, 'contact-groups.*')
+                    ],
+                    [
+                        'label' => 'Custom Fields',
+                        'url' => route('custom-fields.index'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'custom-fields.*')
                     ]
                 ]
             ],

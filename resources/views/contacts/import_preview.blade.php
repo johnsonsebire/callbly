@@ -72,17 +72,17 @@
                                 <div class="col-xl-6">
                                     <div class="card card-bordered">
                                         <div class="card-header">
-                                            <h3 class="card-title fw-bold text-dark">Map Fields</h3>
+                                            <h3 class="card-title fw-bold text-dark">Required Fields</h3>
                                         </div>
                                         <div class="card-body">
                                             <div class="mb-5">
                                                 <label class="form-label required">First Name Column</label>
                                                 <select name="first_name_column" class="form-select form-select-solid" required>
                                                     <option value="">Select column</option>
-                                                    @foreach($headers as $header)
+                                                    @foreach($headers as $index => $header)
                                                         <option value="{{ $header }}" 
                                                             {{ strtolower($header) == 'name' || strtolower($header) == 'first_name' ? 'selected' : '' }}>
-                                                            {{ $header }}
+                                                            Column {{ $index + 1 }}: {{ $header }}
                                                         </option>
                                                     @endforeach
                                                 </select>
@@ -93,10 +93,10 @@
                                                 <label class="form-label required">Last Name Column</label>
                                                 <select name="last_name_column" class="form-select form-select-solid" required>
                                                     <option value="">Select column</option>
-                                                    @foreach($headers as $header)
+                                                    @foreach($headers as $index => $header)
                                                         <option value="{{ $header }}" 
                                                             {{ strtolower($header) == 'last_name' || strtolower($header) == 'surname' ? 'selected' : '' }}>
-                                                            {{ $header }}
+                                                            Column {{ $index + 1 }}: {{ $header }}
                                                         </option>
                                                     @endforeach
                                                 </select>
@@ -107,10 +107,10 @@
                                                 <label class="form-label required">Phone Column</label>
                                                 <select name="phone_column" class="form-select form-select-solid" required>
                                                     <option value="">Select column</option>
-                                                    @foreach($headers as $header)
+                                                    @foreach($headers as $index => $header)
                                                         <option value="{{ $header }}" 
                                                             {{ strtolower($header) == 'phone' || strtolower($header) == 'phone_number' || strtolower($header) == 'mobile' ? 'selected' : '' }}>
-                                                            {{ $header }}
+                                                            Column {{ $index + 1 }}: {{ $header }}
                                                         </option>
                                                     @endforeach
                                                 </select>
@@ -130,10 +130,10 @@
                                                 <label class="form-label">Email Column</label>
                                                 <select name="email_column" class="form-select form-select-solid">
                                                     <option value="">Select column</option>
-                                                    @foreach($headers as $header)
+                                                    @foreach($headers as $index => $header)
                                                         <option value="{{ $header }}" 
                                                             {{ strtolower($header) == 'email' || strtolower($header) == 'email_address' ? 'selected' : '' }}>
-                                                            {{ $header }}
+                                                            Column {{ $index + 1 }}: {{ $header }}
                                                         </option>
                                                     @endforeach
                                                 </select>
@@ -143,10 +143,10 @@
                                                 <label class="form-label">Company Column</label>
                                                 <select name="company_column" class="form-select form-select-solid">
                                                     <option value="">Select column</option>
-                                                    @foreach($headers as $header)
+                                                    @foreach($headers as $index => $header)
                                                         <option value="{{ $header }}" 
                                                             {{ strtolower($header) == 'company' || strtolower($header) == 'organization' ? 'selected' : '' }}>
-                                                            {{ $header }}
+                                                            Column {{ $index + 1 }}: {{ $header }}
                                                         </option>
                                                     @endforeach
                                                 </select>
@@ -156,10 +156,10 @@
                                                 <label class="form-label">Date of Birth Column</label>
                                                 <select name="date_of_birth_column" class="form-select form-select-solid">
                                                     <option value="">Select column</option>
-                                                    @foreach($headers as $header)
+                                                    @foreach($headers as $index => $header)
                                                         <option value="{{ $header }}" 
                                                             {{ strtolower($header) == 'date_of_birth' || strtolower($header) == 'birth_date' || strtolower($header) == 'dob' ? 'selected' : '' }}>
-                                                            {{ $header }}
+                                                            Column {{ $index + 1 }}: {{ $header }}
                                                         </option>
                                                     @endforeach
                                                 </select>
@@ -169,6 +169,111 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="row gy-5 mt-5">
+                                <div class="col-12">
+                                    <div class="card card-bordered">
+                                        <div class="card-header">
+                                            <h3 class="card-title fw-bold text-dark">Additional Contact Information</h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-5">
+                                                        <label class="form-label">Gender Column</label>
+                                                        <select name="gender_column" class="form-select form-select-solid">
+                                                            <option value="">Select column</option>
+                                                            @foreach($headers as $index => $header)
+                                                                <option value="{{ $header }}" 
+                                                                    {{ strtolower($header) == 'gender' || strtolower($header) == 'sex' ? 'selected' : '' }}>
+                                                                    Column {{ $index + 1 }}: {{ $header }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="mb-5">
+                                                        <label class="form-label">Country Column</label>
+                                                        <select name="country_column" class="form-select form-select-solid">
+                                                            <option value="">Select column</option>
+                                                            @foreach($headers as $index => $header)
+                                                                <option value="{{ $header }}" 
+                                                                    {{ strtolower($header) == 'country' || strtolower($header) == 'nation' ? 'selected' : '' }}>
+                                                                    Column {{ $index + 1 }}: {{ $header }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-md-6">
+                                                    <div class="mb-5">
+                                                        <label class="form-label">Region/State Column</label>
+                                                        <select name="region_column" class="form-select form-select-solid">
+                                                            <option value="">Select column</option>
+                                                            @foreach($headers as $index => $header)
+                                                                <option value="{{ $header }}" 
+                                                                    {{ strtolower($header) == 'region' || strtolower($header) == 'state' ? 'selected' : '' }}>
+                                                                    Column {{ $index + 1 }}: {{ $header }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="mb-5">
+                                                        <label class="form-label">City Column</label>
+                                                        <select name="city_column" class="form-select form-select-solid">
+                                                            <option value="">Select column</option>
+                                                            @foreach($headers as $index => $header)
+                                                                <option value="{{ $header }}" 
+                                                                    {{ strtolower($header) == 'city' || strtolower($header) == 'town' ? 'selected' : '' }}>
+                                                                    Column {{ $index + 1 }}: {{ $header }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Custom Fields Section -->
+                            @if(isset($customFields) && $customFields->count() > 0)
+                            <div class="row gy-5 mt-5">
+                                <div class="col-12">
+                                    <div class="card card-bordered">
+                                        <div class="card-header">
+                                            <h3 class="card-title fw-bold text-dark">Custom Fields</h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                @foreach($customFields as $customField)
+                                                <div class="col-md-6">
+                                                    <div class="mb-5">
+                                                        <label class="form-label">{{ $customField->label }} Column</label>
+                                                        <select name="custom_field_{{ $customField->name }}_column" class="form-select form-select-solid">
+                                                            <option value="">Select column</option>
+                                                            @foreach($headers as $index => $header)
+                                                                <option value="{{ $header }}" 
+                                                                    {{ strtolower($header) == strtolower($customField->name) || strtolower($header) == strtolower($customField->label) ? 'selected' : '' }}>
+                                                                    Column {{ $index + 1 }}: {{ $header }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                        @if($customField->description)
+                                                            <div class="form-text text-muted">{{ $customField->description }}</div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
 
                             <div class="d-flex justify-content-end mt-5">
                                 <a href="{{ route('contacts.import') }}" class="btn btn-light me-3">Cancel</a>

@@ -68,7 +68,29 @@
             @foreach($contacts as $contact)
                 <tr>
                     @foreach(array_keys($headers) as $column)
-                        <td>{{ $contact->{$column} ?? '' }}</td>
+                        <td>
+                            @if(strpos($column, 'custom_field_') === 0)
+                                @php
+                                    $fieldName = str_replace('custom_field_', '', $column);
+                                    $customFieldValue = $contact->custom_fields[$fieldName] ?? '';
+                                    
+                                    // Format the value based on field type if we have the field definition
+                                    if(isset($customFields)) {
+                                        $customField = $customFields->firstWhere('name', $fieldName);
+                                        if ($customField) {
+                                            if ($customField->type === 'checkbox') {
+                                                $customFieldValue = $customFieldValue ? 'Yes' : 'No';
+                                            } elseif ($customField->type === 'date' && $customFieldValue) {
+                                                $customFieldValue = \Carbon\Carbon::parse($customFieldValue)->format('Y-m-d');
+                                            }
+                                        }
+                                    }
+                                @endphp
+                                {{ $customFieldValue }}
+                            @else
+                                {{ $contact->{$column} ?? '' }}
+                            @endif
+                        </td>
                     @endforeach
                 </tr>
             @endforeach

@@ -269,6 +269,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get the custom fields for the user
+     */
+    public function customFields(): HasMany
+    {
+        return $this->hasMany(CustomField::class);
+    }
+
+    /**
      * Get the wallet transactions for the user
      */
     public function walletTransactions(): HasMany

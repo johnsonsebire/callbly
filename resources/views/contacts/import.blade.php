@@ -74,9 +74,9 @@
                                         <div class="mb-5">
                                             <p class="text-gray-800 fs-6 fw-semibold mb-2">Your file should include these columns:</p>
                                             <ul class="ps-4">
-                                                <li>Names (first name, last name or both)</li>
-                                                <li>Phone numbers</li>
-                                                <li>Optional: email, company, notes</li>
+                                                <li><strong>Required:</strong> Names (first name, last name or both) and phone numbers</li>
+                                                <li><strong>Optional:</strong> email, company, date_of_birth, gender, country, region, city, notes</li>
+                                                <li><strong>Custom Fields:</strong> Any custom fields you've created will be available for mapping</li>
                                             </ul>
                                         </div>
                                         <div class="separator my-5"></div>
@@ -102,6 +102,9 @@
                                                         <th>last_name</th>
                                                         <th>phone</th>
                                                         <th>email</th>
+                                                        <th>company</th>
+                                                        <th>gender</th>
+                                                        <th>country</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody class="fs-7">
@@ -110,12 +113,18 @@
                                                         <td>Doe</td>
                                                         <td>233501234567</td>
                                                         <td>john@example.com</td>
+                                                        <td>Tech Corp</td>
+                                                        <td>male</td>
+                                                        <td>Ghana</td>
                                                     </tr>
                                                     <tr>
                                                         <td>Jane</td>
                                                         <td>Smith</td>
                                                         <td>233502345678</td>
                                                         <td>jane@example.com</td>
+                                                        <td>Design Ltd</td>
+                                                        <td>female</td>
+                                                        <td>Nigeria</td>
                                                     </tr>
                                                 </tbody>
                                             </table>

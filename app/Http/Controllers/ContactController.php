@@ -56,7 +56,8 @@ class ContactController extends Controller
     {
         $user = Auth::user();
         $groups = ContactGroup::where('user_id', $user->id)->pluck('name', 'id');
-        return view('contacts.create', compact('groups'));
+        $customFields = $user->customFields()->active()->ordered()->get();
+        return view('contacts.create', compact('groups', 'customFields'));
     }
 
     /**
@@ -70,10 +71,34 @@ class ContactController extends Controller
             'phone_number' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
             'date_of_birth' => 'nullable|date',
+            'gender' => 'nullable|string|in:male,female,other',
+            'country' => 'nullable|string|max:255',
+            'region' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
             'company' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'groups' => 'nullable|array',
+            'custom_fields' => 'nullable|array',
         ]);
+
+        // Validate custom fields
+        $user = Auth::user();
+        $customFields = $user->customFields()->active()->get();
+        $customFieldData = [];
+        
+        foreach ($customFields as $customField) {
+            $fieldValue = $request->input("custom_fields.{$customField->name}");
+            
+            if ($customField->is_required && empty($fieldValue)) {
+                return back()->withErrors([
+                    "custom_fields.{$customField->name}" => "The {$customField->label} field is required."
+                ])->withInput();
+            }
+            
+            if (!empty($fieldValue)) {
+                $customFieldData[$customField->name] = $fieldValue;
+            }
+        }
 
         $contact = Contact::create([
             'user_id' => Auth::id(),
@@ -82,8 +107,13 @@ class ContactController extends Controller
             'phone_number' => $validated['phone_number'],
             'email' => $validated['email'] ?? null,
             'date_of_birth' => $validated['date_of_birth'] ?? null,
+            'gender' => $validated['gender'] ?? null,
+            'country' => $validated['country'] ?? null,
+            'region' => $validated['region'] ?? null,
+            'city' => $validated['city'] ?? null,
             'company' => $validated['company'] ?? null,
             'notes' => $validated['notes'] ?? null,
+            'custom_fields' => $customFieldData,
         ]);
 
         if (!empty($validated['groups'])) {
@@ -120,8 +150,9 @@ class ContactController extends Controller
         $user = Auth::user();
         $groups = ContactGroup::where('user_id', $user->id)->pluck('name', 'id');
         $selectedGroups = $contact->groups->pluck('id')->toArray();
+        $customFields = $user->customFields()->active()->ordered()->get();
         
-        return view('contacts.edit', compact('contact', 'groups', 'selectedGroups'));
+        return view('contacts.edit', compact('contact', 'groups', 'selectedGroups', 'customFields'));
     }
 
     /**
@@ -140,10 +171,37 @@ class ContactController extends Controller
             'phone_number' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
             'date_of_birth' => 'nullable|date',
+            'gender' => 'nullable|string|in:male,female,other',
+            'country' => 'nullable|string|max:255',
+            'region' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
             'company' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'groups' => 'nullable|array',
+            'custom_fields' => 'nullable|array',
         ]);
+
+        // Validate custom fields
+        $user = Auth::user();
+        $customFields = $user->customFields()->active()->get();
+        $customFieldData = $contact->custom_fields ?? [];
+        
+        foreach ($customFields as $customField) {
+            $fieldValue = $request->input("custom_fields.{$customField->name}");
+            
+            if ($customField->is_required && empty($fieldValue)) {
+                return back()->withErrors([
+                    "custom_fields.{$customField->name}" => "The {$customField->label} field is required."
+                ])->withInput();
+            }
+            
+            if (!empty($fieldValue)) {
+                $customFieldData[$customField->name] = $fieldValue;
+            } else {
+                // Remove empty custom field values
+                unset($customFieldData[$customField->name]);
+            }
+        }
 
         $contact->update([
             'first_name' => $validated['first_name'],
@@ -151,8 +209,13 @@ class ContactController extends Controller
             'phone_number' => $validated['phone_number'],
             'email' => $validated['email'] ?? null,
             'date_of_birth' => $validated['date_of_birth'] ?? null,
+            'gender' => $validated['gender'] ?? null,
+            'country' => $validated['country'] ?? null,
+            'region' => $validated['region'] ?? null,
+            'city' => $validated['city'] ?? null,
             'company' => $validated['company'] ?? null,
             'notes' => $validated['notes'] ?? null,
+            'custom_fields' => $customFieldData,
         ]);
 
         // Sync groups
@@ -251,7 +314,7 @@ class ContactController extends Controller
                     }
                     
                     // Get the headers (first row)
-                    $headers = $collection[0][0]->keys()->toArray();
+                    $headers = $collection[0][0]->toArray();
                     Log::info('Headers found', ['headers' => $headers]);
                     
                     if (empty($headers)) {
@@ -259,8 +322,8 @@ class ContactController extends Controller
                         return redirect()->back()->with('error', 'The file does not contain any headers. Please ensure the first row contains column names.');
                     }
                     
-                    // Preview the first 5 rows
-                    $records = $collection[0]->take(5);
+                    // Preview the first 5 data rows (skip header row)
+                    $records = $collection[0]->skip(1)->take(5);
                     $totalRecords = count($collection[0]) - 1; // Excluding header row
                     Log::info('Preview data prepared', [
                         'preview_records' => count($records),
@@ -273,6 +336,7 @@ class ContactController extends Controller
                         'path' => $path,
                         'group_id' => $request->group_id,
                         'total_records' => $totalRecords,
+                        'customFields' => Auth::user()->customFields()->active()->ordered()->get(),
                     ]);
                 } catch (\Exception $e) {
                     Log::error('Exception in file processing: ' . $e->getMessage());
@@ -310,6 +374,10 @@ class ContactController extends Controller
                 'email_column' => 'nullable|string',
                 'company_column' => 'nullable|string',
                 'date_of_birth_column' => 'nullable|string',
+                'gender_column' => 'nullable|string',
+                'country_column' => 'nullable|string',
+                'region_column' => 'nullable|string',
+                'city_column' => 'nullable|string',
                 'group_id' => 'nullable|exists:contact_groups,id'
             ]);
 
@@ -346,6 +414,22 @@ class ContactController extends Controller
                 
                 if (!empty($validated['date_of_birth_column'])) {
                     $columnMapping['date_of_birth'] = $validated['date_of_birth_column'];
+                }
+                
+                if (!empty($validated['gender_column'])) {
+                    $columnMapping['gender'] = $validated['gender_column'];
+                }
+                
+                if (!empty($validated['country_column'])) {
+                    $columnMapping['country'] = $validated['country_column'];
+                }
+                
+                if (!empty($validated['region_column'])) {
+                    $columnMapping['region'] = $validated['region_column'];
+                }
+                
+                if (!empty($validated['city_column'])) {
+                    $columnMapping['city'] = $validated['city_column'];
                 }
                 
                 // Start import transaction
@@ -406,8 +490,9 @@ class ContactController extends Controller
             ->select('id', 'first_name', 'last_name', 'phone_number', 'email')
             ->orderBy('first_name')
             ->get();
+        $customFields = $user->customFields()->active()->ordered()->get();
             
-        return view('contacts.export', compact('groups', 'allContacts'));
+        return view('contacts.export', compact('groups', 'allContacts', 'customFields'));
     }
 
     /**
@@ -428,10 +513,12 @@ class ContactController extends Controller
             $query->whereIn('id', $selectedIds);
         }
         
-        // Filter columns to include
+        // Get selected columns and custom fields
         $columns = $request->columns ?? ['first_name', 'last_name', 'phone_number', 'email', 'company', 'notes'];
+        $customFieldNames = $request->custom_fields ?? [];
         
-        $contacts = $query->get($columns);
+        // Get contacts with all necessary fields
+        $contacts = $query->get();
         
         // Define column headers for the export
         $headers = [
@@ -440,12 +527,30 @@ class ContactController extends Controller
             'phone_number' => 'Phone Number',
             'email' => 'Email',
             'date_of_birth' => 'Date of Birth',
+            'gender' => 'Gender',
+            'country' => 'Country',
+            'region' => 'Region/State',
+            'city' => 'City',
             'company' => 'Company',
             'notes' => 'Notes'
         ];
         
-        // Filter headers to only include requested columns
+        // Add custom field headers
+        $customFields = $user->customFields()->active()->whereIn('name', $customFieldNames)->get();
+        foreach ($customFields as $customField) {
+            $headers['custom_field_' . $customField->name] = $customField->label;
+        }
+        
+        // Filter headers to only include requested columns and custom fields
         $exportHeaders = array_intersect_key($headers, array_flip($columns));
+        
+        // Add custom field headers
+        foreach ($customFieldNames as $fieldName) {
+            $customField = $customFields->firstWhere('name', $fieldName);
+            if ($customField) {
+                $exportHeaders['custom_field_' . $fieldName] = $customField->label;
+            }
+        }
         
         // Generate filename
         $timestamp = date('Y-m-d_H-i-s');
@@ -458,14 +563,15 @@ class ContactController extends Controller
             // PDF Export
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('contacts.export_pdf', [
                 'contacts' => $contacts,
-                'headers' => $exportHeaders
+                'headers' => $exportHeaders,
+                'customFields' => $customFields
             ]);
             
             return $pdf->download($filename . '.pdf');
             
         } elseif ($format === 'excel') {
             // Excel Export using Laravel Excel
-            return Excel::download(new ContactsExport($contacts, $exportHeaders), $filename . '.xlsx');
+            return Excel::download(new ContactsExport($contacts, $exportHeaders, $customFields), $filename . '.xlsx');
             
         } else {
             // CSV Export (default)
@@ -480,6 +586,13 @@ class ContactController extends Controller
                 foreach ($columns as $column) {
                     $row[] = $contact->{$column} ?? '';
                 }
+                
+                // Add custom field values
+                foreach ($customFieldNames as $fieldName) {
+                    $customFieldValue = $contact->custom_fields[$fieldName] ?? '';
+                    $row[] = $customFieldValue;
+                }
+                
                 $csv->insertOne($row);
             }
             
