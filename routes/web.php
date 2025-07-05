@@ -130,6 +130,9 @@ Route::middleware('auth')->group(function () {
             Route::put('/{contactGroup}', [App\Http\Controllers\ContactGroupController::class, 'update'])->name('update');
             Route::delete('/{contactGroup}', [App\Http\Controllers\ContactGroupController::class, 'destroy'])->name('destroy');
             
+            // AJAX search for contacts within a group
+            Route::get('/{contactGroup}/search-contacts', [App\Http\Controllers\ContactGroupController::class, 'searchContacts'])->name('search-contacts');
+            
             // Adding/removing contacts from groups
             Route::get('/{contactGroup}/add-contacts', [App\Http\Controllers\ContactGroupController::class, 'addContacts'])->name('add-contacts');
             Route::post('/{contactGroup}/store-contacts', [App\Http\Controllers\ContactGroupController::class, 'storeContacts'])->name('store-contacts');

@@ -93,6 +93,59 @@ class ContactGroupController extends Controller
             'contacts' => $contacts
         ]);
     }
+
+    /**
+     * Search contacts within a group for AJAX requests.
+     */
+    public function searchContacts(Request $request, ContactGroup $contactGroup)
+    {
+        // Verify ownership
+        if ($contactGroup->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $query = $contactGroup->contacts();
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $searchTerm = $request->get('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('first_name', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('last_name', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('phone_number', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('email', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('company', 'LIKE', '%' . $searchTerm . '%');
+            });
+        }
+
+        // Apply sorting
+        $sortBy = $request->get('sort_by', 'first_name');
+        $sortDirection = $request->get('sort_direction', 'asc');
+        
+        $allowedSortFields = ['first_name', 'last_name', 'phone_number', 'email', 'company', 'created_at'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortDirection);
+        }
+
+        $perPage = $request->get('per_page', 20);
+        $contacts = $query->paginate($perPage);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'contacts' => $contacts->items(),
+                    'total' => $contacts->total(),
+                    'current_page' => $contacts->currentPage(),
+                    'last_page' => $contacts->lastPage(),
+                    'per_page' => $contacts->perPage(),
+                    'pagination_links' => $contacts->appends($request->query())->links()->render()
+                ]
+            ]);
+        }
+
+        return redirect()->route('contact-groups.show', $contactGroup);
+    }
     
     /**
      * Show the form for editing the specified contact group.
