@@ -24,12 +24,32 @@ class ContactController extends Controller
     /**
      * Display a listing of contacts.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         
         // Get all available contacts (personal + shared from teams)
         $allContacts = $user->getAvailableContacts();
+        
+        // Apply search filter if provided
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $allContacts = $allContacts->filter(function ($contact) use ($searchTerm) {
+                return stripos($contact->first_name, $searchTerm) !== false ||
+                       stripos($contact->last_name, $searchTerm) !== false ||
+                       stripos($contact->phone_number, $searchTerm) !== false ||
+                       stripos($contact->email, $searchTerm) !== false ||
+                       stripos($contact->company, $searchTerm) !== false;
+            });
+        }
+        
+        // Apply group filter if provided
+        if ($request->filled('group')) {
+            $groupId = $request->group;
+            $allContacts = $allContacts->filter(function ($contact) use ($groupId) {
+                return $contact->groups->contains('id', $groupId);
+            });
+        }
         
         // Paginate the collection manually
         $perPage = 15;
@@ -40,13 +60,68 @@ class ContactController extends Controller
             $allContacts->count(),
             $perPage,
             $currentPage,
-            ['path' => request()->url()]
+            ['path' => request()->url(), 'query' => request()->query()]
         );
         
         // Check if the user has shared contacts
         $hasSharedContacts = $user->canUseTeamResource('contacts');
         
-        return view('contacts.index', compact('contacts', 'hasSharedContacts'));
+        // Get contact groups for filter dropdown
+        $groups = ContactGroup::where('user_id', $user->id)->get();
+        
+        // If it's an AJAX request, return only the contacts table
+        if ($request->ajax()) {
+            return view('contacts.partials.contacts_table', compact('contacts', 'hasSharedContacts'))->render();
+        }
+        
+        return view('contacts.index', compact('contacts', 'hasSharedContacts', 'groups'));
+    }
+
+    /**
+     * Search contacts via AJAX
+     */
+    public function search(Request $request)
+    {
+        $user = Auth::user();
+        $searchTerm = $request->get('q', '');
+        $groupId = $request->get('group');
+        
+        // Get all available contacts (personal + shared from teams)
+        $allContacts = $user->getAvailableContacts();
+        
+        // Apply search filter
+        if (!empty($searchTerm)) {
+            $allContacts = $allContacts->filter(function ($contact) use ($searchTerm) {
+                return stripos($contact->first_name, $searchTerm) !== false ||
+                       stripos($contact->last_name, $searchTerm) !== false ||
+                       stripos($contact->phone_number, $searchTerm) !== false ||
+                       stripos($contact->email, $searchTerm) !== false ||
+                       stripos($contact->company, $searchTerm) !== false;
+            });
+        }
+        
+        // Apply group filter
+        if (!empty($groupId) && $groupId !== 'all') {
+            $allContacts = $allContacts->filter(function ($contact) use ($groupId) {
+                return $contact->groups->contains('id', $groupId);
+            });
+        }
+        
+        // Paginate the results
+        $perPage = 15;
+        $currentPage = $request->input('page', 1);
+        
+        $contacts = new \Illuminate\Pagination\LengthAwarePaginator(
+            $allContacts->forPage($currentPage, $perPage),
+            $allContacts->count(),
+            $perPage,
+            $currentPage,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+        
+        $hasSharedContacts = $user->canUseTeamResource('contacts');
+        
+        return view('contacts.partials.contacts_table', compact('contacts', 'hasSharedContacts'))->render();
     }
 
     /**
@@ -65,63 +140,108 @@ class ContactController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'phone_number' => 'required|string|max:20',
-            'email' => 'nullable|email|max:255',
-            'date_of_birth' => 'nullable|date',
-            'gender' => 'nullable|string|in:male,female,other',
-            'country' => 'nullable|string|max:255',
-            'region' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:255',
-            'company' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
-            'groups' => 'nullable|array',
-            'custom_fields' => 'nullable|array',
-        ]);
+        try {
+            Log::info('Contact creation started', [
+                'user_id' => Auth::id(),
+                'request_data' => $request->except(['_token'])
+            ]);
 
-        // Validate custom fields
-        $user = Auth::user();
-        $customFields = $user->customFields()->active()->get();
-        $customFieldData = [];
-        
-        foreach ($customFields as $customField) {
-            $fieldValue = $request->input("custom_fields.{$customField->name}");
+            $validated = $request->validate([
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'phone_number' => 'required|string|max:20',
+                'email' => 'nullable|email|max:255',
+                'date_of_birth' => 'nullable|date',
+                'gender' => 'nullable|string|in:male,female,other',
+                'country' => 'nullable|string|max:255',
+                'region' => 'nullable|string|max:255',
+                'city' => 'nullable|string|max:255',
+                'company' => 'nullable|string|max:255',
+                'notes' => 'nullable|string',
+                'groups' => 'nullable|array',
+                'custom_fields' => 'nullable|array',
+            ]);
+
+            Log::info('Contact validation passed', ['validated_data' => $validated]);
+
+            // Validate custom fields
+            $user = Auth::user();
+            $customFields = $user->customFields()->active()->get();
+            $customFieldData = [];
             
-            if ($customField->is_required && empty($fieldValue)) {
-                return back()->withErrors([
-                    "custom_fields.{$customField->name}" => "The {$customField->label} field is required."
-                ])->withInput();
-            }
+            Log::info('Processing custom fields', ['custom_fields_count' => $customFields->count()]);
             
-            if (!empty($fieldValue)) {
-                $customFieldData[$customField->name] = $fieldValue;
+            foreach ($customFields as $customField) {
+                $fieldValue = $request->input("custom_fields.{$customField->name}");
+                
+                if ($customField->is_required && empty($fieldValue)) {
+                    Log::warning('Required custom field missing', ['field' => $customField->name]);
+                    return back()->withErrors([
+                        "custom_fields.{$customField->name}" => "The {$customField->label} field is required."
+                    ])->withInput();
+                }
+                
+                if (!empty($fieldValue)) {
+                    $customFieldData[$customField->name] = $fieldValue;
+                }
             }
-        }
 
-        $contact = Contact::create([
-            'user_id' => Auth::id(),
-            'first_name' => $validated['first_name'],
-            'last_name' => $validated['last_name'],
-            'phone_number' => $validated['phone_number'],
-            'email' => $validated['email'] ?? null,
-            'date_of_birth' => $validated['date_of_birth'] ?? null,
-            'gender' => $validated['gender'] ?? null,
-            'country' => $validated['country'] ?? null,
-            'region' => $validated['region'] ?? null,
-            'city' => $validated['city'] ?? null,
-            'company' => $validated['company'] ?? null,
-            'notes' => $validated['notes'] ?? null,
-            'custom_fields' => $customFieldData,
-        ]);
+            Log::info('Custom field data prepared', ['custom_field_data' => $customFieldData]);
 
-        if (!empty($validated['groups'])) {
-            $contact->groups()->attach($validated['groups']);
-        }
+            // Prepare contact data
+            $contactData = [
+                'user_id' => Auth::id(),
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
+                'phone_number' => $validated['phone_number'],
+                'email' => $validated['email'] ?? null,
+                'date_of_birth' => $validated['date_of_birth'] ?? null,
+                'gender' => $validated['gender'] ?? null,
+                'country' => $validated['country'] ?? null,
+                'region' => $validated['region'] ?? null,
+                'city' => $validated['city'] ?? null,
+                'company' => $validated['company'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                'custom_fields' => $customFieldData,
+            ];
+
+            Log::info('Creating contact with data', ['contact_data' => $contactData]);
+
+            $contact = Contact::create($contactData);
+
+            Log::info('Contact created successfully', ['contact_id' => $contact->id]);
+
+            if (!empty($validated['groups'])) {
+                Log::info('Attaching groups', ['groups' => $validated['groups']]);
+                $contact->groups()->attach($validated['groups']);
+            }
+
+            Log::info('Contact creation completed successfully');
 
         return redirect()->route('contacts.index')
             ->with('success', 'Contact created successfully.');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation failed during contact creation', [
+                'errors' => $e->errors(),
+                'user_id' => Auth::id()
+            ]);
+            return back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            Log::error('Exception during contact creation', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => Auth::id()
+            ]);
+            
+            // For production debugging - show detailed error temporarily
+            $errorMessage = 'An error occurred while creating the contact: ' . $e->getMessage();
+            if (app()->environment('production')) {
+                $errorMessage .= ' (Line: ' . $e->getLine() . ', File: ' . basename($e->getFile()) . ')';
+            }
+            
+            return back()->with('error', $errorMessage)->withInput();
+        }
     }
 
     /**

@@ -32,6 +32,10 @@
                             <div class="alert alert-success">{{ session('success') }}</div>
                         @endif
                         
+                        @if(session('error'))
+                            <div class="alert alert-danger">{{ session('error') }}</div>
+                        @endif
+                        
                         @if(session('errors') && is_array(session('errors')) && count(session('errors')) > 0)
                             <div class="alert alert-danger">
                                 <p><strong>The following errors occurred:</strong></p>
@@ -42,6 +46,25 @@
                                 </ul>
                             </div>
                         @endif
+
+                        <!-- Search and Filter Section -->
+                        <div class="d-flex flex-stack flex-wrap mb-5">
+                            <div class="d-flex align-items-center position-relative my-1 me-5">
+                                <i class="ki-outline ki-magnifier fs-1 position-absolute ms-4"></i>
+                                <input type="text" data-kt-contacts-table-filter="search" class="form-control form-control-solid w-250px ps-15" placeholder="Search contacts..." id="contactSearch" />
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <select class="form-select form-select-solid me-3" data-control="select2" data-placeholder="Filter by group" id="groupFilter" style="width: 200px;">
+                                    <option value="all">All Groups</option>
+                                    @foreach($groups as $group)
+                                        <option value="{{ $group->id }}">{{ $group->name }}</option>
+                                    @endforeach
+                                </select>
+                                <button type="button" class="btn btn-light-primary me-3" id="exportContactsBtn">
+                                    <i class="ki-outline ki-download fs-2 me-2"></i>Export Options
+                                </button>
+                            </div>
+                        </div>
                         
                         <div id="exportOptions" class="mb-4" style="display: none;">
                             <div class="card card-bordered">
@@ -64,10 +87,10 @@
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
-                                                <label for="groupFilter" class="form-label">Filter by group (optional)</label>
-                                                <select class="form-select form-select-sm" name="group_id" id="groupFilter">
+                                                <label for="exportGroupFilter" class="form-label">Filter by group (optional)</label>
+                                                <select class="form-select form-select-sm" name="group_id" id="exportGroupFilter">
                                                     <option value="">All groups</option>
-                                                    @foreach(Auth::user()->contactGroups as $group)
+                                                    @foreach($groups as $group)
                                                         <option value="{{ $group->id }}">{{ $group->name }}</option>
                                                     @endforeach
                                                 </select>
@@ -82,84 +105,16 @@
                             </div>
                         </div>
                         
-                        <div class="table-responsive">
-                            <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4">
-                                <thead>
-                                    <tr class="fw-bold text-muted">
-                                        <th class="min-w-25px">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="selectAllContacts">
-                                            </div>
-                                        </th>
-                                        <th class="min-w-150px">Name</th>
-                                        <th class="min-w-120px">Phone</th>
-                                        <th class="min-w-150px">Email</th>
-                                        <th class="min-w-120px">Company</th>
-                                        <th class="min-w-150px">Groups</th>
-                                        <th class="min-w-150px text-end">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($contacts as $contact)
-                                        <tr>
-                                            <td>
-                                                <div class="form-check">
-                                                    <input class="form-check-input contact-checkbox" type="checkbox" value="{{ $contact->id }}">
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="symbol symbol-45px me-3">
-                                                        <span class="symbol-label bg-light-primary text-primary">
-                                                            {{ substr($contact->full_name, 0, 1) }}
-                                                        </span>
-                                                    </div>
-                                                    <div class="d-flex flex-column">
-                                                        <a href="{{ route('contacts.show', $contact) }}" class="text-dark text-hover-primary fw-bold">{{ $contact->full_name }}</a>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>{{ $contact->phone_number }}</td>
-                                            <td>{{ $contact->email }}</td>
-                                            <td>{{ $contact->company }}</td>
-                                            <td>
-                                                @foreach($contact->groups as $group)
-                                                    <span class="badge badge-light-primary fs-7 fw-semibold me-1">{{ $group->name }}</span>
-                                                @endforeach
-                                            </td>
-                                            <td class="text-end">
-                                                <a href="{{ route('contacts.edit', $contact) }}" class="btn btn-sm btn-light-primary me-1">
-                                                    <i class="ki-outline ki-pencil fs-2"></i>
-                                                </a>
-                                                <form action="{{ route('contacts.destroy', $contact) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Delete this contact?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button class="btn btn-sm btn-light-danger me-1">
-                                                        <i class="ki-outline ki-trash fs-2"></i>
-                                                    </button>
-                                                </form>
-                                                <a href="{{ route('sms.compose') }}?contact_id={{ $contact->id }}" class="btn btn-sm btn-light-success">
-                                                    <i class="ki-outline ki-message-text-2 fs-2"></i>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="7" class="text-center py-10">
-                                                <div class="d-flex flex-column align-items-center">
-                                                    <i class="ki-outline ki-people fs-2tx text-gray-300 mb-5"></i>
-                                                    <span class="text-gray-600 fs-5 fw-semibold">No contacts found</span>
-                                                    <span class="text-gray-400 fs-7">Add contacts to get started</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                        <!-- Loading indicator -->
+                        <div id="contactsLoading" class="d-none text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
                         </div>
                         
-                        <div class="d-flex justify-content-center mt-4">
-                            {{ $contacts->links() }}
+                        <!-- Contacts Table Container -->
+                        <div id="contactsTableContainer">
+                            @include('contacts.partials.contacts_table')
                         </div>
                     </div>
                 </div>
@@ -175,46 +130,148 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Toggle export options panel
-        const exportBtn = document.getElementById('exportContactsBtn');
-        const exportOptions = document.getElementById('exportOptions');
+        let searchTimeout;
+        const searchInput = document.getElementById('contactSearch');
+        const groupFilter = document.getElementById('groupFilter');
+        const contactsTableContainer = document.getElementById('contactsTableContainer');
+        const loadingIndicator = document.getElementById('contactsLoading');
         
-        exportBtn.addEventListener('click', function() {
-            exportOptions.style.display = exportOptions.style.display === 'none' ? 'block' : 'none';
+        // Real-time search function
+        function performSearch() {
+            const searchTerm = searchInput.value.trim();
+            const selectedGroup = groupFilter.value;
+            
+            // Show loading indicator
+            loadingIndicator.classList.remove('d-none');
+            contactsTableContainer.style.opacity = '0.5';
+            
+            // Build URL with parameters
+            const url = new URL('{{ route("contacts.search") }}', window.location.origin);
+            if (searchTerm) {
+                url.searchParams.append('q', searchTerm);
+            }
+            if (selectedGroup && selectedGroup !== 'all') {
+                url.searchParams.append('group', selectedGroup);
+            }
+            
+            // Make AJAX request
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'text/html',
+                },
+            })
+            .then(response => response.text())
+            .then(html => {
+                contactsTableContainer.innerHTML = html;
+                loadingIndicator.classList.add('d-none');
+                contactsTableContainer.style.opacity = '1';
+                
+                // Reinitialize event listeners for the new content
+                initializeTableEvents();
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                loadingIndicator.classList.add('d-none');
+                contactsTableContainer.style.opacity = '1';
+            });
+        }
+        
+        // Search input with debouncing
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performSearch, 300); // 300ms delay
         });
         
-        // Select all checkbox functionality
-        const selectAllCheckbox = document.getElementById('selectAllContacts');
-        const contactCheckboxes = document.querySelectorAll('.contact-checkbox');
+        // Group filter change
+        groupFilter.addEventListener('change', function() {
+            performSearch();
+        });
         
-        selectAllCheckbox.addEventListener('change', function() {
+        // Initialize table events (for both initial load and after AJAX updates)
+        function initializeTableEvents() {
+            // Select all checkbox functionality
+            const selectAllCheckbox = document.getElementById('selectAllContacts');
+            const contactCheckboxes = document.querySelectorAll('.contact-checkbox');
+            
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    contactCheckboxes.forEach(checkbox => {
+                        checkbox.checked = selectAllCheckbox.checked;
+                    });
+                    updateSelectedContactsInput();
+                });
+            }
+            
             contactCheckboxes.forEach(checkbox => {
-                checkbox.checked = selectAllCheckbox.checked;
+                checkbox.addEventListener('change', function() {
+                    updateSelectedContactsInput();
+                    
+                    // Update select all checkbox state
+                    if (selectAllCheckbox) {
+                        const allChecked = Array.from(contactCheckboxes).every(cb => cb.checked);
+                        const someChecked = Array.from(contactCheckboxes).some(cb => cb.checked);
+                        selectAllCheckbox.checked = allChecked;
+                        selectAllCheckbox.indeterminate = someChecked && !allChecked;
+                    }
+                });
             });
-            updateSelectedContactsInput();
-        });
-        
-        contactCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                updateSelectedContactsInput();
-            });
-        });
+        }
         
         // Update hidden input with selected contact IDs
         function updateSelectedContactsInput() {
+            const contactCheckboxes = document.querySelectorAll('.contact-checkbox');
             const selectedIds = Array.from(contactCheckboxes)
                 .filter(checkbox => checkbox.checked)
                 .map(checkbox => checkbox.value);
             
-            document.getElementById('selectedContactIds').value = selectedIds.join(',');
+            const selectedContactIdsInput = document.getElementById('selectedContactIds');
+            if (selectedContactIdsInput) {
+                selectedContactIdsInput.value = selectedIds.join(',');
+            }
             
             // Auto-select "Export selected" when contacts are checked
-            if (selectedIds.length > 0) {
-                document.getElementById('exportSelected').checked = true;
-            } else {
-                document.getElementById('exportAll').checked = true;
+            const exportSelected = document.getElementById('exportSelected');
+            const exportAll = document.getElementById('exportAll');
+            if (selectedIds.length > 0 && exportSelected) {
+                exportSelected.checked = true;
+            } else if (exportAll) {
+                exportAll.checked = true;
             }
         }
+        
+        // Toggle export options panel
+        const exportBtn = document.getElementById('exportContactsBtn');
+        const exportOptions = document.getElementById('exportOptions');
+        
+        if (exportBtn && exportOptions) {
+            exportBtn.addEventListener('click', function() {
+                exportOptions.style.display = exportOptions.style.display === 'none' ? 'block' : 'none';
+            });
+        }
+        
+        // Initialize table events on page load
+        initializeTableEvents();
+        
+        // Clear search functionality
+        const clearSearchBtn = document.createElement('button');
+        clearSearchBtn.type = 'button';
+        clearSearchBtn.className = 'btn btn-icon btn-active-light-primary w-30px h-30px position-absolute end-0 top-50 translate-middle-y me-3';
+        clearSearchBtn.innerHTML = '<i class="ki-outline ki-cross fs-5"></i>';
+        clearSearchBtn.style.display = 'none';
+        
+        searchInput.parentNode.appendChild(clearSearchBtn);
+        
+        searchInput.addEventListener('input', function() {
+            clearSearchBtn.style.display = this.value ? 'block' : 'none';
+        });
+        
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            clearSearchBtn.style.display = 'none';
+            performSearch();
+        });
     });
 </script>
 @endpush
