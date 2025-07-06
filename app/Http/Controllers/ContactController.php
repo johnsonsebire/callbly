@@ -148,7 +148,7 @@ class ContactController extends Controller
 
             $validated = $request->validate([
                 'first_name' => 'required|string|max:255',
-                'last_name' => 'required|string|max:255',
+                'last_name' => 'nullable|string|max:255',
                 'phone_number' => 'required|string|max:20',
                 'email' => 'nullable|email|max:255',
                 'date_of_birth' => 'nullable|date',
@@ -192,18 +192,38 @@ class ContactController extends Controller
             $contactData = [
                 'user_id' => Auth::id(),
                 'first_name' => $validated['first_name'],
-                'last_name' => $validated['last_name'],
                 'phone_number' => $validated['phone_number'],
-                'email' => $validated['email'] ?? null,
-                'date_of_birth' => $validated['date_of_birth'] ?? null,
-                'gender' => $validated['gender'] ?? null,
-                'country' => $validated['country'] ?? null,
-                'region' => $validated['region'] ?? null,
-                'city' => $validated['city'] ?? null,
-                'company' => $validated['company'] ?? null,
-                'notes' => $validated['notes'] ?? null,
                 'custom_fields' => $customFieldData,
             ];
+
+            // Only add non-null values to avoid database constraint issues
+            if (!empty($validated['last_name'])) {
+                $contactData['last_name'] = $validated['last_name'];
+            }
+            if (!empty($validated['email'])) {
+                $contactData['email'] = $validated['email'];
+            }
+            if (!empty($validated['date_of_birth'])) {
+                $contactData['date_of_birth'] = $validated['date_of_birth'];
+            }
+            if (!empty($validated['gender'])) {
+                $contactData['gender'] = $validated['gender'];
+            }
+            if (!empty($validated['country'])) {
+                $contactData['country'] = $validated['country'];
+            }
+            if (!empty($validated['region'])) {
+                $contactData['region'] = $validated['region'];
+            }
+            if (!empty($validated['city'])) {
+                $contactData['city'] = $validated['city'];
+            }
+            if (!empty($validated['company'])) {
+                $contactData['company'] = $validated['company'];
+            }
+            if (!empty($validated['notes'])) {
+                $contactData['notes'] = $validated['notes'];
+            }
 
             Log::info('Creating contact with data', ['contact_data' => $contactData]);
 
@@ -287,7 +307,7 @@ class ContactController extends Controller
         
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'phone_number' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
             'date_of_birth' => 'nullable|date',
@@ -323,20 +343,43 @@ class ContactController extends Controller
             }
         }
 
-        $contact->update([
+        // Prepare update data
+        $updateData = [
             'first_name' => $validated['first_name'],
-            'last_name' => $validated['last_name'],
             'phone_number' => $validated['phone_number'],
-            'email' => $validated['email'] ?? null,
-            'date_of_birth' => $validated['date_of_birth'] ?? null,
-            'gender' => $validated['gender'] ?? null,
-            'country' => $validated['country'] ?? null,
-            'region' => $validated['region'] ?? null,
-            'city' => $validated['city'] ?? null,
-            'company' => $validated['company'] ?? null,
-            'notes' => $validated['notes'] ?? null,
             'custom_fields' => $customFieldData,
-        ]);
+        ];
+
+        // Only add non-null values to avoid database constraint issues
+        if (!empty($validated['last_name'])) {
+            $updateData['last_name'] = $validated['last_name'];
+        }
+        if (!empty($validated['email'])) {
+            $updateData['email'] = $validated['email'];
+        }
+        if (!empty($validated['date_of_birth'])) {
+            $updateData['date_of_birth'] = $validated['date_of_birth'];
+        }
+        if (!empty($validated['gender'])) {
+            $updateData['gender'] = $validated['gender'];
+        }
+        if (!empty($validated['country'])) {
+            $updateData['country'] = $validated['country'];
+        }
+        if (!empty($validated['region'])) {
+            $updateData['region'] = $validated['region'];
+        }
+        if (!empty($validated['city'])) {
+            $updateData['city'] = $validated['city'];
+        }
+        if (!empty($validated['company'])) {
+            $updateData['company'] = $validated['company'];
+        }
+        if (!empty($validated['notes'])) {
+            $updateData['notes'] = $validated['notes'];
+        }
+
+        $contact->update($updateData);
 
         // Sync groups
         $contact->groups()->sync($validated['groups'] ?? []);
@@ -489,7 +532,7 @@ class ContactController extends Controller
             $validated = $request->validate([
                 'path' => 'required|string',
                 'first_name_column' => 'required|string',
-                'last_name_column' => 'required|string',
+                'last_name_column' => 'nullable|string',
                 'phone_column' => 'required|string',
                 'email_column' => 'nullable|string',
                 'company_column' => 'nullable|string',
@@ -517,9 +560,13 @@ class ContactController extends Controller
                 // Create column mapping
                 $columnMapping = [
                     'first_name' => $validated['first_name_column'],
-                    'last_name' => $validated['last_name_column'],
                     'phone' => $validated['phone_column'],
                 ];
+                
+                // Add last name only if provided
+                if (!empty($validated['last_name_column'])) {
+                    $columnMapping['last_name'] = $validated['last_name_column'];
+                }
                 
                 // Log the column mapping for debugging
                 Log::info('Column mapping:', $columnMapping);
@@ -580,8 +627,20 @@ class ContactController extends Controller
                 Storage::delete($validated['path']);
                 Log::info('Temporary file deleted: ' . $validated['path']);
                 
-                return redirect()->route('contacts.index')->with('success', 
-                    "Import complete: {$results['imported']} contacts imported, {$results['duplicates']} duplicates skipped, {$results['errors']} errors encountered.");
+                // Prepare success message with detailed error information
+                $message = "Import complete: {$results['imported']} contacts imported, {$results['duplicates']} duplicates skipped";
+                
+                if ($results['errors'] > 0) {
+                    $message .= ", {$results['errors']} errors encountered.";
+                    
+                    // Pass error details to the session for display
+                    return redirect()->route('contacts.index')
+                        ->with('success', $message)
+                        ->with('import_errors', $results['error_details']);
+                } else {
+                    $message .= ".";
+                    return redirect()->route('contacts.index')->with('success', $message);
+                }
                 
             } catch (\Exception $e) {
                 DB::rollBack();

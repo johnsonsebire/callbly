@@ -31,7 +31,8 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
     protected $results = [
         'imported' => 0,
         'duplicates' => 0,
-        'errors' => 0
+        'errors' => 0,
+        'error_details' => [] // Store detailed error information
     ];
     
     /**
@@ -70,6 +71,21 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
         }
         
         foreach ($rows as $index => $row) {
+            // Initialize contact data for error reporting (accessible throughout the loop)
+            $contactDataForErrors = [
+                'first_name' => '',
+                'last_name' => '',
+                'phone_number' => '',
+                'email' => '',
+                'company' => '',
+                'date_of_birth' => '',
+                'gender' => '',
+                'country' => '',
+                'region' => '',
+                'city' => '',
+                'custom_fields' => []
+            ];
+            
             try {
                 // Make sure we're not trying to process an empty row
                 if ($row->isEmpty()) {
@@ -80,7 +96,7 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
                 // Get the numeric index or column name from the mapping
                 // Note: Laravel Excel with WithHeadingRow converts headers to snake_case and lowercase
                 $firstNameKey = $this->convertHeaderToLaravelExcelFormat($this->columnMapping['first_name']);
-                $lastNameKey = $this->convertHeaderToLaravelExcelFormat($this->columnMapping['last_name']);
+                $lastNameKey = isset($this->columnMapping['last_name']) && !empty($this->columnMapping['last_name']) ? $this->convertHeaderToLaravelExcelFormat($this->columnMapping['last_name']) : null;
                 $phoneKey = $this->convertHeaderToLaravelExcelFormat($this->columnMapping['phone']);
                 $emailKey = isset($this->columnMapping['email']) ? $this->convertHeaderToLaravelExcelFormat($this->columnMapping['email']) : null;
                 $companyKey = isset($this->columnMapping['company']) ? $this->convertHeaderToLaravelExcelFormat($this->columnMapping['company']) : null;
@@ -91,12 +107,14 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
                 $cityKey = isset($this->columnMapping['city']) ? $this->convertHeaderToLaravelExcelFormat($this->columnMapping['city']) : null;
                 
                 Log::debug("Row keys: " . json_encode($row->keys()->toArray()));
-                Log::debug("Original mapping keys: first_name={$this->columnMapping['first_name']}, last_name={$this->columnMapping['last_name']}, phone={$this->columnMapping['phone']}");
-                Log::debug("Converted mapping keys: first_name={$firstNameKey}, last_name={$lastNameKey}, phone={$phoneKey}");
+                Log::debug("Original mapping keys: first_name={$this->columnMapping['first_name']}, last_name=" . ($this->columnMapping['last_name'] ?? 'null') . ", phone={$this->columnMapping['phone']}");
+                Log::debug("Converted mapping keys: first_name={$firstNameKey}, last_name=" . ($lastNameKey ?? 'null') . ", phone={$phoneKey}");
                 
                 // Access data directly from the row using Laravel Excel converted keys
+                Log::debug("Attempting to access: firstNameKey={$firstNameKey}, lastNameKey=" . ($lastNameKey ?? 'null') . ", phoneKey={$phoneKey}");
+                
                 $first_name = $row[$firstNameKey] ?? null;
-                $last_name = $row[$lastNameKey] ?? null;
+                $last_name = $lastNameKey ? ($row[$lastNameKey] ?? null) : null;
                 $phone_number = $row[$phoneKey] ?? null;
                 $email = $emailKey ? ($row[$emailKey] ?? null) : null;
                 $company = $companyKey ? ($row[$companyKey] ?? null) : null;
@@ -122,6 +140,21 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
                     }
                 }
                 
+                // Update contact data for error reporting with actual values
+                $contactDataForErrors = [
+                    'first_name' => $first_name ?? '',
+                    'last_name' => $last_name ?? '',
+                    'phone_number' => $phone_number ?? '',
+                    'email' => $email ?? '',
+                    'company' => $company ?? '',
+                    'date_of_birth' => $date_of_birth ?? '',
+                    'gender' => $gender ?? '',
+                    'country' => $country ?? '',
+                    'region' => $region ?? '',
+                    'city' => $city ?? '',
+                    'custom_fields' => $customFieldData
+                ];
+                
                 Log::debug("Row $index mapped data", [
                     'first_name' => $first_name,
                     'last_name' => $last_name,
@@ -139,6 +172,12 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
                 // Skip if no phone number
                 if (empty($phone_number)) {
                     $this->results['errors']++;
+                    $this->results['error_details'][] = [
+                        'row_number' => $index + 2, // +2 because index is 0-based and we skip header row
+                        'contact_data' => $contactDataForErrors,
+                        'error_type' => 'Validation Error',
+                        'error_message' => 'Phone number is required'
+                    ];
                     Log::warning("Row $index skipped: No phone number");
                     continue;
                 }
@@ -150,25 +189,51 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
                     
                 if ($existingContact) {
                     $this->results['duplicates']++;
+                    $this->results['error_details'][] = [
+                        'row_number' => $index + 2,
+                        'contact_data' => $contactDataForErrors,
+                        'error_type' => 'Duplicate',
+                        'error_message' => 'Contact with this phone number already exists'
+                    ];
                     Log::info("Row $index skipped: Duplicate phone number $phone_number");
                     continue;
                 }
                 
                 // Create new contact
-                $contact = new Contact([
+                $contactData = [
                     'user_id' => Auth::id(),
                     'first_name' => $first_name,
-                    'last_name' => $last_name,
                     'phone_number' => $phone_number,
-                    'email' => $email,
-                    'company' => $company,
-                    'date_of_birth' => $date_of_birth,
-                    'gender' => $gender,
-                    'country' => $country,
-                    'region' => $region,
-                    'city' => $city,
                     'custom_fields' => $customFieldData,
-                ]);
+                ];
+                
+                // Only add non-null values to avoid database constraint issues
+                if (!empty($last_name)) {
+                    $contactData['last_name'] = $last_name;
+                }
+                if (!empty($email)) {
+                    $contactData['email'] = $email;
+                }
+                if (!empty($company)) {
+                    $contactData['company'] = $company;
+                }
+                if (!empty($date_of_birth)) {
+                    $contactData['date_of_birth'] = $date_of_birth;
+                }
+                if (!empty($gender)) {
+                    $contactData['gender'] = $gender;
+                }
+                if (!empty($country)) {
+                    $contactData['country'] = $country;
+                }
+                if (!empty($region)) {
+                    $contactData['region'] = $region;
+                }
+                if (!empty($city)) {
+                    $contactData['city'] = $city;
+                }
+                
+                $contact = new Contact($contactData);
                 
                 $contact->save();
                 $this->results['imported']++;
@@ -181,7 +246,19 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
                 
             } catch (\Exception $e) {
                 $this->results['errors']++;
+                
+                // Capture detailed error information
+                $errorDetail = [
+                    'row_number' => $index + 2, // +2 because index is 0-based and we skip header row
+                    'contact_data' => $contactDataForErrors,
+                    'error_message' => $e->getMessage(),
+                    'error_type' => get_class($e)
+                ];
+                
+                $this->results['error_details'][] = $errorDetail;
+                
                 Log::error("Error importing row $index: " . $e->getMessage());
+                Log::error("Contact data: " . json_encode($errorDetail['contact_data']));
                 Log::error($e->getTraceAsString());
             }
         }

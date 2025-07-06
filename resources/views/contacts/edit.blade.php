@@ -44,8 +44,8 @@
                                     </div>
                                     
                                     <div class="mb-3">
-                                        <label for="last_name" class="form-label required">Last Name</label>
-                                        <input type="text" class="form-control" id="last_name" name="last_name" value="{{ old('last_name', $contact->last_name) }}" required>
+                                        <label for="last_name" class="form-label">Last Name</label>
+                                        <input type="text" class="form-control" id="last_name" name="last_name" value="{{ old('last_name', $contact->last_name) }}">
                                     </div>
                                     
                                     <div class="mb-3">
