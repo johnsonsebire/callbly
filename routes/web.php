@@ -100,8 +100,12 @@ Route::middleware('auth')->group(function () {
         // SMS Campaigns
         Route::get('/sms/campaigns', [SmsController::class, 'campaigns'])->name('sms.campaigns');
         Route::get('/sms/campaigns/{id}', [SmsController::class, 'campaignDetails'])->name('sms.campaign-details');
+        Route::get('/sms/campaigns/{id}/status', [SmsController::class, 'getCampaignStatus'])->name('sms.campaign-status');
         Route::get('/sms/campaigns/{id}/download-report', [SmsController::class, 'downloadReport'])->name('sms.download-report');
         Route::get('/sms/campaigns/{id}/duplicate', [SmsController::class, 'duplicateCampaign'])->name('sms.duplicate-campaign');
+        
+        // Queue Management
+        Route::get('/sms/queue/status', [SmsController::class, 'getQueueStatus'])->name('sms.queue-status');
         
         // SMS Sender Names
         Route::get('/sms/sender-names', [SmsController::class, 'senderNames'])->name('sms.sender-names');

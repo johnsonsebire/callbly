@@ -115,6 +115,14 @@ use Illuminate\Support\Str;
                             </div>
                             <div class="card-body d-flex flex-column justify-content-end">
                                 <a href="{{ route('sms.campaigns') }}" class="btn btn-light-primary">View All Campaigns</a>
+                                @if($activeCampaigns > 0)
+                                    <div class="mt-3">
+                                        <small class="text-muted">
+                                            <i class="ki-outline ki-loading fs-7 me-1" id="processingIcon"></i>
+                                            Processing in background
+                                        </small>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
