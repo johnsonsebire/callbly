@@ -66,6 +66,7 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
         // Debug first row to verify column mapping
         if (isset($rows[0])) {
             Log::info('First row data for mapping:', $rows[0]->toArray());
+            Log::info('Available row keys:', $rows[0]->keys()->toArray());
         }
         
         foreach ($rows as $index => $row) {
@@ -77,119 +78,43 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
                 }
                 
                 // Get the numeric index or column name from the mapping
-                $firstNameKey = $this->columnMapping['first_name'];
-                $lastNameKey = $this->columnMapping['last_name'];
-                $phoneKey = $this->columnMapping['phone'];
-                $emailKey = $this->columnMapping['email'] ?? null;
-                $companyKey = $this->columnMapping['company'] ?? null;
-                $dateOfBirthKey = $this->columnMapping['date_of_birth'] ?? null;
-                $genderKey = $this->columnMapping['gender'] ?? null;
-                $countryKey = $this->columnMapping['country'] ?? null;
-                $regionKey = $this->columnMapping['region'] ?? null;
-                $cityKey = $this->columnMapping['city'] ?? null;
+                // Note: Laravel Excel with WithHeadingRow converts headers to snake_case and lowercase
+                $firstNameKey = $this->convertHeaderToLaravelExcelFormat($this->columnMapping['first_name']);
+                $lastNameKey = $this->convertHeaderToLaravelExcelFormat($this->columnMapping['last_name']);
+                $phoneKey = $this->convertHeaderToLaravelExcelFormat($this->columnMapping['phone']);
+                $emailKey = isset($this->columnMapping['email']) ? $this->convertHeaderToLaravelExcelFormat($this->columnMapping['email']) : null;
+                $companyKey = isset($this->columnMapping['company']) ? $this->convertHeaderToLaravelExcelFormat($this->columnMapping['company']) : null;
+                $dateOfBirthKey = isset($this->columnMapping['date_of_birth']) ? $this->convertHeaderToLaravelExcelFormat($this->columnMapping['date_of_birth']) : null;
+                $genderKey = isset($this->columnMapping['gender']) ? $this->convertHeaderToLaravelExcelFormat($this->columnMapping['gender']) : null;
+                $countryKey = isset($this->columnMapping['country']) ? $this->convertHeaderToLaravelExcelFormat($this->columnMapping['country']) : null;
+                $regionKey = isset($this->columnMapping['region']) ? $this->convertHeaderToLaravelExcelFormat($this->columnMapping['region']) : null;
+                $cityKey = isset($this->columnMapping['city']) ? $this->convertHeaderToLaravelExcelFormat($this->columnMapping['city']) : null;
                 
                 Log::debug("Row keys: " . json_encode($row->keys()->toArray()));
-                Log::debug("Mapping keys: first_name={$firstNameKey}, last_name={$lastNameKey}, phone={$phoneKey}");
+                Log::debug("Original mapping keys: first_name={$this->columnMapping['first_name']}, last_name={$this->columnMapping['last_name']}, phone={$this->columnMapping['phone']}");
+                Log::debug("Converted mapping keys: first_name={$firstNameKey}, last_name={$lastNameKey}, phone={$phoneKey}");
                 
-                // Access data directly from the row with the proper key (numeric or string)
-                $first_name = null;
-                $last_name = null;
-                $phone_number = null;
-                $email = null;
-                $company = null;
-                $date_of_birth = null;
-                $gender = null;
-                $country = null;
-                $region = null;
-                $city = null;
-                
-                // Direct access by numeric index if that's what we have
-                if (is_numeric($firstNameKey) && isset($row->values()[$firstNameKey])) {
-                    $first_name = $row->values()[$firstNameKey];
-                } elseif ($row->has($firstNameKey)) {
-                    $first_name = $row[$firstNameKey];
-                }
-                
-                if (is_numeric($lastNameKey) && isset($row->values()[$lastNameKey])) {
-                    $last_name = $row->values()[$lastNameKey];
-                } elseif ($row->has($lastNameKey)) {
-                    $last_name = $row[$lastNameKey];
-                }
-                
-                if (is_numeric($phoneKey) && isset($row->values()[$phoneKey])) {
-                    $phone_number = $row->values()[$phoneKey];
-                } elseif ($row->has($phoneKey)) {
-                    $phone_number = $row[$phoneKey];
-                }
-                
-                if ($emailKey) {
-                    if (is_numeric($emailKey) && isset($row->values()[$emailKey])) {
-                        $email = $row->values()[$emailKey];
-                    } elseif ($row->has($emailKey)) {
-                        $email = $row[$emailKey];
-                    }
-                }
-                
-                if ($companyKey) {
-                    if (is_numeric($companyKey) && isset($row->values()[$companyKey])) {
-                        $company = $row->values()[$companyKey];
-                    } elseif ($row->has($companyKey)) {
-                        $company = $row[$companyKey];
-                    }
-                }
-                
-                if ($dateOfBirthKey) {
-                    if (is_numeric($dateOfBirthKey) && isset($row->values()[$dateOfBirthKey])) {
-                        $date_of_birth = $row->values()[$dateOfBirthKey];
-                    } elseif ($row->has($dateOfBirthKey)) {
-                        $date_of_birth = $row[$dateOfBirthKey];
-                    }
-                }
-                
-                if ($genderKey) {
-                    if (is_numeric($genderKey) && isset($row->values()[$genderKey])) {
-                        $gender = $row->values()[$genderKey];
-                    } elseif ($row->has($genderKey)) {
-                        $gender = $row[$genderKey];
-                    }
-                }
-                
-                if ($countryKey) {
-                    if (is_numeric($countryKey) && isset($row->values()[$countryKey])) {
-                        $country = $row->values()[$countryKey];
-                    } elseif ($row->has($countryKey)) {
-                        $country = $row[$countryKey];
-                    }
-                }
-                
-                if ($regionKey) {
-                    if (is_numeric($regionKey) && isset($row->values()[$regionKey])) {
-                        $region = $row->values()[$regionKey];
-                    } elseif ($row->has($regionKey)) {
-                        $region = $row[$regionKey];
-                    }
-                }
-                
-                if ($cityKey) {
-                    if (is_numeric($cityKey) && isset($row->values()[$cityKey])) {
-                        $city = $row->values()[$cityKey];
-                    } elseif ($row->has($cityKey)) {
-                        $city = $row[$cityKey];
-                    }
-                }
+                // Access data directly from the row using Laravel Excel converted keys
+                $first_name = $row[$firstNameKey] ?? null;
+                $last_name = $row[$lastNameKey] ?? null;
+                $phone_number = $row[$phoneKey] ?? null;
+                $email = $emailKey ? ($row[$emailKey] ?? null) : null;
+                $company = $companyKey ? ($row[$companyKey] ?? null) : null;
+                $date_of_birth = $dateOfBirthKey ? ($row[$dateOfBirthKey] ?? null) : null;
+                $gender = $genderKey ? ($row[$genderKey] ?? null) : null;
+                $country = $countryKey ? ($row[$countryKey] ?? null) : null;
+                $region = $regionKey ? ($row[$regionKey] ?? null) : null;
+                $city = $cityKey ? ($row[$cityKey] ?? null) : null;
                 
                 // Process custom fields
                 $customFieldData = [];
                 foreach ($this->columnMapping as $key => $columnHeader) {
                     if (strpos($key, 'custom_field_') === 0 && !empty($columnHeader)) {
                         $fieldName = str_replace(['custom_field_', '_column'], '', $key);
-                        $customFieldValue = null;
                         
-                        if (is_numeric($columnHeader) && isset($row->values()[$columnHeader])) {
-                            $customFieldValue = $row->values()[$columnHeader];
-                        } elseif ($row->has($columnHeader)) {
-                            $customFieldValue = $row[$columnHeader];
-                        }
+                        // Convert header to Laravel Excel format
+                        $convertedHeader = $this->convertHeaderToLaravelExcelFormat($columnHeader);
+                        $customFieldValue = $row[$convertedHeader] ?? null;
                         
                         if (!empty($customFieldValue)) {
                             $customFieldData[$fieldName] = $customFieldValue;
@@ -272,6 +197,25 @@ class ContactsImport implements ToCollection, WithHeadingRow, WithValidation
     public function getResults(): array
     {
         return $this->results;
+    }
+    
+    /**
+     * Convert header name to Laravel Excel format (snake_case, lowercase)
+     * This matches how Laravel Excel processes headers with WithHeadingRow
+     * 
+     * @param string $header
+     * @return string
+     */
+    private function convertHeaderToLaravelExcelFormat(string $header): string
+    {
+        // Convert to lowercase and replace spaces/special characters with underscores
+        $converted = strtolower($header);
+        $converted = preg_replace('/[^a-z0-9]+/i', '_', $converted);
+        $converted = trim($converted, '_');
+        
+        Log::debug("Header conversion: '{$header}' -> '{$converted}'");
+        
+        return $converted;
     }
     
     /**
