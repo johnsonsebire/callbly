@@ -90,8 +90,8 @@
                                             </div>
 
                                             <div class="mb-5">
-                                                <label class="form-label required">Last Name Column</label>
-                                                <select name="last_name_column" class="form-select form-select-solid" required>
+                                                <label class="form-label">Last Name Column (Optional)</label>
+                                                <select name="last_name_column" class="form-select form-select-solid">
                                                     <option value="">Select column</option>
                                                     @foreach($headers as $index => $header)
                                                         <option value="{{ $header }}" 
@@ -100,7 +100,7 @@
                                                         </option>
                                                     @endforeach
                                                 </select>
-                                                <div class="form-text text-muted">Select which column contains the last name</div>
+                                                <div class="form-text text-muted">Select which column contains the last name (optional)</div>
                                             </div>
 
                                             <div class="mb-5">

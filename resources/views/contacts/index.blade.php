@@ -51,6 +51,55 @@
                                 </ul>
                             </div>
                         @endif
+                        
+                        @if(session('import_errors') && is_array(session('import_errors')) && count(session('import_errors')) > 0)
+                            <div class="alert alert-warning">
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="ki-outline ki-information-5 fs-2 text-warning me-2"></i>
+                                    <h5 class="mb-0 text-warning">Import Error Details</h5>
+                                </div>
+                                <p><strong>The following contacts could not be imported:</strong></p>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Row #</th>
+                                                <th>First Name</th>
+                                                <th>Last Name</th>
+                                                <th>Phone Number</th>
+                                                <th>Email</th>
+                                                <th>Error</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach(session('import_errors') as $error)
+                                                <tr>
+                                                    <td><span class="badge badge-light">{{ $error['row_number'] }}</span></td>
+                                                    <td>{{ $error['contact_data']['first_name'] }}</td>
+                                                    <td>{{ $error['contact_data']['last_name'] }}</td>
+                                                    <td>{{ $error['contact_data']['phone_number'] }}</td>
+                                                    <td>{{ $error['contact_data']['email'] }}</td>
+                                                    <td>
+                                                        <small class="text-danger">
+                                                            <strong>{{ $error['error_type'] ?? 'Error' }}:</strong>
+                                                            {{ $error['error_message'] }}
+                                                        </small>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <small class="text-muted">
+                                        <i class="ki-outline ki-information fs-6 me-1"></i>
+                                        Please review the error details above and fix the data in your import file before trying again.
+                                    </small>
+                                </div>
+                            </div>
+                        @endif
 
                         <!-- Search and Filter Section -->
                         <div class="row g-4 mb-6">
