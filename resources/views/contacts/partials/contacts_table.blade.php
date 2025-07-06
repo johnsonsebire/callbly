@@ -1,3 +1,22 @@
+<!-- Results Summary -->
+@if($contacts->count() > 0)
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="text-muted">
+            <i class="ki-outline ki-information-5 fs-6 me-1"></i>
+            Showing {{ $contacts->firstItem() }} to {{ $contacts->lastItem() }} of {{ $contacts->total() }} contacts
+        </div>
+        @if(request('search') || request('group'))
+            <div class="text-muted fs-7">
+                <i class="ki-outline ki-filter fs-6 me-1"></i>
+                Filtered results
+                @if(request('search'))
+                    | Search: "{{ request('search') }}"
+                @endif
+            </div>
+        @endif
+    </div>
+@endif
+
 <div class="table-responsive">
     <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4">
         <thead>
@@ -71,34 +90,81 @@
                         @endif
                     </td>
                     <td class="text-end">
-                        <a href="{{ route('contacts.edit', $contact) }}" class="btn btn-sm btn-light-primary me-1" title="Edit">
-                            <i class="ki-outline ki-pencil fs-2"></i>
-                        </a>
-                        <form action="{{ route('contacts.destroy', $contact) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Delete this contact?');">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-sm btn-light-danger me-1" title="Delete">
-                                <i class="ki-outline ki-trash fs-2"></i>
-                            </button>
-                        </form>
-                        <a href="{{ route('sms.compose') }}?contact_id={{ $contact->id }}" class="btn btn-sm btn-light-success" title="Send SMS">
-                            <i class="ki-outline ki-message-text-2 fs-2"></i>
-                        </a>
+                        <div class="d-flex justify-content-end align-items-center">
+                            <a href="{{ route('contacts.edit', $contact) }}" 
+                               class="btn btn-sm btn-light-primary me-1" 
+                               data-bs-toggle="tooltip" 
+                               data-bs-placement="top" 
+                               title="Edit {{ $contact->full_name }}">
+                                <i class="ki-outline ki-pencil fs-2"></i>
+                            </a>
+                            <form action="{{ route('contacts.destroy', $contact) }}" 
+                                  method="POST" 
+                                  class="d-inline-block" 
+                                  onsubmit="return confirm('Are you sure you want to delete {{ $contact->full_name }}? This action cannot be undone.');">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn btn-sm btn-light-danger me-1" 
+                                        type="submit"
+                                        data-bs-toggle="tooltip" 
+                                        data-bs-placement="top" 
+                                        title="Delete {{ $contact->full_name }}">
+                                    <i class="ki-outline ki-trash fs-2"></i>
+                                </button>
+                            </form>
+                            <a href="{{ route('sms.compose') }}?contact_id={{ $contact->id }}" 
+                               class="btn btn-sm btn-light-success" 
+                               data-bs-toggle="tooltip" 
+                               data-bs-placement="top" 
+                               title="Send SMS to {{ $contact->full_name }}">
+                                <i class="ki-outline ki-message-text-2 fs-2"></i>
+                            </a>
+                        </div>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="text-center py-10">
+                    <td colspan="7" class="text-center py-15">
                         <div class="d-flex flex-column align-items-center">
-                            <i class="ki-outline ki-people fs-2tx text-gray-300 mb-5"></i>
-                            <span class="text-gray-600 fs-5 fw-semibold">No contacts found</span>
-                            <span class="text-gray-400 fs-7">
-                                @if(request('search'))
-                                    Try adjusting your search criteria
-                                @else
-                                    Add contacts to get started
-                                @endif
-                            </span>
+                            <div class="symbol symbol-100px symbol-circle mb-7">
+                                <div class="symbol-label fs-2x fw-semibold text-gray-400 bg-light-primary">
+                                    <i class="ki-outline ki-people fs-2tx text-primary"></i>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <h4 class="fw-semibold text-gray-800 mb-3">
+                                    @if(request('search'))
+                                        No contacts found for "{{ request('search') }}"
+                                    @elseif(request('group'))
+                                        No contacts in this group
+                                    @else
+                                        No contacts found
+                                    @endif
+                                </h4>
+                                <p class="text-gray-400 fs-6 mb-5">
+                                    @if(request('search'))
+                                        Try adjusting your search criteria or clear the search to see all contacts.
+                                    @elseif(request('group'))
+                                        This group doesn't have any contacts yet. Try selecting a different group or add contacts to this group.
+                                    @else
+                                        Get started by adding your first contact or importing contacts from a file.
+                                    @endif
+                                </p>
+                                <div class="d-flex flex-center gap-3">
+                                    @if(request('search') || request('group'))
+                                        <button type="button" class="btn btn-light-primary" onclick="clearFilters()">
+                                            <i class="ki-outline ki-cross fs-2 me-2"></i>Clear Filters
+                                        </button>
+                                    @else
+                                        <a href="{{ route('contacts.create') }}" class="btn btn-primary">
+                                            <i class="ki-outline ki-plus-square fs-2 me-2"></i>Add First Contact
+                                        </a>
+                                        <a href="{{ route('contacts.import') }}" class="btn btn-light-primary">
+                                            <i class="ki-outline ki-cloud-add fs-2 me-2"></i>Import Contacts
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
                     </td>
                 </tr>

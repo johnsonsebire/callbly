@@ -13,7 +13,12 @@
                     <div class="card-header pt-5">
                         <h3 class="card-title align-items-start flex-column">
                             <span class="card-label fw-bold text-dark">My Contacts</span>
-                            <span class="text-gray-400 mt-1 fw-semibold fs-6">Manage your contact list</span>
+                            <span class="text-gray-400 mt-1 fw-semibold fs-6">
+                                Manage your contact list
+                                @if($contacts->total() > 0)
+                                    • {{ number_format($contacts->total()) }} total contacts
+                                @endif
+                            </span>
                         </h3>
                         <div class="card-toolbar d-flex flex-wrap gap-2">
                             <a href="{{ route('contacts.create') }}" class="btn btn-sm btn-primary">
@@ -266,6 +271,36 @@
         white-space: nowrap;
     }
     
+    /* Action buttons responsive */
+    @media (max-width: 576px) {
+        .table td:last-child .d-flex {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .table td:last-child .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+    
+    /* Empty state improvements */
+    .symbol-circle .symbol-label {
+        border-radius: 50%;
+    }
+    
+    /* Badge improvements */
+    .badge.fs-7 {
+        font-size: 0.75rem !important;
+        padding: 0.35rem 0.65rem;
+    }
+    
+    /* Table row hover effects */
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+        transition: background-color 0.2s ease;
+    }
+    
     /* Loading state improvements */
     #contactsLoading {
         background: rgba(255, 255, 255, 0.8);
@@ -332,6 +367,7 @@
                 
                 // Reinitialize event listeners for the new content
                 initializeTableEvents();
+                initializeTooltips();
                 
                 // Update URL without page reload (for better UX)
                 const newUrl = new URL(window.location);
@@ -496,6 +532,25 @@
         
         // Initialize clear button state
         toggleClearButton();
+        
+        // Global function to clear all filters (accessible from empty state)
+        window.clearFilters = function() {
+            searchInput.value = '';
+            groupFilter.value = 'all';
+            toggleClearButton();
+            performSearch();
+        };
+        
+        // Initialize tooltips for dynamically loaded content
+        function initializeTooltips() {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+        
+        // Initialize tooltips on page load
+        initializeTooltips();
     });
 </script>
 @endpush
