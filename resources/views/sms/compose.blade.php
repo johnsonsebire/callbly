@@ -57,7 +57,7 @@
                                         <textarea name="message" id="message" rows="6" class="form-control @error('message') is-invalid @enderror" required>{{ request('template_content') ?: old('message') }}</textarea>
                                         <div class="d-flex justify-content-between mt-1">
                                             <small id="characterCount" class="text-muted">0 characters</small>
-                                            <small id="messageCount" class="text-muted">0 message(s)</small>
+                                            <small id="messageCount" class="text-muted">0 page(s)</small>
                                         </div>
                                         @error('message')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
@@ -300,7 +300,7 @@
                                             <div><span id="charsCount">0</span>/160</div>
                                         </div>
                                         <div class="alert alert-info mt-2 mb-0" id="messageInfo" style="display: none;">
-                                            <p class="mb-0"><small><i class="ki-outline ki-information-5 me-1"></i> This message will be sent as <span id="messageParts" class="fw-bold">0</span> part(s).</small></p>
+                                            <p class="mb-0"><small><i class="ki-outline ki-information-5 me-1"></i> Due to its length, this message will use <span id="messageParts" class="fw-bold">0</span> SMS credits. It will be delivered as one complete message.</small></p>
                                         </div>
                                     </div>
                                 </div>
@@ -319,7 +319,7 @@
                                     <div class="card-body pt-5">
                                         <ul class="mb-0">
                                             <li>Keep your message concise to reduce costs.</li>
-                                            <li>Avoid special characters that might increase message parts.</li>
+                                            <li>Avoid special characters that might increase message length.</li>
                                             <li>Include country code for all numbers (e.g. 233).</li>
                                             <li>Use contact groups for effective campaigns.</li>
                                         </ul>
@@ -725,7 +725,7 @@
             characterCount.textContent = length + ' characters';
             charsCount.textContent = length;
             
-            // Calculate message parts - FIXED FORMULA
+            // Calculate message pages - FIXED FORMULA
             let parts = 1;
             if (length <= 160) {
                 parts = 1;
@@ -734,11 +734,11 @@
                 parts = Math.ceil(length / 153);
             }
             
-            // Update message parts display
-            messageCount.textContent = parts + ' message(s)';
+            // Update message pages display
+            messageCount.textContent = parts + ' page(s)';
             messageParts.textContent = parts;
             
-            // Show message parts info if more than one part
+            // Show credit info if more than one page
             if (parts > 1) {
                 messageInfo.style.display = 'block';
             } else {
@@ -749,7 +749,7 @@
             calculateCredits();
             
             // Debug output to console to verify function execution
-            console.log(`Message metrics updated: ${length} chars, ${parts} parts`);
+            console.log(`Message metrics updated: ${length} chars, ${parts} pages`);
         }
         
         function updateRecipientCounts() {
@@ -843,6 +843,8 @@
                             
                             if (data.parts > 1) {
                                 messageInfo.style.display = 'block';
+                            } else {
+                                messageInfo.style.display = 'none';
                             }
                             
                             // Display warning if user doesn't have enough credits

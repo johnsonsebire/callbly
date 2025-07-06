@@ -240,14 +240,14 @@ class SmsService
         
         $messageLength = mb_strlen($message);
         
-        // Calculate number of parts needed
+        // Calculate number of pages needed
         if ($messageLength <= $maxSingleSmsLength) {
             $parts = 1;
         } else {
             $parts = ceil(($messageLength - $maxSingleSmsLength) / $maxMultipartSmsLength) + 1;
         }
         
-        // Calculate credits based on parts and recipient count
+        // Calculate credits based on pages and recipient count
         return $parts * $recipientCount;
     }
 
@@ -482,7 +482,7 @@ class SmsService
             if (isset($result['credits_used'])) {
                 $campaign->credits_used = $result['credits_used'];
             } else {
-                // Calculate credits used based on message parts and recipient count
+                // Calculate credits used based on message pages and recipient count
                 $messageLength = mb_strlen($campaign->message);
                 $hasUnicode = preg_match('/[\x{0080}-\x{FFFF}]/u', $campaign->message);
                 

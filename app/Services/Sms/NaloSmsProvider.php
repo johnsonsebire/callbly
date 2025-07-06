@@ -348,19 +348,19 @@ class NaloSmsProvider implements SmsProviderInterface
     {
         // SMS messages have a maximum of 160 characters for single SMS
         $maxSingleSmsLength = 160;
-        $maxMultipartSmsLength = 153; // Each part of a multipart SMS can hold 153 chars
+        $maxMultipartSmsLength = 153; // Each page of a multipart SMS can hold 153 chars
         
         $messageLength = mb_strlen($message);
         
-        // Calculate number of parts needed - FIXED FORMULA
+        // Calculate number of pages needed - FIXED FORMULA
         if ($messageLength <= $maxSingleSmsLength) {
             $parts = 1;
         } else {
-            // For multi-part messages, calculate correctly
+            // For multi-page messages, calculate correctly
             $parts = ceil($messageLength / $maxMultipartSmsLength);
         }
         
-        // Calculate credits based on parts and recipient count
+        // Calculate credits based on pages and recipient count
         $creditsPerPart = config('sms.pricing.default.credits_per_sms', 1);
         
         return $parts * $creditsPerPart * $recipientCount;

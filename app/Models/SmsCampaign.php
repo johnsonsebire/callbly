@@ -70,7 +70,7 @@ class SmsCampaign extends Model
         $messageLength = mb_strlen($this->message);
         $hasUnicode = preg_match('/[\x{0080}-\x{FFFF}]/u', $this->message);
         
-        // Calculate message parts
+        // Calculate message pages
         if ($hasUnicode) {
             $parts = $messageLength <= 70 ? 1 : ceil(($messageLength - 70) / 67) + 1;
         } else {

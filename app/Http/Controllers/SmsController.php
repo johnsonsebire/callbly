@@ -430,7 +430,7 @@ class SmsController extends Controller
             ]);
         }
         
-        // Calculate message parts and required credits
+        // Calculate message pages and required credits
         $messageLength = mb_strlen($message);
         $hasUnicode = preg_match('/[\x{0080}-\x{FFFF}]/u', $message);
         $parts = $this->calculateMessageParts($messageLength, $hasUnicode);
@@ -622,7 +622,7 @@ class SmsController extends Controller
         $message = $request->input('message');
         $recipientsCount = $request->input('recipients_count');
         
-        // Calculate message parts
+        // Calculate message pages
         $messageLength = mb_strlen($message);
         $hasUnicode = preg_match('/[\x{0080}-\x{FFFF}]/u', $message);
         $parts = $this->calculateMessageParts($messageLength, $hasUnicode);
@@ -988,7 +988,7 @@ class SmsController extends Controller
         // Get the metrics for display
         $metrics = $this->calculateCampaignMetrics($campaign);
         
-        // Calculate message parts for cost estimation
+        // Calculate message pages for cost estimation
         $messageLength = mb_strlen($campaign->message);
         $hasUnicode = preg_match('/[\x{0080}-\x{FFFF}]/u', $campaign->message);
         $parts = $this->calculateMessageParts($messageLength, $hasUnicode);

@@ -205,8 +205,8 @@
                                             characters</p>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="text-muted small text-uppercase">Message Parts</label>
-                                        <p class="fs-5 fw-semibold">{{ $parts }} {{ Str::plural('part', $parts) }}
+                                        <label class="text-muted small text-uppercase">Message Length</label>
+                                        <p class="fs-5 fw-semibold">{{ $parts }} {{ Str::plural('page', $parts) }}
                                         </p>
                                     </div>
                                     <div class="mb-3">
