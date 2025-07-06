@@ -86,7 +86,7 @@
                                             <div>
                                                 <small class="text-muted" id="characterCount">0 characters</small>
                                                 <small class="text-muted mx-2">|</small>
-                                                <small class="text-muted" id="messageCount">0 message(s)</small>
+                                                <small class="text-muted" id="messageCount">0 page(s)</small>
                                             </div>
                                             <button type="button" id="insert-template-tag" class="btn btn-sm btn-light-primary">
                                                 <i class="fas fa-tag me-1"></i> Insert Variable
@@ -289,14 +289,14 @@
         const templateTagBtns = document.querySelectorAll('.template-tag-btn');
         const previewContent = document.getElementById('preview-content');
         
-        // Character count and SMS parts calculation
+        // Character count and SMS pages calculation
         function updateCounts() {
             const content = contentField.value;
             const charCount = content.length;
             const msgCount = Math.ceil(charCount / 160) || 1;
 
             characterCount.textContent = charCount + ' characters';
-            messageCount.textContent = msgCount + ' message(s)';
+            messageCount.textContent = msgCount + ' page(s)';
             
             // Change color if approaching or exceeding single message
             if (charCount > 140 && charCount <= 160) {
