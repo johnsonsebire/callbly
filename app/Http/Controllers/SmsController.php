@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Contracts\SmsProviderInterface;
+use App\Jobs\SendBulkSmsJob;
+use App\Jobs\SendSingleSmsJob;
 use App\Models\SmsCampaign;
 use App\Models\SenderName;
 use App\Models\User;
@@ -17,7 +19,7 @@ use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-
+use Illuminate\Support\Facades\DB;
 class SmsController extends Controller
 {
     public function __construct(
@@ -501,114 +503,94 @@ class SmsController extends Controller
         }
         
         try {
-            // Create a custom request for the API controller
-            $apiRequest = new \Illuminate\Http\Request();
-            $apiRequest->replace([
-                'recipients' => $recipients,
-                'message' => $message,
-                'sender_name' => $senderName,
-                'name' => $campaign->name,
-                'scheduled_at' => $scheduledAt ? $scheduledAt->format('Y-m-d H:i:s') : null,
-                'campaign_id' => $campaign->id, // Pass the existing campaign ID
-                '_internal_call' => true, // Add flag to prevent double credit deduction
-            ]);
-            
-            // Set the authenticated user for the request
-            $apiRequest->setUserResolver(function () use ($user) {
-                return $user;
-            });
-            
-            \Illuminate\Support\Facades\Log::info('Calling API controller', [
+            // Deduct credits before queuing the job
+            \Illuminate\Support\Facades\Log::info('About to deduct SMS credits before queuing job', [
+                'user_id' => $user->id,
                 'campaign_id' => $campaign->id,
-                'recipients_count' => count($recipients)
+                'credits_needed' => $creditsNeeded,
+                'user_credits_before' => $user->sms_credits
             ]);
             
-            // Use the SmsService to send the messages through API controller
-            $apiController = app(\App\Http\Controllers\Api\SmsController::class);
-            $apiResponse = $apiController->sendBulk($apiRequest);
+            // Use our centralized method for credit deduction
+            $teamResourceService = app(\App\Services\TeamResourceService::class);
+            $creditResult = $teamResourceService->deductSharedSmsCredits($user, $creditsNeeded);
             
-            $responseData = json_decode($apiResponse->getContent(), true);
-            
-            \Illuminate\Support\Facades\Log::info('API response received', [
-                'success' => $responseData['success'] ?? false,
-                'message' => $responseData['message'] ?? null,
-                'data' => $responseData['data'] ?? null,
-                'response_status_code' => $apiResponse->getStatusCode()
-            ]);
-            
-            // Force campaign update to get the latest metrics
-            $campaign->updateMetrics();
-            $campaign->refresh();
-            
-            // Consider the campaign successful if API returned success OR if we have any delivered messages
-            $isSuccessful = ($responseData['success'] ?? false) || ($campaign->delivered_count > 0);
-            
-            if ($isSuccessful) {
-                // Debug log to track credit deduction
-                \Illuminate\Support\Facades\Log::info('About to deduct SMS credits in web controller', [
+            if (!$creditResult['success']) {
+                \Illuminate\Support\Facades\Log::error('Failed to deduct SMS credits', [
                     'user_id' => $user->id,
                     'campaign_id' => $campaign->id,
                     'credits_needed' => $creditsNeeded,
-                    'user_credits_before' => $user->sms_credits
+                    'error' => $creditResult['message']
                 ]);
                 
-                // Use our centralized method for credit deduction
-                $teamResourceService = app(\App\Services\TeamResourceService::class);
-                $creditResult = $teamResourceService->deductSharedSmsCredits($user, $creditsNeeded);
-                
-                if (!$creditResult['success']) {
-                    \Illuminate\Support\Facades\Log::error('Failed to deduct SMS credits', [
-                        'user_id' => $user->id,
-                        'campaign_id' => $campaign->id,
-                        'credits_needed' => $creditsNeeded,
-                        'error' => $creditResult['message']
-                    ]);
-                }
-                
-                // Update campaign with team credit info if applicable
-                if (isset($creditResult['team_id']) && $creditResult['team_id']) {
-                    $campaign->update([
-                        'team_id' => $creditResult['team_id'],
-                        'team_credits_used' => $creditResult['team_credits_used'],
-                        'credits_used' => $creditsNeeded // Ensure credits_used is set correctly
-                    ]);
-                } else {
-                    // Just update the credits used
-                    $campaign->update([
-                        'credits_used' => $creditsNeeded
-                    ]);
-                }
-                
-                // Refresh user to get the latest credit balance
-                $user->refresh();
-                
-                \Illuminate\Support\Facades\Log::info('SMS campaign sent successfully', [
-                    'campaign_id' => $campaign->id,
-                    'personal_credits_used' => $creditResult['personal_credits_used'] ?? 0,
-                    'team_credits_used' => $creditResult['team_credits_used'] ?? 0,
-                    'user_credits_before' => $creditResult['initial_credits'] ?? 'unknown',
-                    'user_credits_after' => $user->sms_credits
+                return redirect()->back()->withInput()->withErrors([
+                    'credits' => 'Failed to deduct SMS credits: ' . $creditResult['message']
                 ]);
-                
-                // Redirect with success message
-                return redirect()->route('sms.campaign-details', $responseData['data']['campaign_id'] ?? $campaign->id)
-                    ->with('success', 'Your SMS campaign has been sent successfully.');
-            } else {
-                // Update campaign status to failed
-                $campaign->update([
-                    'status' => 'failed'
-                ]);
-                
-                \Illuminate\Support\Facades\Log::error('Failed to send campaign via API', [
-                    'campaign_id' => $campaign->id,
-                    'error' => $responseData['message'] ?? 'Unknown error'
-                ]);
-                
-                return redirect()->route('sms.campaigns')
-                    ->withErrors(['error' => 'Failed to send SMS campaign: ' . ($responseData['message'] ?? 'Unknown error')]);
             }
+            
+            // Update campaign with team credit info if applicable
+            if (isset($creditResult['team_id']) && $creditResult['team_id']) {
+                $campaign->update([
+                    'team_id' => $creditResult['team_id'],
+                    'team_credits_used' => $creditResult['team_credits_used'],
+                    'credits_used' => $creditsNeeded
+                ]);
+            } else {
+                $campaign->update([
+                    'credits_used' => $creditsNeeded
+                ]);
+            }
+            
+            // Dispatch the appropriate job based on recipients count
+            if (count($recipients) === 1 && $recipientsType === 'single') {
+                // Single SMS job
+                \App\Jobs\SendSingleSmsJob::dispatch(
+                    $campaign->id,
+                    $recipients[0],
+                    $message,
+                    $senderName
+                );
+                
+                \Illuminate\Support\Facades\Log::info('Single SMS job dispatched', [
+                    'campaign_id' => $campaign->id,
+                    'recipient' => $recipients[0]
+                ]);
+                
+                $successMessage = 'Your SMS is being sent. You can track its progress on the campaign details page.';
+            } else {
+                // Bulk SMS job
+                \App\Jobs\SendBulkSmsJob::dispatch(
+                    $campaign->id,
+                    $recipients,
+                    $message,
+                    $senderName
+                );
+                
+                \Illuminate\Support\Facades\Log::info('Bulk SMS job dispatched', [
+                    'campaign_id' => $campaign->id,
+                    'recipients_count' => count($recipients)
+                ]);
+                
+                $successMessage = 'Your SMS campaign is being processed in the background. You can track its progress on the campaign details page.';
+            }
+            
+            // Refresh user to get the latest credit balance
+            $user->refresh();
+            
+            \Illuminate\Support\Facades\Log::info('SMS job dispatched successfully', [
+                'campaign_id' => $campaign->id,
+                'personal_credits_used' => $creditResult['personal_credits_used'] ?? 0,
+                'team_credits_used' => $creditResult['team_credits_used'] ?? 0,
+                'user_credits_before' => $creditResult['initial_credits'] ?? 'unknown',
+                'user_credits_after' => $user->sms_credits
+            ]);
+            
+            // Redirect with success message
+            return redirect()->route('sms.campaign-details', $campaign->id)
+                ->with('success', $successMessage);
+                
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('SMS sending error', [
+            \Illuminate\Support\Facades\Log::error('SMS job dispatch error', [
                 'campaign_id' => $campaign->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -620,7 +602,7 @@ class SmsController extends Controller
             ]);
             
             return redirect()->route('sms.campaigns')
-                ->withErrors(['error' => 'An error occurred while sending your SMS campaign: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'An error occurred while processing your SMS campaign: ' . $e->getMessage()]);
         }
     }
 
@@ -988,6 +970,95 @@ class SmsController extends Controller
 
         return redirect()->route('sms.templates')
             ->with('success', 'Template deleted successfully.');
+    }
+
+    /**
+     * Get campaign status for real-time updates (AJAX endpoint).
+     *
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function getCampaignStatus(int $id): JsonResponse
+    {
+        $campaign = SmsCampaign::where('user_id', Auth::id())->findOrFail($id);
+        
+        // Force an update of the campaign metrics before returning
+        $campaign->updateMetrics();
+        
+        // Get the metrics for display
+        $metrics = $this->calculateCampaignMetrics($campaign);
+        
+        // Calculate message parts for cost estimation
+        $messageLength = mb_strlen($campaign->message);
+        $hasUnicode = preg_match('/[\x{0080}-\x{FFFF}]/u', $campaign->message);
+        $parts = $this->calculateMessageParts($messageLength, $hasUnicode);
+        
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $campaign->id,
+                'name' => $campaign->name,
+                'status' => $campaign->status,
+                'recipients_count' => $campaign->recipients_count,
+                'delivered_count' => $campaign->delivered_count,
+                'failed_count' => $campaign->failed_count,
+                'pending_count' => $metrics['pendingCount'],
+                'delivered_percentage' => $metrics['deliveredPercentage'],
+                'failed_percentage' => $metrics['failedPercentage'],
+                'pending_percentage' => $metrics['pendingPercentage'],
+                'credits_used' => $campaign->credits_used ?? ($parts * $campaign->recipients_count),
+                'created_at' => $campaign->created_at->format('M d, Y H:i:s'),
+                'started_at' => $campaign->started_at?->format('M d, Y H:i:s'),
+                'completed_at' => $campaign->completed_at?->format('M d, Y H:i:s'),
+                'is_processing' => in_array($campaign->status, ['pending', 'processing']),
+                'success_rate' => $campaign->getSuccessRate(),
+            ]
+        ]);
+    }
+
+    /**
+     * Get queue status for monitoring (AJAX endpoint).
+     *
+     * @return JsonResponse
+     */
+    public function getQueueStatus(): JsonResponse
+    {
+        try {
+            // Get queue statistics from the database
+            $pendingJobs = DB::table('jobs')->where('queue', 'sms')->count();
+            $failedJobs = DB::table('failed_jobs')->count();
+            
+            // Get recent processing campaigns
+            $processingCampaigns = SmsCampaign::where('user_id', Auth::id())
+                ->whereIn('status', ['pending', 'processing'])
+                ->orderBy('created_at', 'desc')
+                ->take(5)
+                ->get(['id', 'name', 'status', 'recipients_count', 'delivered_count', 'created_at']);
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'pending_jobs' => $pendingJobs,
+                    'failed_jobs' => $failedJobs,
+                    'processing_campaigns' => $processingCampaigns->map(function ($campaign) {
+                        return [
+                            'id' => $campaign->id,
+                            'name' => $campaign->name,
+                            'status' => $campaign->status,
+                            'progress' => $campaign->recipients_count > 0 
+                                ? round(($campaign->delivered_count / $campaign->recipients_count) * 100, 1)
+                                : 0,
+                            'created_at' => $campaign->created_at->diffForHumans(),
+                        ];
+                    }),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get queue status: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
 }

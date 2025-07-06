@@ -51,8 +51,8 @@ use Illuminate\Support\Str;
                                     <div class="col-md-6 mb-3">
                                         <label class="text-muted small text-uppercase">Status</label>
                                         <div>
-                                            <span class="badge bg-{{ $campaign->status == 'completed' ? 'success' : ($campaign->status == 'failed' ? 'danger' : 'warning') }} py-2 px-3 rounded-pill">
-                                                <i class="fas fa-{{ $campaign->status == 'completed' ? 'check-circle' : ($campaign->status == 'failed' ? 'times-circle' : 'clock') }} me-1"></i>
+                                            <span class="badge bg-{{ $campaign->status == 'completed' ? 'success' : ($campaign->status == 'failed' ? 'danger' : ($campaign->status == 'processing' ? 'primary' : 'warning')) }} py-2 px-3 rounded-pill" data-campaign-status="{{ $campaign->status }}">
+                                                <i class="fas fa-{{ $campaign->status == 'completed' ? 'check-circle' : ($campaign->status == 'failed' ? 'times-circle' : ($campaign->status == 'processing' ? 'spinner fa-spin' : 'clock')) }} me-1"></i>
                                                 {{ ucfirst($campaign->status) }}
                                             </span>
                                         </div>
@@ -98,19 +98,19 @@ use Illuminate\Support\Str;
                                 <div class="row mb-4">
                                     <div class="col-md-4 text-center mb-4 mb-md-0">
                                         <div class="d-inline-block p-3 rounded-circle bg-success bg-opacity-10 mb-2">
-                                            <h1 class="text-success mb-0">{{ number_format($deliveredCount) }}</h1>
+                                            <h1 class="text-success mb-0" data-delivered-count>{{ number_format($deliveredCount) }}</h1>
                                         </div>
                                         <div class="text-muted">Delivered</div>
                                     </div>
                                     <div class="col-md-4 text-center mb-4 mb-md-0">
                                         <div class="d-inline-block p-3 rounded-circle bg-danger bg-opacity-10 mb-2">
-                                            <h1 class="text-danger mb-0">{{ number_format($failedCount) }}</h1>
+                                            <h1 class="text-danger mb-0" data-failed-count>{{ number_format($failedCount) }}</h1>
                                         </div>
                                         <div class="text-muted">Failed</div>
                                     </div>
                                     <div class="col-md-4 text-center">
                                         <div class="d-inline-block p-3 rounded-circle bg-warning bg-opacity-10 mb-2">
-                                            <h1 class="text-warning mb-0">{{ number_format($pendingCount) }}</h1>
+                                            <h1 class="text-warning mb-0" data-pending-count>{{ number_format($pendingCount) }}</h1>
                                         </div>
                                         <div class="text-muted">Pending</div>
                                     </div>
@@ -123,8 +123,9 @@ use Illuminate\Support\Str;
                                             style="width: {{ $deliveredPercentage }}%" 
                                             aria-valuenow="{{ $deliveredPercentage }}" 
                                             aria-valuemin="0" 
-                                            aria-valuemax="100">
-                                            {{ $deliveredPercentage }}%
+                                            aria-valuemax="100"
+                                            data-progress-delivered>
+                                            <span data-delivered-percentage>{{ $deliveredPercentage }}%</span>
                                         </div>
                                         @endif
                                         
@@ -133,8 +134,9 @@ use Illuminate\Support\Str;
                                             style="width: {{ $pendingPercentage }}%" 
                                             aria-valuenow="{{ $pendingPercentage }}" 
                                             aria-valuemin="0" 
-                                            aria-valuemax="100">
-                                            {{ $pendingPercentage }}%
+                                            aria-valuemax="100"
+                                            data-progress-pending>
+                                            <span data-pending-percentage>{{ $pendingPercentage }}%</span>
                                         </div>
                                         @endif
                                         
@@ -143,8 +145,9 @@ use Illuminate\Support\Str;
                                             style="width: {{ $failedPercentage }}%" 
                                             aria-valuenow="{{ $failedPercentage }}" 
                                             aria-valuemin="0" 
-                                            aria-valuemax="100">
-                                            {{ $failedPercentage }}%
+                                            aria-valuemax="100"
+                                            data-progress-failed>
+                                            <span data-failed-percentage>{{ $failedPercentage }}%</span>
                                         </div>
                                         @endif
                                     @else
@@ -315,4 +318,156 @@ use Illuminate\Support\Str;
     margin-right: 8px;
 }
 </style>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const campaignId = {{ $campaign->id }};
+    let isPolling = false;
+    let pollInterval;
+    
+    // Check if campaign is still processing
+    function shouldPoll() {
+        const statusBadge = document.querySelector('[data-campaign-status]');
+        if (!statusBadge) return false;
+        
+        const status = statusBadge.dataset.campaignStatus;
+        return ['pending', 'processing'].includes(status);
+    }
+    
+    // Start polling for status updates
+    function startPolling() {
+        if (isPolling || !shouldPoll()) return;
+        
+        isPolling = true;
+        console.log('Starting campaign status polling...');
+        
+        pollInterval = setInterval(fetchCampaignStatus, 3000); // Poll every 3 seconds
+    }
+    
+    // Stop polling
+    function stopPolling() {
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            isPolling = false;
+            console.log('Stopped campaign status polling');
+        }
+    }
+    
+    // Fetch campaign status from server
+    function fetchCampaignStatus() {
+        fetch(`/sms/campaigns/${campaignId}/status`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateCampaignUI(data.data);
+                
+                // Stop polling if campaign is no longer processing
+                if (!data.data.is_processing) {
+                    stopPolling();
+                    
+                    // Optionally reload the page to show updated recipient details
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching campaign status:', error);
+            // Continue polling even on error, but limit retries
+        });
+    }
+    
+    // Update UI with new campaign data
+    function updateCampaignUI(campaign) {
+        // Update status badge
+        const statusBadge = document.querySelector('[data-campaign-status]');
+        if (statusBadge) {
+            statusBadge.dataset.campaignStatus = campaign.status;
+            statusBadge.className = `badge py-2 px-3 rounded-pill bg-${getStatusColor(campaign.status)}`;
+            statusBadge.innerHTML = `<i class="fas fa-${getStatusIcon(campaign.status)} me-1"></i>${capitalize(campaign.status)}`;
+        }
+        
+        // Update delivery counts
+        updateElement('[data-delivered-count]', campaign.delivered_count.toLocaleString());
+        updateElement('[data-failed-count]', campaign.failed_count.toLocaleString());
+        updateElement('[data-pending-count]', campaign.pending_count.toLocaleString());
+        
+        // Update percentages
+        updateElement('[data-delivered-percentage]', campaign.delivered_percentage + '%');
+        updateElement('[data-failed-percentage]', campaign.failed_percentage + '%');
+        updateElement('[data-pending-percentage]', campaign.pending_percentage + '%');
+        
+        // Update progress bars
+        updateProgressBar('[data-progress-delivered]', campaign.delivered_percentage);
+        updateProgressBar('[data-progress-failed]', campaign.failed_percentage);
+        updateProgressBar('[data-progress-pending]', campaign.pending_percentage);
+        
+        // Update timestamps
+        if (campaign.started_at) {
+            updateElement('[data-started-at]', campaign.started_at);
+        }
+        if (campaign.completed_at) {
+            updateElement('[data-completed-at]', campaign.completed_at);
+        }
+        
+        console.log('Campaign status updated:', campaign.status, 
+                   `Delivered: ${campaign.delivered_count}/${campaign.recipients_count}`);
+    }
+    
+    // Helper functions
+    function updateElement(selector, value) {
+        const element = document.querySelector(selector);
+        if (element) element.textContent = value;
+    }
+    
+    function updateProgressBar(selector, percentage) {
+        const progressBar = document.querySelector(selector);
+        if (progressBar) {
+            progressBar.style.width = percentage + '%';
+            progressBar.setAttribute('aria-valuenow', percentage);
+            progressBar.textContent = percentage + '%';
+        }
+    }
+    
+    function getStatusColor(status) {
+        switch(status) {
+            case 'completed': return 'success';
+            case 'failed': return 'danger';
+            case 'processing': return 'primary';
+            default: return 'warning';
+        }
+    }
+    
+    function getStatusIcon(status) {
+        switch(status) {
+            case 'completed': return 'check-circle';
+            case 'failed': return 'times-circle';
+            case 'processing': return 'spinner fa-spin';
+            default: return 'clock';
+        }
+    }
+    
+    function capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+    
+    // Start polling if campaign is processing
+    if (shouldPoll()) {
+        startPolling();
+    }
+    
+    // Clean up on page unload
+    window.addEventListener('beforeunload', stopPolling);
+});
+</script>
+@endpush
+
 @endsection

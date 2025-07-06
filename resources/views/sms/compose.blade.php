@@ -237,6 +237,15 @@
                                             Send Message
                                         </button>
                                     </div>
+                                    
+                                    <!-- Background Processing Info -->
+                                    <div class="alert alert-info d-flex align-items-center" role="alert">
+                                        <i class="ki-outline ki-information-5 fs-2tx text-info me-3"></i>
+                                        <div class="flex-grow-1">
+                                            <h6 class="alert-heading mb-1">Background Processing</h6>
+                                            <p class="mb-0">Your SMS campaigns are processed in the background for better performance. You'll be redirected to the campaign details page where you can track progress in real-time. You'll also receive an email notification when the campaign completes.</p>
+                                        </div>
+                                    </div>
                                 </form>
 
                                 <!-- Template Modal -->

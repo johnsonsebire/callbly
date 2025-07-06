@@ -26,6 +26,7 @@ class SmsCampaign extends Model
         'delivered_count',
         'failed_count',
         'scheduled_at',
+        'started_at',
         'completed_at',
         'provider_response',
         'credits_used',
@@ -39,6 +40,7 @@ class SmsCampaign extends Model
      */
     protected $casts = [
         'scheduled_at' => 'datetime',
+        'started_at' => 'datetime',
         'completed_at' => 'datetime',
         'provider_response' => 'array',
         'credits_used' => 'integer',
