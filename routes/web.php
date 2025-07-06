@@ -21,6 +21,8 @@ use App\Http\Controllers\WalletController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TeamInvitationController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
@@ -114,6 +116,24 @@ Route::middleware('auth')->group(function () {
         
         // Consolidated Individual Contacts routes
         Route::get('contacts/manage', [ContactController::class, 'index'])->name('contacts.manage');
+        Route::get('contacts/search', [ContactController::class, 'search'])->name('contacts.search');
+        
+        // Temporary debug route for production troubleshooting
+        Route::get('contacts/debug-test', function() {
+            $user = Auth::user();
+            $testData = [
+                'user_exists' => $user ? true : false,
+                'user_id' => $user ? $user->id : null,
+                'user_email' => $user ? $user->email : null,
+                'custom_fields_count' => $user ? $user->customFields()->active()->count() : 0,
+                'environment' => app()->environment(),
+                'database_connection' => DB::connection()->getPdo() ? 'Connected' : 'Failed',
+                'contacts_table_exists' => Schema::hasTable('contacts'),
+                'contacts_columns' => Schema::hasTable('contacts') ? Schema::getColumnListing('contacts') : [],
+            ];
+            return response()->json($testData);
+        })->name('contacts.debug');
+        
         Route::resource('contacts', ContactController::class);
         Route::get('contacts-import', [ContactController::class, 'import'])->name('contacts.import');
         Route::post('contacts-import', [ContactController::class, 'uploadImport'])->name('contacts.upload-import');
