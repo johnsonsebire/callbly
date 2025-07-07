@@ -131,8 +131,32 @@
                         @endif
                     </div>
                     <div class="card-body pt-0">
+                        <!-- Search and Filter for Team Members -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="d-flex align-items-center">
+                                <div class="input-group input-group-sm me-3" style="max-width: 300px;">
+                                    <span class="input-group-text">
+                                        <i class="ki-outline ki-magnifier fs-5"></i>
+                                    </span>
+                                    <input type="text" id="membersSearchInput" class="form-control" 
+                                           placeholder="Search members by name or email...">
+                                    <button class="btn btn-outline-secondary" type="button" id="clearMembersSearch">
+                                        <i class="ki-outline ki-cross-circle fs-6"></i>
+                                    </button>
+                                </div>
+                                <select id="membersRoleFilter" class="form-select form-select-sm" style="max-width: 150px;">
+                                    <option value="">All Roles</option>
+                                    <option value="owner">Owner</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="member">Member</option>
+                                </select>
+                            </div>
+                            <div>
+                                <span id="membersResultCount" class="badge bg-light text-dark">{{ $team->users->count() }} member(s)</span>
+                            </div>
+                        </div>
                         <div class="table-responsive">
-                            <table class="table align-middle table-row-dashed fs-6 gy-5">
+                            <table class="table align-middle table-row-dashed fs-6 gy-5" id="membersTable">
                                 <thead>
                                     <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
                                         <th class="min-w-125px">User</th>
@@ -143,7 +167,9 @@
                                 </thead>
                                 <tbody class="text-gray-600 fw-semibold">
                                     <!-- Team Owner -->
-                                    <tr>
+                                    <tr class="member-row" data-member-name="{{ strtolower($team->owner->name) }}" 
+                                        data-member-email="{{ strtolower($team->owner->email) }}" 
+                                        data-member-role="owner">
                                         <td class="d-flex align-items-center">
                                             <div class="symbol symbol-circle symbol-40px me-3">
                                                 <div class="symbol-label bg-light-primary">
@@ -167,7 +193,9 @@
                                     <!-- Team Members -->
                                     @foreach($members as $member)
                                         @if($member->id !== $team->owner_id)
-                                            <tr>
+                                            <tr class="member-row" data-member-name="{{ strtolower($member->name) }}" 
+                                                data-member-email="{{ strtolower($member->email) }}" 
+                                                data-member-role="{{ $member->pivot->role }}">
                                                 <td class="d-flex align-items-center">
                                                     <div class="symbol symbol-circle symbol-40px me-3">
                                                         <div class="symbol-label bg-light-primary">
@@ -213,6 +241,11 @@
                                     @endforeach
                                 </tbody>
                             </table>
+                            <!-- No results message for members -->
+                            <div id="noMembersResults" class="text-center py-4" style="display: none;">
+                                <i class="ki-outline ki-information-5 fs-3x text-muted mb-3"></i>
+                                <p class="text-muted">No team members found matching your search criteria.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -227,8 +260,32 @@
                             </h3>
                         </div>
                         <div class="card-body pt-0">
+                            <!-- Search and Filter for Pending Invitations -->
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="input-group input-group-sm me-3" style="max-width: 300px;">
+                                        <span class="input-group-text">
+                                            <i class="ki-outline ki-magnifier fs-5"></i>
+                                        </span>
+                                        <input type="text" id="invitationsSearchInput" class="form-control" 
+                                               placeholder="Search invitations by email...">
+                                        <button class="btn btn-outline-secondary" type="button" id="clearInvitationsSearch">
+                                            <i class="ki-outline ki-cross-circle fs-6"></i>
+                                        </button>
+                                    </div>
+                                    <select id="invitationsRoleFilter" class="form-select form-select-sm" style="max-width: 150px;">
+                                        <option value="">All Roles</option>
+                                        <option value="admin">Admin</option>
+                                        <option value="member">Member</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <span id="invitationsResultCount" class="badge bg-light text-dark">{{ $invitations->count() }} invitation(s)</span>
+                                </div>
+                            </div>
+                            
                             <div class="table-responsive">
-                                <table class="table align-middle table-row-dashed fs-6 gy-5">
+                                <table class="table align-middle table-row-dashed fs-6 gy-5" id="invitationsTable">
                                     <thead>
                                         <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
                                             <th class="min-w-125px">Email</th>
@@ -240,7 +297,8 @@
                                     </thead>
                                     <tbody class="text-gray-600 fw-semibold">
                                         @foreach($invitations as $invitation)
-                                            <tr>
+                                            <tr class="invitation-row" data-invitation-email="{{ strtolower($invitation->email) }}" 
+                                                data-invitation-role="{{ $invitation->role }}">
                                                 <td>{{ $invitation->email }}</td>
                                                 <td>
                                                     <span class="badge badge-light-{{ $invitation->role === 'admin' ? 'success' : 'info' }}">
@@ -263,6 +321,11 @@
                                         @endforeach
                                     </tbody>
                                 </table>
+                                <!-- No results message for invitations -->
+                                <div id="noInvitationsResults" class="text-center py-4" style="display: none;">
+                                    <i class="ki-outline ki-information-5 fs-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No pending invitations found matching your search criteria.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -284,6 +347,148 @@
                 document.getElementById(`role-form-${memberId}`).submit();
             });
         });
+
+        // Team Members Search and Filter
+        const membersSearchInput = document.getElementById('membersSearchInput');
+        const membersRoleFilter = document.getElementById('membersRoleFilter');
+        const clearMembersSearch = document.getElementById('clearMembersSearch');
+        const membersResultCount = document.getElementById('membersResultCount');
+        const noMembersResults = document.getElementById('noMembersResults');
+        const membersTable = document.getElementById('membersTable');
+
+        // Invitations Search and Filter
+        const invitationsSearchInput = document.getElementById('invitationsSearchInput');
+        const invitationsRoleFilter = document.getElementById('invitationsRoleFilter');
+        const clearInvitationsSearch = document.getElementById('clearInvitationsSearch');
+        const invitationsResultCount = document.getElementById('invitationsResultCount');
+        const noInvitationsResults = document.getElementById('noInvitationsResults');
+        const invitationsTable = document.getElementById('invitationsTable');
+
+        // Members search and filter functionality
+        function filterMembers() {
+            const searchTerm = membersSearchInput ? membersSearchInput.value.toLowerCase() : '';
+            const roleFilter = membersRoleFilter ? membersRoleFilter.value.toLowerCase() : '';
+            const memberRows = document.querySelectorAll('.member-row');
+            let visibleCount = 0;
+
+            memberRows.forEach(row => {
+                const memberName = row.dataset.memberName || '';
+                const memberEmail = row.dataset.memberEmail || '';
+                const memberRole = row.dataset.memberRole || '';
+
+                const matchesSearch = !searchTerm || 
+                    memberName.includes(searchTerm) || 
+                    memberEmail.includes(searchTerm);
+                
+                const matchesRole = !roleFilter || memberRole === roleFilter;
+
+                if (matchesSearch && matchesRole) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Update count and show/hide no results message
+            if (membersResultCount) {
+                membersResultCount.textContent = `${visibleCount} member(s)`;
+            }
+
+            if (noMembersResults && membersTable) {
+                if (visibleCount === 0) {
+                    noMembersResults.style.display = 'block';
+                    membersTable.style.display = 'none';
+                } else {
+                    noMembersResults.style.display = 'none';
+                    membersTable.style.display = '';
+                }
+            }
+        }
+
+        // Invitations search and filter functionality
+        function filterInvitations() {
+            const searchTerm = invitationsSearchInput ? invitationsSearchInput.value.toLowerCase() : '';
+            const roleFilter = invitationsRoleFilter ? invitationsRoleFilter.value.toLowerCase() : '';
+            const invitationRows = document.querySelectorAll('.invitation-row');
+            let visibleCount = 0;
+
+            invitationRows.forEach(row => {
+                const invitationEmail = row.dataset.invitationEmail || '';
+                const invitationRole = row.dataset.invitationRole || '';
+
+                const matchesSearch = !searchTerm || invitationEmail.includes(searchTerm);
+                const matchesRole = !roleFilter || invitationRole === roleFilter;
+
+                if (matchesSearch && matchesRole) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Update count and show/hide no results message
+            if (invitationsResultCount) {
+                invitationsResultCount.textContent = `${visibleCount} invitation(s)`;
+            }
+
+            if (noInvitationsResults && invitationsTable) {
+                if (visibleCount === 0) {
+                    noInvitationsResults.style.display = 'block';
+                    invitationsTable.style.display = 'none';
+                } else {
+                    noInvitationsResults.style.display = 'none';
+                    invitationsTable.style.display = '';
+                }
+            }
+        }
+
+        // Event listeners for members
+        if (membersSearchInput) {
+            membersSearchInput.addEventListener('input', filterMembers);
+        }
+
+        if (membersRoleFilter) {
+            membersRoleFilter.addEventListener('change', filterMembers);
+        }
+
+        if (clearMembersSearch) {
+            clearMembersSearch.addEventListener('click', function() {
+                if (membersSearchInput) {
+                    membersSearchInput.value = '';
+                }
+                if (membersRoleFilter) {
+                    membersRoleFilter.value = '';
+                }
+                filterMembers();
+            });
+        }
+
+        // Event listeners for invitations
+        if (invitationsSearchInput) {
+            invitationsSearchInput.addEventListener('input', filterInvitations);
+        }
+
+        if (invitationsRoleFilter) {
+            invitationsRoleFilter.addEventListener('change', filterInvitations);
+        }
+
+        if (clearInvitationsSearch) {
+            clearInvitationsSearch.addEventListener('click', function() {
+                if (invitationsSearchInput) {
+                    invitationsSearchInput.value = '';
+                }
+                if (invitationsRoleFilter) {
+                    invitationsRoleFilter.value = '';
+                }
+                filterInvitations();
+            });
+        }
+
+        // Initial filter application
+        filterMembers();
+        filterInvitations();
     });
 </script>
 @endpush
