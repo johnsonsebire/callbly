@@ -17,7 +17,7 @@
                         </h3>
                         <div class="card-toolbar">
                             <a href="{{ route('contacts.index') }}" class="btn btn-sm btn-light-primary">
-                                <i class="ki-outline ki-arrow-left fs-2 me-2"></i>Back to Contacts
+                                <span class="material-icons fs-4 me-2">arrow_back</span>Back to Contacts
                             </a>
                         </div>
                     </div>
@@ -138,19 +138,22 @@
                                                 <div class="d-flex flex-column">
                                                     <div class="form-check form-check-custom form-check-solid mb-3">
                                                         <input class="form-check-input" type="radio" name="format" id="formatExcel" value="excel" checked />
-                                                        <label class="form-check-label fw-semibold" for="formatExcel">
+                                                        <label class="form-check-label fw-semibold d-flex align-items-center" for="formatExcel">
+                                                            <span class="material-icons fs-2 text-success me-2">description</span>
                                                             Excel (.xlsx)
                                                         </label>
                                                     </div>
                                                     <div class="form-check form-check-custom form-check-solid mb-3">
                                                         <input class="form-check-input" type="radio" name="format" id="formatCsv" value="csv" />
-                                                        <label class="form-check-label fw-semibold" for="formatCsv">
+                                                        <label class="form-check-label fw-semibold d-flex align-items-center" for="formatCsv">
+                                                            <span class="material-icons fs-2 text-primary me-2">table_chart</span>
                                                             CSV (.csv)
                                                         </label>
                                                     </div>
                                                     <div class="form-check form-check-custom form-check-solid">
                                                         <input class="form-check-input" type="radio" name="format" id="formatPdf" value="pdf" />
-                                                        <label class="form-check-label fw-semibold" for="formatPdf">
+                                                        <label class="form-check-label fw-semibold d-flex align-items-center" for="formatPdf">
+                                                            <span class="material-icons fs-2 text-danger me-2">picture_as_pdf</span>
                                                             PDF (.pdf)
                                                         </label>
                                                     </div>
@@ -265,35 +268,38 @@
                                 <div class="card card-bordered mt-5">
                                     <div class="card-header">
                                         <h3 class="card-title align-items-start flex-column">
-                                            <span class="card-label fw-bold text-dark">Format Options</span>
+                                            <span class="card-label fw-bold text-dark">
+                                                <i class="ki-outline ki-setting-3 fs-2 me-2"></i>Format Options
+                                            </span>
+                                            <span class="text-gray-400 mt-1 fw-semibold fs-6">Choose the best format for your needs</span>
                                         </h3>
                                     </div>
                                     <div class="card-body">
-                                        <div class="d-flex align-items-center mb-4">
-                                            <div class="d-flex align-items-center justify-content-center bg-light-success rounded-circle w-40px h-40px me-3">
-                                                <i class="ki-outline ki-file-excel fs-1 text-success"></i>
+                                        <div class="d-flex align-items-center mb-4 p-3 bg-light-success rounded">
+                                            <div class="d-flex align-items-center justify-content-center bg-success rounded-circle w-50px h-50px me-4">
+                                                <span class="material-icons fs-1 text-white">description</span>
                                             </div>
-                                            <div>
-                                                <div class="fs-6 fw-bold text-dark">Excel Format</div>
-                                                <div class="fs-7 text-muted">Perfect for data analysis and manipulation</div>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex align-items-center mb-4">
-                                            <div class="d-flex align-items-center justify-content-center bg-light-primary rounded-circle w-40px h-40px me-3">
-                                                <i class="ki-outline ki-file-csv fs-1 text-primary"></i>
-                                            </div>
-                                            <div>
-                                                <div class="fs-6 fw-bold text-dark">CSV Format</div>
-                                                <div class="fs-7 text-muted">Universal compatibility with most systems</div>
+                                            <div class="flex-grow-1">
+                                                <div class="fs-5 fw-bold text-success">Excel Format (.xlsx)</div>
+                                                <div class="fs-7 text-muted">Perfect for data analysis, manipulation, and advanced filtering</div>
                                             </div>
                                         </div>
-                                        <div class="d-flex align-items-center">
-                                            <div class="d-flex align-items-center justify-content-center bg-light-danger rounded-circle w-40px h-40px me-3">
-                                                <i class="ki-outline ki-file-pdf fs-1 text-danger"></i>
+                                        <div class="d-flex align-items-center mb-4 p-3 bg-light-primary rounded">
+                                            <div class="d-flex align-items-center justify-content-center bg-primary rounded-circle w-50px h-50px me-4">
+                                                <span class="material-icons fs-1 text-white">table_chart</span>
                                             </div>
-                                            <div>
-                                                <div class="fs-6 fw-bold text-dark">PDF Format</div>
-                                                <div class="fs-7 text-muted">Great for printing or formal documentation</div>
+                                            <div class="flex-grow-1">
+                                                <div class="fs-5 fw-bold text-primary">CSV Format (.csv)</div>
+                                                <div class="fs-7 text-muted">Universal compatibility with most systems and applications</div>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center p-3 bg-light-danger rounded">
+                                            <div class="d-flex align-items-center justify-content-center bg-danger rounded-circle w-50px h-50px me-4">
+                                                <span class="material-icons fs-1 text-white">picture_as_pdf</span>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="fs-5 fw-bold text-danger">PDF Format (.pdf)</div>
+                                                <div class="fs-7 text-muted">Ideal for printing, sharing, or formal documentation</div>
                                             </div>
                                         </div>
                                     </div>

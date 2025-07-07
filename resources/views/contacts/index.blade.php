@@ -380,6 +380,8 @@
             const searchTerm = searchInput.value.trim();
             const selectedGroup = groupFilter.value;
             
+            console.log('Performing search with:', { searchTerm, selectedGroup });
+            
             // Show loading indicator
             loadingIndicator.classList.remove('d-none');
             contactsTableContainer.style.opacity = '0.6';
@@ -387,14 +389,18 @@
             
             // Build URL with parameters
             const url = new URL('{{ route("contacts.search") }}', window.location.origin);
-            if (searchTerm) {
-                url.searchParams.append('q', searchTerm);
-            }
+            
+            // Always add search parameter, even if empty (to ensure backend processes the request correctly)
+            url.searchParams.append('q', searchTerm);
+            
+            // Add group parameter if a specific group is selected
             if (selectedGroup && selectedGroup !== 'all') {
                 url.searchParams.append('group', selectedGroup);
             }
             
-            // Make AJAX request
+            console.log('Making request to:', url.toString());
+            
+            // Always make AJAX request to ensure proper filtering
             fetch(url, {
                 method: 'GET',
                 headers: {
@@ -453,10 +459,43 @@
             searchTimeout = setTimeout(performSearch, 300); // 300ms delay
         });
         
-        // Group filter change
-        groupFilter.addEventListener('change', function() {
-            performSearch();
-        });
+        // Group filter change - Handle both regular select and Select2
+        function initializeGroupFilter() {
+            if (!groupFilter) return;
+            
+            // For regular select element
+            groupFilter.addEventListener('change', function() {
+                performSearch();
+            });
+            
+            // For Select2 - check if it's initialized and add jQuery event listener
+            if (groupFilter.hasAttribute('data-control') && groupFilter.getAttribute('data-control') === 'select2') {
+                // Function to attach Select2 event listener
+                const attachSelect2Listener = () => {
+                    if (typeof $ !== 'undefined' && $(groupFilter).hasClass('select2-hidden-accessible')) {
+                        // Remove any existing event listeners to prevent duplicates
+                        $(groupFilter).off('change.contactsFilter');
+                        // Add new event listener with namespace
+                        $(groupFilter).on('change.contactsFilter', function() {
+                            performSearch();
+                        });
+                        return true;
+                    }
+                    return false;
+                };
+                
+                // Try to attach immediately
+                if (!attachSelect2Listener()) {
+                    // If not ready, try again after Select2 initialization
+                    setTimeout(attachSelect2Listener, 100);
+                    setTimeout(attachSelect2Listener, 500);
+                    setTimeout(attachSelect2Listener, 1000);
+                }
+            }
+        }
+        
+        // Initialize group filter
+        initializeGroupFilter();
         
         // Initialize table events (for both initial load and after AJAX updates)
         function initializeTableEvents() {
@@ -585,7 +624,17 @@
         // Global function to clear all filters (accessible from empty state)
         window.clearFilters = function() {
             searchInput.value = '';
-            groupFilter.value = 'all';
+            
+            // Clear group filter - handle both regular select and Select2
+            if (groupFilter) {
+                groupFilter.value = 'all';
+                
+                // If it's a Select2 element, update it properly
+                if (typeof $ !== 'undefined' && $(groupFilter).hasClass('select2-hidden-accessible')) {
+                    $(groupFilter).val('all').trigger('change');
+                }
+            }
+            
             toggleClearButton();
             performSearch();
         };
