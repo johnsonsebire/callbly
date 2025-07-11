@@ -233,8 +233,8 @@
 
                                     <div class="d-grid gap-2 mb-5">
                                         <button type="submit" class="btn btn-primary btn-lg" id="sendButton" {{ $senderNames->isEmpty() ? 'disabled' : '' }}>
-                                            <i class="ki-outline ki-paper-plane fs-2 me-2"></i>
-                                            Send Message
+                                            <i class="ki-outline ki-paper-plane fs-2 me-2" id="sendButtonIcon"></i>
+                                            <span id="sendButtonText">Send Message</span>
                                         </button>
                                     </div>
                                     
@@ -413,8 +413,20 @@
 
         // Initialize scheduling switch
         if (scheduleSwitch) {
+            const sendButtonText = document.getElementById('sendButtonText');
+            const sendButtonIcon = document.getElementById('sendButtonIcon');
+            
             scheduleSwitch.addEventListener('change', function() {
                 scheduleContainer.style.display = this.checked ? 'block' : 'none';
+                
+                // Update button text and icon based on scheduling
+                if (this.checked) {
+                    sendButtonText.textContent = 'Schedule Message';
+                    sendButtonIcon.className = 'ki-outline ki-calendar fs-2 me-2';
+                } else {
+                    sendButtonText.textContent = 'Send Message';
+                    sendButtonIcon.className = 'ki-outline ki-paper-plane fs-2 me-2';
+                }
             });
         }
         

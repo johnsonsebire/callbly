@@ -105,71 +105,75 @@ class SmsController extends Controller
                 'sender_name' => $request->sender_name,
                 'status' => 'pending',
                 'recipients_count' => 1,
-                'scheduled_at' => $request->scheduled_at,
+                'scheduled_at' => $request->scheduled_at ? date('Y-m-d H:i:s', strtotime($request->scheduled_at)) : null,
             ]);
 
-            // Send SMS via service
-            $result = $this->smsService->sendSingle(
+            // Deduct credits before queuing the job (only if not internal call)
+            if (!request()->has('_internal_call')) {
+                $teamResourceService = app(\App\Services\TeamResourceService::class);
+                $creditResult = $teamResourceService->deductSharedSmsCredits($user, $creditsNeeded);
+                
+                if (!$creditResult['success']) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to deduct SMS credits: ' . $creditResult['message']
+                    ], 400);
+                }
+                
+                // Update campaign with team credit info if applicable
+                if ($creditResult['team_id']) {
+                    $campaign->update([
+                        'team_id' => $creditResult['team_id'],
+                        'team_credits_used' => $creditResult['team_credits_used'],
+                        'credits_used' => $creditsNeeded
+                    ]);
+                } else {
+                    $campaign->update([
+                        'credits_used' => $creditsNeeded
+                    ]);
+                }
+            }
+
+            // Dispatch SMS job (with delay if scheduled)
+            $job = \App\Jobs\SendSingleSmsJob::dispatch(
+                $campaign->id,
                 $request->recipient,
                 $request->message,
-                $request->sender_name,
-                $campaign->id
+                $request->sender_name
             );
-
-            if ($result['success']) {
-                // Update campaign status
-                $campaign->update([
-                    'status' => 'sent',
-                    'delivered_count' => 1
-                ]);
-
-                // Don't deduct credits here as this is done in the web controller
-                // This is to prevent double deduction when called from SmsController
+            
+            // Apply delay if message is scheduled
+            if ($request->scheduled_at && strtotime($request->scheduled_at) > time()) {
+                $scheduledTime = new \DateTime($request->scheduled_at);
+                $delay = $scheduledTime->getTimestamp() - time();
+                $job->delay($delay);
                 
-                // Only deduct if directly called via API, not from web controller
-                if (!request()->has('_internal_call')) {
-                    // Use our credit deduction service to handle both personal and team credits
-                    $teamResourceService = app(\App\Services\TeamResourceService::class);
-                    $creditResult = $teamResourceService->deductSharedSmsCredits($user, $creditsNeeded);
-                    
-                    if (!$creditResult['success']) {
-                        Log::error('Failed to deduct SMS credits', [
-                            'user_id' => $user->id,
-                            'campaign_id' => $campaign->id,
-                            'credits_needed' => $creditsNeeded,
-                            'error' => $creditResult['message']
-                        ]);
-                    }
-                    
-                    // Update campaign with team credit info if applicable
-                    if ($creditResult['team_id']) {
-                        $campaign->update([
-                            'team_id' => $creditResult['team_id'],
-                            'team_credits_used' => $creditResult['team_credits_used']
-                        ]);
-                    }
-                }
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'SMS sent successfully',
-                    'data' => [
-                        'campaign_id' => $campaign->id,
-                        'reference' => $result['reference'],
-                    ]
+                Log::info('Single SMS job scheduled via API', [
+                    'campaign_id' => $campaign->id,
+                    'recipient' => $request->recipient,
+                    'scheduled_at' => $request->scheduled_at,
+                    'delay_seconds' => $delay
                 ]);
+                
+                $message = 'SMS scheduled for ' . $scheduledTime->format('M d, Y H:i:s');
             } else {
-                // Update campaign status to failed
-                $campaign->update([
-                    'status' => 'failed',
-                    'failed_count' => 1
+                Log::info('Single SMS job dispatched immediately via API', [
+                    'campaign_id' => $campaign->id,
+                    'recipient' => $request->recipient
                 ]);
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to send SMS: ' . $result['message']
-                ], 500);
+                
+                $message = 'SMS is being sent';
             }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'data' => [
+                    'campaign_id' => $campaign->id,
+                    'scheduled_at' => $request->scheduled_at,
+                ]
+            ]);
+
         } catch (\Exception $e) {
             Log::error('SMS sending error: ' . $e->getMessage(), [
                 'exception' => $e
@@ -289,92 +293,85 @@ class SmsController extends Controller
                     'name' => $request->name,
                     'message' => $request->message,
                     'sender_name' => $request->sender_name,
-                    'status' => 'processing',
+                    'status' => 'pending',
                     'recipients_count' => $recipientsCount,
-                    'scheduled_at' => $request->scheduled_at,
+                    'scheduled_at' => $request->scheduled_at ? date('Y-m-d H:i:s', strtotime($request->scheduled_at)) : null,
                 ]);
             }
 
-            // Send SMS via service (this might be processed as a queue job for large batches)
-            $result = $this->smsService->sendBulk(
-                $request->recipients,
-                $request->message,
-                $request->sender_name,
-                $campaign->id
-            );
-
-            // Log the raw result for debugging
-            Log::info('Raw SMS service result', [
-                'campaign_id' => $campaign->id,
-                'result' => $result
-            ]);
-
-            // Force campaign metrics update to ensure latest status
-            $campaign->updateMetrics();
-            $campaign->refresh();
-
-            // Always treat the campaign as successful if we've reached this point
-            // Even if some recipients failed, we consider the campaign itself successful
-            $success = true;
-            
-            // Explicitly check for the internal call flag
-            // Using both has() and input() methods to be thorough
-            $isInternalCall = $request->has('_internal_call') || $request->input('_internal_call') === true;
-            
-            Log::info('Credit deduction check', [
-                'is_internal_call' => $isInternalCall,
-                'request_has_flag' => $request->has('_internal_call'),
-                'request_input_flag' => $request->input('_internal_call'),
-                'request_all' => $request->all()
-            ]);
-
-            // Only deduct credits if this is a direct API call, not from the web controller
-            if (!$isInternalCall) {
-                // Use our credit deduction service to handle both personal and team credits
+            // Deduct credits before queuing the job (only if not internal call)
+            if (!request()->has('_internal_call')) {
                 $teamResourceService = app(\App\Services\TeamResourceService::class);
                 $creditResult = $teamResourceService->deductSharedSmsCredits($user, $creditsNeeded);
                 
                 if (!$creditResult['success']) {
-                    Log::error('Failed to deduct SMS credits for bulk message', [
-                        'user_id' => $user->id,
-                        'campaign_id' => $campaign->id,
-                        'credits_needed' => $creditsNeeded,
-                        'error' => $creditResult['message']
-                    ]);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to deduct SMS credits: ' . $creditResult['message']
+                    ], 400);
                 }
                 
                 // Update campaign with team credit info if applicable
-                if (isset($creditResult['team_id']) && $creditResult['team_id']) {
+                if ($creditResult['team_id']) {
                     $campaign->update([
                         'team_id' => $creditResult['team_id'],
-                        'team_credits_used' => $creditResult['team_credits_used']
+                        'team_credits_used' => $creditResult['team_credits_used'],
+                        'credits_used' => $creditsNeeded
+                    ]);
+                } else {
+                    $campaign->update([
+                        'credits_used' => $creditsNeeded
                     ]);
                 }
                 
-                // Include credit usage in the response
                 $personalCreditsUsed = $creditResult['personal_credits_used'] ?? 0;
                 $teamCreditsUsed = $creditResult['team_credits_used'] ?? 0;
             } else {
-                // For internal calls, don't deduct here (it's handled in the web controller)
-                Log::info('Skipping credit deduction in API as this is an internal call', [
-                    'campaign_id' => $campaign->id
-                ]);
                 $personalCreditsUsed = 0;
                 $teamCreditsUsed = 0;
             }
 
+            // Dispatch bulk SMS job (with delay if scheduled)
+            $job = \App\Jobs\SendBulkSmsJob::dispatch(
+                $campaign->id,
+                $request->recipients,
+                $request->message,
+                $request->sender_name
+            );
+            
+            // Apply delay if message is scheduled
+            if ($request->scheduled_at && strtotime($request->scheduled_at) > time()) {
+                $scheduledTime = new \DateTime($request->scheduled_at);
+                $delay = $scheduledTime->getTimestamp() - time();
+                $job->delay($delay);
+                
+                Log::info('Bulk SMS job scheduled via API', [
+                    'campaign_id' => $campaign->id,
+                    'recipients_count' => $recipientsCount,
+                    'scheduled_at' => $request->scheduled_at,
+                    'delay_seconds' => $delay
+                ]);
+                
+                $message = 'Bulk SMS campaign scheduled for ' . $scheduledTime->format('M d, Y H:i:s');
+            } else {
+                Log::info('Bulk SMS job dispatched immediately via API', [
+                    'campaign_id' => $campaign->id,
+                    'recipients_count' => $recipientsCount
+                ]);
+                
+                $message = 'Bulk SMS campaign is being processed';
+            }
+
             return response()->json([
-                'success' => $success,
-                'message' => 'Bulk SMS processing started successfully',
+                'success' => true,
+                'message' => $message,
                 'data' => [
                     'campaign_id' => $campaign->id,
-                    'reference' => $result['reference'] ?? null,
                     'recipients_count' => $recipientsCount,
                     'estimated_cost' => $creditsNeeded,
-                    'personal_credits_used' => $personalCreditsUsed ?? 0,
-                    'team_credits_used' => $teamCreditsUsed ?? 0,
-                    'delivered_count' => $campaign->delivered_count,
-                    'failed_count' => $campaign->failed_count,
+                    'personal_credits_used' => $personalCreditsUsed,
+                    'team_credits_used' => $teamCreditsUsed,
+                    'scheduled_at' => $request->scheduled_at,
                 ]
             ]);
         } catch (\Exception $e) {

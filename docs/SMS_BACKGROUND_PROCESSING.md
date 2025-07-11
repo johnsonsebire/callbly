@@ -11,6 +11,7 @@ The SMS system has been enhanced with background processing to improve user expe
 - **Bulk SMS**: Processed in background via `SendBulkSmsJob`
 - **Credit Deduction**: Happens before job dispatch to prevent double billing
 - **Real-time Updates**: Campaign status updates via AJAX polling
+- **SMS Scheduling**: Support for delayed execution based on `scheduled_at` field
 
 ### 2. Queue Jobs
 
@@ -19,12 +20,14 @@ The SMS system has been enhanced with background processing to improve user expe
 - Timeout: 60 seconds
 - Retries: 3 times with 5-second backoff
 - Queue: `sms`
+- **Scheduling Support**: Can be delayed using `delay()` method
 
 #### SendBulkSmsJob
 - Handles bulk SMS campaigns
 - Timeout: 300 seconds (5 minutes)
 - Retries: 3 times with 5-second backoff
 - Queue: `sms`
+- **Scheduling Support**: Can be delayed using `delay()` method
 
 ### 3. Campaign Statuses
 - **pending**: Campaign created, waiting to be processed
@@ -62,6 +65,33 @@ php artisan sms:work
 1. **Campaign Details Page**: Real-time status updates
 2. **Queue Status Endpoint**: `/sms/queue/status` for monitoring
 3. **Logs**: Check `storage/logs/laravel.log` for detailed processing logs
+
+## SMS Scheduling
+
+### Overview
+The SMS system supports scheduling messages for future delivery. When a user selects a future date/time, the job is dispatched with a delay rather than being processed immediately.
+
+### How It Works
+1. **Schedule Selection**: User enables "Schedule for later" and selects date/time
+2. **Delay Calculation**: System calculates delay in seconds from current time
+3. **Job Dispatch**: Job is dispatched with `delay()` method
+4. **Queue Processing**: Laravel's queue system holds the job until the scheduled time
+5. **Automatic Execution**: Job runs automatically at the scheduled time
+
+### Technical Details
+- **Frontend**: Dynamic button text changes from "Send Message" to "Schedule Message"
+- **Backend**: Uses Laravel's `delay()` method on job dispatch
+- **Storage**: `scheduled_at` field stores the target execution time
+- **Validation**: Ensures scheduled time is in the future
+
+### Example Usage
+```php
+// Job is delayed based on scheduled_at time
+if ($scheduledAt && $scheduledAt > now()) {
+    $delay = $scheduledAt->diffInSeconds(now());
+    $job->delay($delay);
+}
+```
 
 ## Technical Implementation
 
