@@ -541,37 +541,67 @@ class SmsController extends Controller
                 ]);
             }
             
-            // Dispatch the appropriate job based on recipients count
+            // Dispatch the appropriate job based on recipients count and schedule
             if (count($recipients) === 1 && $recipientsType === 'single') {
                 // Single SMS job
-                \App\Jobs\SendSingleSmsJob::dispatch(
+                $job = \App\Jobs\SendSingleSmsJob::dispatch(
                     $campaign->id,
                     $recipients[0],
                     $message,
                     $senderName
                 );
                 
-                \Illuminate\Support\Facades\Log::info('Single SMS job dispatched', [
-                    'campaign_id' => $campaign->id,
-                    'recipient' => $recipients[0]
-                ]);
-                
-                $successMessage = 'Your SMS is being sent. You can track its progress on the campaign details page.';
+                // Apply delay if message is scheduled
+                if ($scheduledAt && $scheduledAt > now()) {
+                    $delay = $scheduledAt->diffInSeconds(now());
+                    $job->delay($delay);
+                    
+                    \Illuminate\Support\Facades\Log::info('Single SMS job scheduled', [
+                        'campaign_id' => $campaign->id,
+                        'recipient' => $recipients[0],
+                        'scheduled_at' => $scheduledAt->format('Y-m-d H:i:s'),
+                        'delay_seconds' => $delay
+                    ]);
+                    
+                    $successMessage = 'Your SMS has been scheduled for ' . $scheduledAt->format('M d, Y H:i:s') . '. You can track its progress on the campaign details page.';
+                } else {
+                    \Illuminate\Support\Facades\Log::info('Single SMS job dispatched immediately', [
+                        'campaign_id' => $campaign->id,
+                        'recipient' => $recipients[0]
+                    ]);
+                    
+                    $successMessage = 'Your SMS is being sent. You can track its progress on the campaign details page.';
+                }
             } else {
                 // Bulk SMS job
-                \App\Jobs\SendBulkSmsJob::dispatch(
+                $job = \App\Jobs\SendBulkSmsJob::dispatch(
                     $campaign->id,
                     $recipients,
                     $message,
                     $senderName
                 );
                 
-                \Illuminate\Support\Facades\Log::info('Bulk SMS job dispatched', [
-                    'campaign_id' => $campaign->id,
-                    'recipients_count' => count($recipients)
-                ]);
-                
-                $successMessage = 'Your SMS campaign is being processed in the background. You can track its progress on the campaign details page.';
+                // Apply delay if message is scheduled
+                if ($scheduledAt && $scheduledAt > now()) {
+                    $delay = $scheduledAt->diffInSeconds(now());
+                    $job->delay($delay);
+                    
+                    \Illuminate\Support\Facades\Log::info('Bulk SMS job scheduled', [
+                        'campaign_id' => $campaign->id,
+                        'recipients_count' => count($recipients),
+                        'scheduled_at' => $scheduledAt->format('Y-m-d H:i:s'),
+                        'delay_seconds' => $delay
+                    ]);
+                    
+                    $successMessage = 'Your SMS campaign has been scheduled for ' . $scheduledAt->format('M d, Y H:i:s') . '. You can track its progress on the campaign details page.';
+                } else {
+                    \Illuminate\Support\Facades\Log::info('Bulk SMS job dispatched immediately', [
+                        'campaign_id' => $campaign->id,
+                        'recipients_count' => count($recipients)
+                    ]);
+                    
+                    $successMessage = 'Your SMS campaign is being processed in the background. You can track its progress on the campaign details page.';
+                }
             }
             
             // Refresh user to get the latest credit balance
