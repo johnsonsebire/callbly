@@ -33,6 +33,15 @@ class SmsService
     public function sendSingle(string $recipient, string $message, string $senderName, int $campaignId, ?int $contactId = null): array
     {
         try {
+            Log::info('=== SMS SERVICE SEND SINGLE START ===', [
+                'timestamp' => now()->format('Y-m-d H:i:s'),
+                'campaign_id' => $campaignId,
+                'recipient' => $recipient,
+                'sender' => $senderName,
+                'message_preview' => substr($message, 0, 50) . '...',
+                'contact_id' => $contactId
+            ]);
+            
             $reference = 'SMS_' . Str::uuid()->toString();
             
             // Clean and format the phone number to ensure it's in the correct format
@@ -41,8 +50,8 @@ class SmsService
             // Use the configured SMS provider interface
             $result = $this->provider->sendSms($formattedRecipient, $message, $senderName);
             
-            // Log campaign info with the result for tracking
-            Log::info('SMS sent via provider', [
+            Log::info('=== ACTUAL SMS SENT TO PROVIDER ===', [
+                'timestamp' => now()->format('Y-m-d H:i:s'),
                 'campaign_id' => $campaignId,
                 'recipient' => $formattedRecipient,
                 'sender' => $senderName,
