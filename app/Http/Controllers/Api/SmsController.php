@@ -146,7 +146,8 @@ class SmsController extends Controller
             if ($request->scheduled_at && \Carbon\Carbon::parse($request->scheduled_at)->isAfter(now())) {
                 $scheduledTime = \Carbon\Carbon::parse($request->scheduled_at);
                 $delay = $scheduledTime->diffInSeconds(now());
-                dispatch($job->delay($delay));
+                $job->delay($delay);
+                dispatch($job);
                 
                 Log::info('Single SMS job scheduled via API', [
                     'campaign_id' => $campaign->id,
@@ -345,7 +346,8 @@ class SmsController extends Controller
             if ($request->scheduled_at && \Carbon\Carbon::parse($request->scheduled_at)->isAfter(now())) {
                 $scheduledTime = \Carbon\Carbon::parse($request->scheduled_at);
                 $delay = $scheduledTime->diffInSeconds(now());
-                dispatch($job->delay($delay));
+                $job->delay($delay);
+                dispatch($job);
                 
                 Log::info('Bulk SMS job scheduled via API', [
                     'campaign_id' => $campaign->id,

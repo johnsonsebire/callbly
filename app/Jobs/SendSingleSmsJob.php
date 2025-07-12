@@ -49,10 +49,13 @@ class SendSingleSmsJob implements ShouldQueue
     public function handle(SmsService $smsService): void
     {
         try {
-            Log::info('Starting single SMS job processing', [
+            Log::info('=== SINGLE SMS JOB EXECUTION START ===', [
+                'job_execution_time' => now()->format('Y-m-d H:i:s'),
                 'campaign_id' => $this->campaignId,
                 'recipient' => $this->recipient,
-                'job_id' => $this->job->getJobId()
+                'job_id' => $this->job->getJobId(),
+                'message_preview' => substr($this->message, 0, 50) . '...',
+                'sender_name' => $this->senderName
             ]);
 
             // Update campaign status to processing
@@ -60,6 +63,13 @@ class SendSingleSmsJob implements ShouldQueue
             if (!$campaign) {
                 throw new Exception("Campaign {$this->campaignId} not found");
             }
+
+            Log::info('Campaign found - checking scheduled time', [
+                'campaign_id' => $campaign->id,
+                'campaign_scheduled_at' => $campaign->scheduled_at,
+                'current_time' => now()->format('Y-m-d H:i:s'),
+                'job_started_at' => now()->format('Y-m-d H:i:s')
+            ]);
 
             $campaign->update([
                 'status' => 'processing',

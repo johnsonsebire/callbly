@@ -267,6 +267,16 @@ class SmsController extends Controller
      */
     public function send(Request $request): RedirectResponse
     {
+        // === DEBUGGING: START OF FLOW ===
+        \Illuminate\Support\Facades\Log::info('=== SMS SEND REQUEST START ===', [
+            'timestamp' => now()->format('Y-m-d H:i:s'),
+            'user_id' => auth()->id(),
+            'raw_scheduled_at' => $request->input('scheduled_at'),
+            'all_inputs' => $request->all(),
+            'request_method' => $request->method(),
+            'request_url' => $request->url()
+        ]);
+        
         // Debug incoming request data
         \Illuminate\Support\Facades\Log::info('SMS Send Request', [
             'request_data' => $request->all()
@@ -289,7 +299,14 @@ class SmsController extends Controller
             try {
                 // Parse the datetime from the form using Carbon
                 $scheduledAt = \Carbon\Carbon::createFromFormat('Y-m-d\TH:i', $request->input('scheduled_at'));
-                \Illuminate\Support\Facades\Log::info('Scheduling SMS for: ' . $scheduledAt->format('Y-m-d H:i:s'));
+                \Illuminate\Support\Facades\Log::info('=== SCHEDULING ANALYSIS ===', [
+                    'parsed_scheduled_at' => $scheduledAt->format('Y-m-d H:i:s'),
+                    'current_time' => now()->format('Y-m-d H:i:s'),
+                    'is_future' => $scheduledAt->isAfter(now()),
+                    'diff_in_seconds' => $scheduledAt->diffInSeconds(now()),
+                    'timezone' => $scheduledAt->timezone,
+                    'raw_input' => $request->input('scheduled_at')
+                ]);
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to parse scheduled date', [
                     'input' => $request->input('scheduled_at'),
@@ -553,8 +570,25 @@ class SmsController extends Controller
                 
                 // Apply delay if message is scheduled
                 if ($scheduledAt && $scheduledAt->isAfter(now())) {
-                    $delay = $scheduledAt->diffInSeconds(now());
-                    dispatch($job->delay($delay));
+                    $delay = now()->diffInSeconds($scheduledAt);
+                    
+                    \Illuminate\Support\Facades\Log::info('=== APPLYING DELAY TO SINGLE SMS JOB ===', [
+                        'campaign_id' => $campaign->id,
+                        'recipient' => $recipients[0],
+                        'scheduled_at' => $scheduledAt->format('Y-m-d H:i:s'),
+                        'current_time' => now()->format('Y-m-d H:i:s'),
+                        'delay_seconds' => $delay,
+                        'job_class' => get_class($job)
+                    ]);
+                    
+                    $job->delay($delay);
+                    
+                    \Illuminate\Support\Facades\Log::info('=== DELAY APPLIED - DISPATCHING JOB ===', [
+                        'job_delayed' => true,
+                        'delay_seconds' => $delay
+                    ]);
+                    
+                    dispatch($job);
                     
                     \Illuminate\Support\Facades\Log::info('Single SMS job scheduled', [
                         'campaign_id' => $campaign->id,
@@ -565,6 +599,12 @@ class SmsController extends Controller
                     
                     $successMessage = 'Your SMS has been scheduled for ' . $scheduledAt->format('M d, Y H:i:s') . '. You can track its progress on the campaign details page.';
                 } else {
+                    \Illuminate\Support\Facades\Log::info('=== NO DELAY NEEDED - IMMEDIATE DISPATCH ===', [
+                        'campaign_id' => $campaign->id,
+                        'scheduled_at' => $scheduledAt ? $scheduledAt->format('Y-m-d H:i:s') : 'null',
+                        'is_after_now' => $scheduledAt ? $scheduledAt->isAfter(now()) : false
+                    ]);
+                    
                     dispatch($job);
                     
                     \Illuminate\Support\Facades\Log::info('Single SMS job dispatched immediately', [
@@ -585,8 +625,25 @@ class SmsController extends Controller
                 
                 // Apply delay if message is scheduled
                 if ($scheduledAt && $scheduledAt->isAfter(now())) {
-                    $delay = $scheduledAt->diffInSeconds(now());
-                    dispatch($job->delay($delay));
+                    $delay = now()->diffInSeconds($scheduledAt);
+                    
+                    \Illuminate\Support\Facades\Log::info('=== APPLYING DELAY TO BULK SMS JOB ===', [
+                        'campaign_id' => $campaign->id,
+                        'recipients_count' => count($recipients),
+                        'scheduled_at' => $scheduledAt->format('Y-m-d H:i:s'),
+                        'current_time' => now()->format('Y-m-d H:i:s'),
+                        'delay_seconds' => $delay,
+                        'job_class' => get_class($job)
+                    ]);
+                    
+                    $job->delay($delay);
+                    
+                    \Illuminate\Support\Facades\Log::info('=== DELAY APPLIED - DISPATCHING BULK JOB ===', [
+                        'job_delayed' => true,
+                        'delay_seconds' => $delay
+                    ]);
+                    
+                    dispatch($job);
                     
                     \Illuminate\Support\Facades\Log::info('Bulk SMS job scheduled', [
                         'campaign_id' => $campaign->id,
@@ -597,6 +654,12 @@ class SmsController extends Controller
                     
                     $successMessage = 'Your SMS campaign has been scheduled for ' . $scheduledAt->format('M d, Y H:i:s') . '. You can track its progress on the campaign details page.';
                 } else {
+                    \Illuminate\Support\Facades\Log::info('=== NO DELAY NEEDED - IMMEDIATE BULK DISPATCH ===', [
+                        'campaign_id' => $campaign->id,
+                        'scheduled_at' => $scheduledAt ? $scheduledAt->format('Y-m-d H:i:s') : 'null',
+                        'is_after_now' => $scheduledAt ? $scheduledAt->isAfter(now()) : false
+                    ]);
+                    
                     dispatch($job);
                     
                     \Illuminate\Support\Facades\Log::info('Bulk SMS job dispatched immediately', [
