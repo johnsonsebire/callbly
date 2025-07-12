@@ -287,8 +287,8 @@ class SmsController extends Controller
         $scheduledAt = null;
         if ($request->filled('scheduled_at')) {
             try {
-                // Parse the datetime from the form
-                $scheduledAt = new \DateTime($request->input('scheduled_at'));
+                // Parse the datetime from the form using Carbon
+                $scheduledAt = \Carbon\Carbon::createFromFormat('Y-m-d\TH:i', $request->input('scheduled_at'));
                 \Illuminate\Support\Facades\Log::info('Scheduling SMS for: ' . $scheduledAt->format('Y-m-d H:i:s'));
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to parse scheduled date', [
@@ -544,7 +544,7 @@ class SmsController extends Controller
             // Dispatch the appropriate job based on recipients count and schedule
             if (count($recipients) === 1 && $recipientsType === 'single') {
                 // Single SMS job
-                $job = \App\Jobs\SendSingleSmsJob::dispatch(
+                $job = new \App\Jobs\SendSingleSmsJob(
                     $campaign->id,
                     $recipients[0],
                     $message,
@@ -552,9 +552,9 @@ class SmsController extends Controller
                 );
                 
                 // Apply delay if message is scheduled
-                if ($scheduledAt && $scheduledAt > now()) {
+                if ($scheduledAt && $scheduledAt->isAfter(now())) {
                     $delay = $scheduledAt->diffInSeconds(now());
-                    $job->delay($delay);
+                    dispatch($job->delay($delay));
                     
                     \Illuminate\Support\Facades\Log::info('Single SMS job scheduled', [
                         'campaign_id' => $campaign->id,
@@ -565,6 +565,8 @@ class SmsController extends Controller
                     
                     $successMessage = 'Your SMS has been scheduled for ' . $scheduledAt->format('M d, Y H:i:s') . '. You can track its progress on the campaign details page.';
                 } else {
+                    dispatch($job);
+                    
                     \Illuminate\Support\Facades\Log::info('Single SMS job dispatched immediately', [
                         'campaign_id' => $campaign->id,
                         'recipient' => $recipients[0]
@@ -574,7 +576,7 @@ class SmsController extends Controller
                 }
             } else {
                 // Bulk SMS job
-                $job = \App\Jobs\SendBulkSmsJob::dispatch(
+                $job = new \App\Jobs\SendBulkSmsJob(
                     $campaign->id,
                     $recipients,
                     $message,
@@ -582,9 +584,9 @@ class SmsController extends Controller
                 );
                 
                 // Apply delay if message is scheduled
-                if ($scheduledAt && $scheduledAt > now()) {
+                if ($scheduledAt && $scheduledAt->isAfter(now())) {
                     $delay = $scheduledAt->diffInSeconds(now());
-                    $job->delay($delay);
+                    dispatch($job->delay($delay));
                     
                     \Illuminate\Support\Facades\Log::info('Bulk SMS job scheduled', [
                         'campaign_id' => $campaign->id,
@@ -595,6 +597,8 @@ class SmsController extends Controller
                     
                     $successMessage = 'Your SMS campaign has been scheduled for ' . $scheduledAt->format('M d, Y H:i:s') . '. You can track its progress on the campaign details page.';
                 } else {
+                    dispatch($job);
+                    
                     \Illuminate\Support\Facades\Log::info('Bulk SMS job dispatched immediately', [
                         'campaign_id' => $campaign->id,
                         'recipients_count' => count($recipients)
