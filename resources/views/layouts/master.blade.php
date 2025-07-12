@@ -69,6 +69,56 @@ Use Illuminate\Support\Str;
                 text-align: center;
                 margin-right: 10px;
             }
+            
+            /* Fix bullet points from stretching on mobile */
+            .mobile-nav-item .bullet-dot {
+                width: 4px !important;
+                height: 4px !important;
+                min-width: 4px !important;
+                max-width: 4px !important;
+                min-height: 4px !important;
+                max-height: 4px !important;
+                flex-shrink: 0 !important;
+                flex-grow: 0 !important;
+                border-radius: 50% !important;
+                display: inline-block !important;
+            }
+            
+            .mobile-nav-item .bullet {
+                width: 4px !important;
+                height: 4px !important;
+                min-width: 4px !important;
+                max-width: 4px !important;
+                min-height: 4px !important;
+                max-height: 4px !important;
+                flex-shrink: 0 !important;
+                flex-grow: 0 !important;
+                border-radius: 50% !important;
+                display: inline-block !important;
+            }
+            
+            /* Additional fix for any bullet points in mobile navigation */
+            .offcanvas .bullet-dot,
+            .offcanvas .bullet,
+            #kt_app_sidebar_mobile .bullet-dot,
+            #kt_app_sidebar_mobile .bullet {
+                width: 4px !important;
+                height: 4px !important;
+                min-width: 4px !important;
+                max-width: 4px !important;
+                min-height: 4px !important;
+                max-height: 4px !important;
+                flex-shrink: 0 !important;
+                flex-grow: 0 !important;
+                border-radius: 50% !important;
+                display: inline-block !important;
+                background-color: #999 !important;
+            }
+            
+            /* Ensure proper spacing for mobile navigation items */
+            .mobile-nav-item .d-flex {
+                align-items: center !important;
+            }
         }
     </style>
 
@@ -94,7 +144,7 @@ Use Illuminate\Support\Str;
                         </div>
                         <div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0 me-lg-15">
                             <a href="{{ route('dashboard') }}">
-                                <img alt="Callbly Logo" src="{{ asset('assets/media/logos/callbly-white.png') }}" class="h-30px" />
+                                <img alt="Callbly Logo" src="{{ asset('assets/media/logos/callbly logo.png') }}" class="h-30px" />
                             </a>
                         </div>
                     </div>
