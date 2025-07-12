@@ -135,7 +135,7 @@ class SmsController extends Controller
             }
 
             // Dispatch SMS job (with delay if scheduled)
-            $job = \App\Jobs\SendSingleSmsJob::dispatch(
+            $job = new \App\Jobs\SendSingleSmsJob(
                 $campaign->id,
                 $request->recipient,
                 $request->message,
@@ -143,10 +143,10 @@ class SmsController extends Controller
             );
             
             // Apply delay if message is scheduled
-            if ($request->scheduled_at && strtotime($request->scheduled_at) > time()) {
-                $scheduledTime = new \DateTime($request->scheduled_at);
-                $delay = $scheduledTime->getTimestamp() - time();
-                $job->delay($delay);
+            if ($request->scheduled_at && \Carbon\Carbon::parse($request->scheduled_at)->isAfter(now())) {
+                $scheduledTime = \Carbon\Carbon::parse($request->scheduled_at);
+                $delay = $scheduledTime->diffInSeconds(now());
+                dispatch($job->delay($delay));
                 
                 Log::info('Single SMS job scheduled via API', [
                     'campaign_id' => $campaign->id,
@@ -157,6 +157,8 @@ class SmsController extends Controller
                 
                 $message = 'SMS scheduled for ' . $scheduledTime->format('M d, Y H:i:s');
             } else {
+                dispatch($job);
+                
                 Log::info('Single SMS job dispatched immediately via API', [
                     'campaign_id' => $campaign->id,
                     'recipient' => $request->recipient
@@ -332,7 +334,7 @@ class SmsController extends Controller
             }
 
             // Dispatch bulk SMS job (with delay if scheduled)
-            $job = \App\Jobs\SendBulkSmsJob::dispatch(
+            $job = new \App\Jobs\SendBulkSmsJob(
                 $campaign->id,
                 $request->recipients,
                 $request->message,
@@ -340,10 +342,10 @@ class SmsController extends Controller
             );
             
             // Apply delay if message is scheduled
-            if ($request->scheduled_at && strtotime($request->scheduled_at) > time()) {
-                $scheduledTime = new \DateTime($request->scheduled_at);
-                $delay = $scheduledTime->getTimestamp() - time();
-                $job->delay($delay);
+            if ($request->scheduled_at && \Carbon\Carbon::parse($request->scheduled_at)->isAfter(now())) {
+                $scheduledTime = \Carbon\Carbon::parse($request->scheduled_at);
+                $delay = $scheduledTime->diffInSeconds(now());
+                dispatch($job->delay($delay));
                 
                 Log::info('Bulk SMS job scheduled via API', [
                     'campaign_id' => $campaign->id,
@@ -354,6 +356,8 @@ class SmsController extends Controller
                 
                 $message = 'Bulk SMS campaign scheduled for ' . $scheduledTime->format('M d, Y H:i:s');
             } else {
+                dispatch($job);
+                
                 Log::info('Bulk SMS job dispatched immediately via API', [
                     'campaign_id' => $campaign->id,
                     'recipients_count' => $recipientsCount
