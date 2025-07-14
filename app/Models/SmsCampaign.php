@@ -72,9 +72,9 @@ class SmsCampaign extends Model
         
         // Calculate message pages
         if ($hasUnicode) {
-            $parts = $messageLength <= 70 ? 1 : ceil(($messageLength - 70) / 67) + 1;
+            $parts = $messageLength <= 70 ? 1 : ceil($messageLength / 67);
         } else {
-            $parts = $messageLength <= 160 ? 1 : ceil(($messageLength - 160) / 153) + 1;
+            $parts = $messageLength <= 160 ? 1 : ceil($messageLength / 153);
         }
         
         return $parts * $this->recipients_count;

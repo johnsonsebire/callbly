@@ -161,7 +161,7 @@ class SmsWithCurrencyService
             return 1;
         }
         
-        return ceil(($length - $maxSingleSmsLength) / $maxMultipartSmsLength) + 1;
+        return ceil($length / $maxMultipartSmsLength);
     }
     
     /**
