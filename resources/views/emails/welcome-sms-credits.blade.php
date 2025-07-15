@@ -1,4 +1,4 @@
-@extends('emails.layouts.app')
+@extends('emails.layouts.master')
 
 @section('content')
 <div style="padding: 40px 0;">

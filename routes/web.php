@@ -55,18 +55,13 @@ Route::middleware('guest')->group(function () {
 // Email Verification Routes
 Route::middleware('auth')->group(function () {
     Route::get('/email/verify', function () {
-        // Auto-verify all users (temporary solution)
-        if (!auth()->user()->hasVerifiedEmail()) {
-            auth()->user()->markEmailAsVerified();
-            return redirect('/dashboard')->with('success', 'Your email has been verified.');
-        }
         return view('auth.verify');
     })->name('verification.notice');
     
     Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
         $request->fulfill();
         return redirect('/dashboard')->with('success', 'Email verified successfully!');
-    })->middleware(['signed'])->name('verification.verify');
+    })->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
     
     Route::post('/email/verification-notification', function (Request $request) {
         $request->user()->sendEmailVerificationNotification();

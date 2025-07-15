@@ -27,6 +27,17 @@ class SendWelcomeSmsCredits
     {
         $user = $event->user;
         
+        // Prevent duplicate execution - check if user already received welcome credits
+        // We check if user already has credits or if they were created more than 5 minutes ago
+        if ($user->sms_credits > 0 || $user->created_at->diffInMinutes(now()) > 5) {
+            Log::info('Welcome SMS credits already processed or user too old', [
+                'user_id' => $user->id,
+                'current_credits' => $user->sms_credits,
+                'created_minutes_ago' => $user->created_at->diffInMinutes(now())
+            ]);
+            return;
+        }
+        
         // Check if free SMS credits for new users is enabled
         $isEnabled = SystemSetting::get('new_user_free_sms_credits_enabled', true);
         
