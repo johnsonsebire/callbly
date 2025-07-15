@@ -12,6 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Add global middleware that sets permission team context for authenticated users (run early)
+        $middleware->web(prepend: [
+            \App\Http\Middleware\SetPermissionTeamContext::class,
+        ]);
+        
         // Register Spatie permission middleware aliases
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,

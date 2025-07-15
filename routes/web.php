@@ -278,7 +278,7 @@ Route::middleware('auth')->group(function () {
     });
     
     // Super Admin Sender Name Approval Routes
-    Route::middleware(['auth','role:super-admin|super admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware(['auth', \App\Http\Middleware\SetPermissionTeamContext::class, 'role:super-admin|super admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('sender-names', [\App\Http\Controllers\Admin\SenderNameApprovalController::class, 'index'])
             ->name('sender-names.index');
         Route::put('sender-names/{sender_name}', [\App\Http\Controllers\Admin\SenderNameApprovalController::class, 'update'])
@@ -301,6 +301,14 @@ Route::middleware('auth')->group(function () {
         // User Impersonation routes
         Route::get('impersonate/{user}', [\App\Http\Controllers\Admin\ImpersonationController::class, 'impersonate'])
             ->name('impersonate');
+            
+        // System Settings routes
+        Route::get('settings', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'index'])
+            ->name('settings.index');
+        Route::put('settings', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'update'])
+            ->name('settings.update');
+        Route::post('settings/reset', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'reset'])
+            ->name('settings.reset');
     });
     
     // Route accessible to all users for stopping impersonation
@@ -314,3 +322,26 @@ Route::middleware('auth')->group(function () {
 
 // Contact form submission route (public, no auth required)
 Route::post('/contact/send', [ContactController::class, 'send'])->name('contact.send');
+
+// Debug route to test role checking
+Route::middleware(['auth'])->get('/debug/roles', function () {
+    $user = auth()->user();
+    
+    return response()->json([
+        'user' => [
+            'id' => $user->id,
+            'email' => $user->email,
+            'current_team_id' => $user->current_team_id,
+            'database_role' => $user->role
+        ],
+        'spatie_roles' => $user->roles->pluck('name')->toArray(),
+        'permissions_team_id' => app(\Spatie\Permission\PermissionRegistrar::class)->getPermissionsTeamId(),
+        'checks' => [
+            'isAdmin' => $user->isAdmin(),
+            'isSuperAdmin' => $user->isSuperAdmin(),
+            'hasRole_super_admin' => $user->hasRole('super admin'),
+            'hasRole_super-admin' => $user->hasRole('super-admin'),
+            'hasAnyRole' => $user->hasAnyRole(['super-admin', 'super admin'])
+        ]
+    ]);
+});

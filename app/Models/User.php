@@ -68,13 +68,57 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Check if user is admin
+     * Check if user is admin (staff or super admin)
      *
      * @return bool
      */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        $this->setTeamContextIfNeeded();
+        return $this->hasAnyRole(['staff', 'super admin']);
+    }
+
+    /**
+     * Check if user is super admin
+     *
+     * @return bool
+     */
+    public function isSuperAdmin(): bool
+    {
+        $this->setTeamContextIfNeeded();
+        return $this->hasRole('super admin');
+    }
+
+    /**
+     * Check if user is staff
+     *
+     * @return bool
+     */
+    public function isStaff(): bool
+    {
+        $this->setTeamContextIfNeeded();
+        return $this->hasRole('staff');
+    }
+
+    /**
+     * Check if user is customer
+     *
+     * @return bool
+     */
+    public function isCustomer(): bool
+    {
+        $this->setTeamContextIfNeeded();
+        return $this->hasRole('customer');
+    }
+
+    /**
+     * Set team context for permission checks if user has a current team
+     */
+    private function setTeamContextIfNeeded(): void
+    {
+        if ($this->current_team_id && !app(\Spatie\Permission\PermissionRegistrar::class)->getPermissionsTeamId()) {
+            app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($this->current_team_id);
+        }
     }
 
     /**

@@ -310,6 +310,11 @@ class NavigationService
                         'label' => 'User Management',
                         'url' => route('admin.users.index'),
                         'active' => $this->checkRoutePattern($currentRouteName, 'admin.users.*')
+                    ],
+                    [
+                        'label' => 'System Settings',
+                        'url' => route('admin.settings.index'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'admin.settings.*')
                     ]
                 ]
             ];
