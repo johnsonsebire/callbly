@@ -57,6 +57,9 @@ class RegisterController extends Controller
 
         auth()->login($user);
 
+        // Fire the Registered event to trigger free SMS credits and other welcome processes
+        event(new \Illuminate\Auth\Events\Registered($user));
+
         // Check if there was a pending team invitation
         if ($invitationToken = session('team_invitation_token')) {
             $invitation = TeamInvitation::where('token', $invitationToken)
