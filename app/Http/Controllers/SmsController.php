@@ -185,9 +185,9 @@ class SmsController extends Controller
     protected function calculateMessageParts(int $messageLength, bool $hasUnicode): int
     {
         if ($hasUnicode) {
-            return $messageLength <= 70 ? 1 : ceil(($messageLength - 70) / 67) + 1;
+            return $messageLength <= 70 ? 1 : ceil($messageLength / 67);
         }
-        return $messageLength <= 160 ? 1 : ceil(($messageLength - 160) / 153) + 1;
+        return $messageLength <= 160 ? 1 : ceil($messageLength / 153);
     }
 
     protected function calculateCampaignMetrics(SmsCampaign $campaign): array

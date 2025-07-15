@@ -253,7 +253,7 @@ class SmsService
         if ($messageLength <= $maxSingleSmsLength) {
             $parts = 1;
         } else {
-            $parts = ceil(($messageLength - $maxSingleSmsLength) / $maxMultipartSmsLength) + 1;
+            $parts = ceil($messageLength / $maxMultipartSmsLength);
         }
         
         // Calculate credits based on pages and recipient count
@@ -496,9 +496,9 @@ class SmsService
                 $hasUnicode = preg_match('/[\x{0080}-\x{FFFF}]/u', $campaign->message);
                 
                 if ($hasUnicode) {
-                    $parts = $messageLength <= 70 ? 1 : ceil(($messageLength - 70) / 67) + 1;
+                    $parts = $messageLength <= 70 ? 1 : ceil($messageLength / 67);
                 } else {
-                    $parts = $messageLength <= 160 ? 1 : ceil(($messageLength - 160) / 153) + 1;
+                    $parts = $messageLength <= 160 ? 1 : ceil($messageLength / 153);
                 }
                 
                 $campaign->credits_used = $parts * $campaign->recipients_count;

@@ -39,14 +39,33 @@ class MakeSuperAdmin extends Command
             }
             
             DB::transaction(function () use ($user) {
+                // Get or create system team
+                $systemTeam = \App\Models\Team::firstOrCreate([
+                    'name' => 'System',
+                    'slug' => 'system'
+                ], [
+                    'owner_id' => $user->id,
+                    'description' => 'System-wide roles and permissions'
+                ]);
+                
                 // Remove any existing roles
                 $user->roles()->detach();
                 
-                // Assign super admin role
+                // Set team context to the system team
+                app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($systemTeam->id);
+                
+                // Assign super admin role in system team context
                 $user->assignRole('super admin');
                 
+                // Set the user's current team to system team
+                $user->current_team_id = $systemTeam->id;
+                $user->save();
+                
                 // Log the action
-                Log::info("User {$user->email} was assigned the super admin role");
+                Log::info("User {$user->email} was assigned the super admin role", [
+                    'team_id' => $systemTeam->id,
+                    'team_name' => $systemTeam->name
+                ]);
             });
             
             $this->info("User {$email} successfully set as super admin!");

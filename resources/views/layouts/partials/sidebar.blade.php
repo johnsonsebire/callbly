@@ -102,7 +102,15 @@
                         <a href="#" class="fw-semibold text-muted text-hover-primary fs-7">{{ auth()->user()->email }}</a>
                         <div>
                             <span class="badge badge-light-primary fw-bold fs-8 px-2 py-1">
-                                {{ auth()->user()->getRoleNames()->first() ?? 'User' }}
+                                @if(auth()->user()->isSuperAdmin())
+                                    Super Admin
+                                @elseif(auth()->user()->isStaff())
+                                    Staff
+                                @elseif(auth()->user()->isCustomer())
+                                    Customer
+                                @else
+                                    User
+                                @endif
                             </span>
                         </div>
                     </div>
