@@ -162,6 +162,82 @@
                                 </div>
                             </div>
 
+                            <!-- Sender Name Whitelist Settings -->
+                            <div class="row mt-5">
+                                <div class="col-12">
+                                    <div class="card card-custom gutter-b">
+                                        <div class="card-header">
+                                            <div class="card-title">
+                                                <h3 class="card-label">Sender Name Whitelist Automation</h3>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <!-- Auto Send Enable -->
+                                                    <div class="form-group mb-5">
+                                                        <label class="form-label">Auto-Send Whitelist Requests</label>
+                                                        <div class="form-check form-switch form-check-custom form-check-solid">
+                                                            <input class="form-check-input" type="checkbox" 
+                                                                   id="sender_name_auto_send_enabled" name="sender_name_auto_send_enabled" 
+                                                                   value="1" {{ $settings['sender_name_auto_send_enabled'] ? 'checked' : '' }}>
+                                                            <label class="form-check-label" for="sender_name_auto_send_enabled">
+                                                                Automatically send whitelist request documents via email
+                                                            </label>
+                                                        </div>
+                                                        <!-- Hidden input for unchecked state -->
+                                                        <input type="hidden" name="sender_name_auto_send_enabled" value="0">
+                                                        <div class="form-text">When enabled, PDF documents will be automatically emailed to specified addresses when new sender names are requested</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <!-- Current Auto-Send Status -->
+                                                    <div class="d-flex flex-column">
+                                                        <h5 class="mb-3">Current Auto-Send Status</h5>
+                                                        <div class="d-flex align-items-center mb-2">
+                                                            <span class="bullet bullet-dot me-3 {{ $settings['sender_name_auto_send_enabled'] ? 'bg-success' : 'bg-danger' }}"></span>
+                                                            <span class="fw-semibold text-gray-600">Auto-Send: 
+                                                                <span class="text-gray-800">{{ $settings['sender_name_auto_send_enabled'] ? 'Enabled' : 'Disabled' }}</span>
+                                                            </span>
+                                                        </div>
+                                                        <div class="d-flex align-items-center">
+                                                            <span class="bullet bullet-dot me-3 {{ !empty($settings['sender_name_notification_emails']) ? 'bg-success' : 'bg-warning' }}"></span>
+                                                            <span class="fw-semibold text-gray-600">Email Addresses: 
+                                                                <span class="text-gray-800">{{ !empty($settings['sender_name_notification_emails']) ? 'Configured' : 'Not Set' }}</span>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Notification Email Addresses -->
+                                            <div class="form-group mb-5">
+                                                <label for="sender_name_notification_emails" class="form-label">Notification Email Addresses</label>
+                                                <textarea class="form-control form-control-solid" 
+                                                          id="sender_name_notification_emails" name="sender_name_notification_emails" 
+                                                          rows="3" placeholder="email1@example.com, email2@example.com">{{ old('sender_name_notification_emails', $settings['sender_name_notification_emails']) }}</textarea>
+                                                <div class="form-text">
+                                                    Enter email addresses separated by commas. These addresses will receive whitelist request documents when auto-send is enabled.
+                                                    <br><strong>Example:</strong> approvals@telco.com, whitelist@provider.com
+                                                </div>
+                                            </div>
+
+                                            <!-- Instructions -->
+                                            <div class="alert alert-info d-flex align-items-center p-5">
+                                                <i class="ki-outline ki-information-2 fs-2hx text-info me-4"></i>
+                                                <div class="d-flex flex-column">
+                                                    <h4 class="mb-1 text-info">How it works</h4>
+                                                    <span>
+                                                        <strong>When Auto-Send is Enabled:</strong> PDF whitelist request documents are automatically generated and emailed to the specified addresses when users request new sender names.
+                                                        <br><strong>When Auto-Send is Disabled:</strong> You can manually download PDF documents from the sender names management page and send them yourself.
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="d-flex justify-content-end mt-5">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="ki-duotone ki-check fs-2"></i>Update Settings
@@ -184,6 +260,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const amountField = document.getElementById('new_user_free_sms_credits_amount');
     const emailCheckbox = document.getElementById('welcome_email_enabled');
     
+    // Toggle sender name auto-send fields
+    const autoSendCheckbox = document.getElementById('sender_name_auto_send_enabled');
+    const emailsField = document.getElementById('sender_name_notification_emails');
+    
     function toggleFields() {
         const isEnabled = enableCheckbox.checked;
         amountField.disabled = !isEnabled;
@@ -195,12 +275,45 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    function toggleAutoSendFields() {
+        const isAutoSendEnabled = autoSendCheckbox.checked;
+        emailsField.disabled = !isAutoSendEnabled;
+        
+        if (!isAutoSendEnabled) {
+            emailsField.value = '';
+        }
+    }
+    
     enableCheckbox.addEventListener('change', toggleFields);
+    autoSendCheckbox.addEventListener('change', toggleAutoSendFields);
     toggleFields(); // Initial state
+    toggleAutoSendFields(); // Initial state
+    
+    // Handle checkbox submission properly
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        // Ensure checkboxes have proper values
+        document.querySelectorAll('input[type="checkbox"]').forEach(function(checkbox) {
+            // Remove any existing hidden inputs for this checkbox
+            const existingHidden = document.querySelector(`input[type="hidden"][name="${checkbox.name}"]`);
+            if (existingHidden && existingHidden !== checkbox) {
+                existingHidden.remove();
+            }
+            
+            // Add proper hidden input for unchecked state
+            if (!checkbox.checked) {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = checkbox.name;
+                hiddenInput.value = '0';
+                form.appendChild(hiddenInput);
+            }
+        });
     
     // Form validation
     const form = document.querySelector('form');
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function(e) {        });
+        
         const senderName = document.getElementById('system_sender_name').value;
         const pattern = /^[a-zA-Z0-9]+$/;
         
@@ -214,6 +327,20 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             alert('Sender name must not exceed 11 characters.');
             return false;
+        }
+        
+        // Validate email addresses if auto-send is enabled
+        if (autoSendCheckbox.checked && emailsField.value.trim()) {
+            const emails = emailsField.value.split(',').map(email => email.trim()).filter(email => email);
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            for (let email of emails) {
+                if (!emailPattern.test(email)) {
+                    e.preventDefault();
+                    alert(`Invalid email address: ${email}`);
+                    return false;
+                }
+            }
         }
     });
 });
