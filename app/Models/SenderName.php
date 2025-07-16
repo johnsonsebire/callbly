@@ -13,6 +13,26 @@ class SenderName extends Model
     use HasFactory;
 
     /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::created(function (SenderName $senderName) {
+            // Automatically send whitelist request if auto-send is enabled
+            try {
+                $pdfService = app(\App\Services\SenderNameWhitelistPdfService::class);
+                $pdfService->sendWhitelistRequestIfEnabled($senderName);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to auto-send whitelist request for new sender name', [
+                    'sender_name_id' => $senderName->id,
+                    'sender_name' => $senderName->name,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        });
+    }
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
@@ -69,6 +89,14 @@ class SenderName extends Model
     public function isApproved(): bool
     {
         return $this->status === 'approved' && $this->approved_at !== null;
+    }
+
+    /**
+     * Get the sender name value (alias for name attribute).
+     */
+    public function getSenderNameAttribute(): string
+    {
+        return $this->name;
     }
 
     /**

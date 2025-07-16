@@ -179,12 +179,37 @@
                                                                 <i class="ki-outline ki-check fs-2"></i>
                                                             </button>
                                                         </form>
-                                                        <button type="button" class="btn btn-icon btn-light-danger btn-sm" 
+                                                        <button type="button" class="btn btn-icon btn-light-danger btn-sm me-1" 
                                                                 data-bs-toggle="modal" 
                                                                 data-bs-target="#kt_modal_reject_{{ $item->id }}" 
                                                                 data-bs-placement="top" title="Reject">
                                                             <i class="ki-outline ki-cross fs-2"></i>
-                                                        </button>
+                                                        </button>                                        <!-- PDF Actions for pending sender names -->
+                                        <a href="{{ route('admin.sender-names.preview-pdf', $item->id) }}" 
+                                           class="btn btn-icon btn-light-secondary btn-sm me-1" 
+                                           data-bs-toggle="tooltip" 
+                                           data-bs-placement="top" 
+                                           title="Preview Whitelist PDF"
+                                           target="_blank">
+                                            <i class="ki-outline ki-eye fs-2"></i>
+                                        </a>
+                                        <a href="{{ route('admin.sender-names.download-pdf', $item->id) }}" 
+                                           class="btn btn-icon btn-light-info btn-sm me-1" 
+                                           data-bs-toggle="tooltip" 
+                                           data-bs-placement="top" 
+                                           title="Download Whitelist PDF">
+                                            <i class="ki-outline ki-file-down fs-2"></i>
+                                        </a>
+                                        <form method="POST" action="{{ route('admin.sender-names.send-whitelist', $item->id) }}" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-icon btn-light-warning btn-sm" 
+                                                    data-bs-toggle="tooltip" 
+                                                    data-bs-placement="top" 
+                                                    title="Send Whitelist Request Email"
+                                                    onclick="return confirm('Send whitelist request email for sender name {{ $item->name }}?')">
+                                                <i class="ki-outline ki-send fs-2"></i>
+                                            </button>
+                                        </form>
                                                     </div>
                                                 @else
                                                     <div class="d-flex justify-content-end flex-shrink-0">
@@ -194,12 +219,37 @@
                                                               data-bs-placement="top" title="Edit">
                                                             <i class="ki-outline ki-pencil fs-2"></i>
                                                         </button>
-                                                        <button type="button" class="btn btn-icon btn-light-danger btn-sm" 
+                                                        <button type="button" class="btn btn-icon btn-light-danger btn-sm me-1" 
                                                               data-bs-toggle="modal" 
                                                               data-bs-target="#kt_modal_delete_{{ $item->id }}" 
                                                               data-bs-placement="top" title="Delete">
                                                             <i class="ki-outline ki-trash fs-2"></i>
-                                                        </button>
+                                                        </button>                                        <!-- PDF Actions for approved/rejected sender names -->
+                                        <a href="{{ route('admin.sender-names.preview-pdf', $item->id) }}" 
+                                           class="btn btn-icon btn-light-secondary btn-sm me-1" 
+                                           data-bs-toggle="tooltip" 
+                                           data-bs-placement="top" 
+                                           title="Preview Whitelist PDF"
+                                           target="_blank">
+                                            <i class="ki-outline ki-eye fs-2"></i>
+                                        </a>
+                                        <a href="{{ route('admin.sender-names.download-pdf', $item->id) }}" 
+                                           class="btn btn-icon btn-light-info btn-sm me-1" 
+                                           data-bs-toggle="tooltip" 
+                                           data-bs-placement="top" 
+                                           title="Download Whitelist PDF">
+                                            <i class="ki-outline ki-file-down fs-2"></i>
+                                        </a>
+                                        <form method="POST" action="{{ route('admin.sender-names.send-whitelist', $item->id) }}" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-icon btn-light-warning btn-sm" 
+                                                    data-bs-toggle="tooltip" 
+                                                    data-bs-placement="top" 
+                                                    title="Send Whitelist Request Email"
+                                                    onclick="return confirm('Send whitelist request email for sender name {{ $item->name }}?')">
+                                                <i class="ki-outline ki-send fs-2"></i>
+                                            </button>
+                                        </form>
                                                     </div>
                                                 @endif
                                             </td>

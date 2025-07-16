@@ -283,6 +283,13 @@ Route::middleware('auth')->group(function () {
         // Add new route for creating sender names for users
         Route::post('sender-names/create-for-user', [\App\Http\Controllers\Admin\SenderNameApprovalController::class, 'createForUser'])
             ->name('sender-names.create-for-user');
+        // PDF whitelist request routes
+        Route::get('sender-names/{sender_name}/download-pdf', [\App\Http\Controllers\Admin\SenderNameApprovalController::class, 'downloadWhitelistPdf'])
+            ->name('sender-names.download-pdf');
+        Route::get('sender-names/{sender_name}/preview-pdf', [\App\Http\Controllers\Admin\SenderNameApprovalController::class, 'previewWhitelistPdf'])
+            ->name('sender-names.preview-pdf');
+        Route::post('sender-names/{sender_name}/send-whitelist', [\App\Http\Controllers\Admin\SenderNameApprovalController::class, 'sendWhitelistRequest'])
+            ->name('sender-names.send-whitelist');
         
         // User Management for Super Admin
         Route::resource('users', \App\Http\Controllers\Admin\UserController::class);

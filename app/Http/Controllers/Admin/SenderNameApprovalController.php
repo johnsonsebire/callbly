@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SenderName;
 use App\Models\User;
+use App\Services\SenderNameWhitelistPdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -247,6 +248,94 @@ class SenderNameApprovalController extends Controller
             
             return back()->with('error', 'An error occurred while creating the sender name: ' . $e->getMessage())
                 ->withInput();
+        }
+    }
+    
+    /**
+     * Download PDF whitelist request for a sender name
+     *
+     * @param  int  $id
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function downloadWhitelistPdf($id)
+    {
+        $senderName = SenderName::with('user')->findOrFail($id);
+        
+        try {
+            $pdfService = new SenderNameWhitelistPdfService();
+            return $pdfService->downloadWhitelistRequestPdf($senderName);
+            
+        } catch (\Exception $e) {
+            Log::error('Error generating PDF for sender name', [
+                'error' => $e->getMessage(),
+                'sender_name_id' => $id,
+                'admin_id' => Auth::id(),
+            ]);
+            
+            return back()->with('error', 'An error occurred while generating the PDF document.');
+        }
+    }
+    
+    /**
+     * Send whitelist request email for a sender name
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function sendWhitelistRequest($id)
+    {
+        $senderName = SenderName::with('user')->findOrFail($id);
+        
+        try {
+            $pdfService = new SenderNameWhitelistPdfService();
+            $sent = $pdfService->sendWhitelistRequestIfEnabled($senderName);
+            
+            if ($sent) {
+                Log::info('Whitelist request email sent manually', [
+                    'sender_name_id' => $id,
+                    'admin_id' => Auth::id(),
+                ]);
+                
+                return back()->with('success', "Whitelist request email sent successfully for sender name '{$senderName->sender_name}'.");
+            } else {
+                return back()->with('error', 'Auto-send is not enabled or email addresses are not configured. Please check system settings.');
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Error sending whitelist request email', [
+                'error' => $e->getMessage(),
+                'sender_name_id' => $id,
+                'admin_id' => Auth::id(),
+            ]);
+            
+            return back()->with('error', 'An error occurred while sending the whitelist request email.');
+        }
+    }
+    
+    /**
+     * Preview the PDF whitelist request in browser
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function previewWhitelistPdf($id)
+    {
+        $senderName = SenderName::with('user')->findOrFail($id);
+        
+        try {
+            $pdfService = new SenderNameWhitelistPdfService();
+            $data = $pdfService->preparePdfData($senderName);
+            
+            return view('pdfs.sender-name-whitelist-request', $data);
+            
+        } catch (\Exception $e) {
+            Log::error('Error previewing PDF for sender name', [
+                'error' => $e->getMessage(),
+                'sender_name_id' => $id,
+                'admin_id' => Auth::id(),
+            ]);
+            
+            return back()->with('error', 'An error occurred while previewing the PDF document.');
         }
     }
 }
