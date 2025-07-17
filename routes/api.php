@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\ServicePlanController;
 use App\Http\Controllers\Api\SmsController;
 use App\Http\Controllers\Api\UssdController;
 use App\Http\Controllers\Api\VirtualNumberController;
+use App\Http\Controllers\WalletController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +46,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/sender-names', [SmsController::class, 'getSenderNames']);
         Route::get('/campaigns', [SmsController::class, 'getCampaigns']);
         Route::get('/campaigns/{id}', [SmsController::class, 'getCampaignDetails']);
+        
+        // SMS Templates routes
+        Route::get('/templates', [SmsController::class, 'getTemplates']);
+        Route::post('/templates', [SmsController::class, 'createTemplate']);
+        Route::put('/templates/{id}', [SmsController::class, 'updateTemplate']);
+        Route::delete('/templates/{id}', [SmsController::class, 'deleteTemplate']);
     });
     
     // Contacts routes
@@ -58,6 +65,78 @@ Route::middleware('auth:sanctum')->group(function () {
         }
         
         return response()->json($contact);
+    });
+    
+    // Contacts list for mobile app
+    Route::get('/contacts', function () {
+        $user = auth()->user();
+        $contacts = $user->getAvailableContacts()->take(1000); // Limit for mobile performance
+        
+        return response()->json([
+            'success' => true,
+            'data' => $contacts->map(function ($contact) {
+                return [
+                    'id' => $contact->id,
+                    'name' => $contact->full_name,
+                    'phone' => $contact->phone_number,
+                    'email' => $contact->email,
+                    'first_name' => $contact->first_name,
+                    'last_name' => $contact->last_name,
+                    'created_at' => $contact->created_at,
+                    'updated_at' => $contact->updated_at,
+                ];
+            })->values()
+        ]);
+    });
+    
+    // Contact groups for mobile app
+    Route::get('/contact-groups', function () {
+        $user = auth()->user();
+        $contactGroups = $user->getAvailableContactGroups();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $contactGroups->map(function ($group) {
+                return [
+                    'id' => $group->id,
+                    'name' => $group->name,
+                    'description' => $group->description,
+                    'contacts_count' => $group->contacts_count ?? $group->contacts()->count(),
+                    'created_at' => $group->created_at,
+                    'updated_at' => $group->updated_at,
+                ];
+            })->values()
+        ]);
+    });
+    
+    // Contact group contacts
+    Route::get('/contact-groups/{id}/contacts', function ($id) {
+        $user = auth()->user();
+        $contactGroup = \App\Models\ContactGroup::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+            
+        if (!$contactGroup) {
+            return response()->json(['error' => 'Contact group not found'], 404);
+        }
+        
+        $contacts = $contactGroup->contacts()->get();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $contacts->map(function ($contact) {
+                return [
+                    'id' => $contact->id,
+                    'name' => $contact->full_name,
+                    'phone' => $contact->phone_number,
+                    'email' => $contact->email,
+                    'first_name' => $contact->first_name,
+                    'last_name' => $contact->last_name,
+                    'created_at' => $contact->created_at,
+                    'updated_at' => $contact->updated_at,
+                ];
+            })
+        ]);
     });
     
     // USSD routes
@@ -110,6 +189,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/commissions', [AffiliateController::class, 'getCommissions']);
         Route::post('/payout-request', [AffiliateController::class, 'requestPayout']);
         Route::get('/payout-history', [AffiliateController::class, 'getPayoutHistory']);
+    });
+    
+    // Wallet API routes
+    Route::prefix('wallet')->group(function () {
+        Route::get('/balance', [WalletController::class, 'getBalance']);
+        Route::get('/transactions', [WalletController::class, 'getTransactions']);
+        Route::post('/topup', [WalletController::class, 'initiateTopup']);
     });
     
     // Push notification settings

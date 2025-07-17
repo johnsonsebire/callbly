@@ -23,11 +23,12 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         
-        // Get account balance
+        // Get real account balance
         $accountBalance = [
             'sms_credits' => $user->sms_credits,
             'call_credits' => $user->call_credits,
             'ussd_credits' => $user->ussd_credits,
+            'wallet_balance' => $user->wallet_balance ?? 0,
         ];
         
         // Get SMS statistics
@@ -43,7 +44,7 @@ class DashboardController extends Controller
         $virtualNumberStats = $this->getVirtualNumberStatistics($user->id);
         
         // Get recent transactions
-        $recentTransactions = Order::where('user_id', $user->id)
+        $recentTransactions = \App\Models\Order::where('user_id', $user->id)
             ->with(['servicePlan:id,name'])
             ->orderBy('created_at', 'desc')
             ->take(5)
@@ -59,15 +60,32 @@ class DashboardController extends Controller
                 ];
             });
         
+        // Get usage statistics for mobile dashboard
+        $usageStats = [
+            'sms_sent_today' => $smsStats['sent_today'] ?? 0,
+            'sms_sent_this_month' => $smsStats['sent_this_month'] ?? 0,
+            'total_contacts' => $user->getAvailableContacts()->count(),
+            'active_campaigns' => $smsStats['active_campaigns'] ?? 0,
+        ];
+
         return response()->json([
             'success' => true,
             'data' => [
                 'account_balance' => $accountBalance,
-                'sms_stats' => $smsStats,
-                'ussd_stats' => $ussdStats,
-                'contact_center_stats' => $contactCenterStats,
-                'virtual_number_stats' => $virtualNumberStats,
+                'sms_statistics' => $smsStats,
+                'ussd_statistics' => $ussdStats,
+                'contact_center_statistics' => $contactCenterStats,
+                'virtual_number_statistics' => $virtualNumberStats,
                 'recent_transactions' => $recentTransactions,
+                'usage_statistics' => $usageStats,
+                'user' => [
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'currency' => [
+                        'code' => $user->currency->code ?? 'NGN',
+                        'symbol' => $user->currency->symbol ?? '₦',
+                    ],
+                ],
             ]
         ]);
     }
@@ -83,10 +101,26 @@ class DashboardController extends Controller
         // Total sent messages
         $totalSent = SmsCampaign::where('user_id', $userId)->sum('total_sent');
         
+        // Messages sent today
+        $sentToday = SmsCampaign::where('user_id', $userId)
+            ->whereDate('created_at', today())
+            ->sum('total_sent');
+            
+        // Messages sent this month
+        $sentThisMonth = SmsCampaign::where('user_id', $userId)
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->sum('total_sent');
+        
         // Messages sent in last 30 days
         $last30Days = SmsCampaign::where('user_id', $userId)
             ->where('created_at', '>=', now()->subDays(30))
             ->sum('total_sent');
+            
+        // Active campaigns count
+        $activeCampaigns = SmsCampaign::where('user_id', $userId)
+            ->where('status', 'active')
+            ->count();
             
         // Delivery rate
         $deliveryStats = SmsCampaign::where('user_id', $userId)
@@ -114,7 +148,10 @@ class DashboardController extends Controller
             
         return [
             'total_sent' => $totalSent,
+            'sent_today' => $sentToday,
+            'sent_this_month' => $sentThisMonth,
             'last_30_days' => $last30Days,
+            'active_campaigns' => $activeCampaigns,
             'delivery_rate' => $deliveryRate,
             'recent_campaigns' => $recentCampaigns,
         ];

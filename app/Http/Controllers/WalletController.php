@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 
 class WalletController extends Controller
 {
@@ -229,6 +230,165 @@ class WalletController extends Controller
             return back()->withErrors([
                 'error' => 'An error occurred while processing your purchase. Please try again later.'
             ]);
+        }
+    }
+    
+    /**
+     * Get wallet balance for API
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getBalance()
+    {
+        try {
+            $user = auth()->user();
+            $wallet = $user->wallet;
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'balance' => $wallet->balance,
+                    'currency' => $user->currency->code,
+                    'formatted_balance' => $user->currency->symbol . number_format($wallet->balance, 2),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to get wallet balance: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve wallet balance'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Get wallet transactions for API
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getTransactions(Request $request)
+    {
+        try {
+            $user = auth()->user();
+            $wallet = $user->wallet;
+            
+            $page = $request->get('page', 1);
+            $limit = $request->get('limit', 20);
+            
+            $transactions = WalletTransaction::where('wallet_id', $wallet->id)
+                ->orderBy('created_at', 'desc')
+                ->paginate($limit, ['*'], 'page', $page);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $transactions->items(),
+                'pagination' => [
+                    'current_page' => $transactions->currentPage(),
+                    'per_page' => $transactions->perPage(),
+                    'total' => $transactions->total(),
+                    'last_page' => $transactions->lastPage(),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to get wallet transactions: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve wallet transactions'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Initiate wallet topup for API
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function initiateTopup(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'amount' => 'required|numeric|min:5',
+            'payment_method' => 'string|in:card,mobile_money,bank_transfer'
+        ]);
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        
+        try {
+            $user = auth()->user();
+            $amount = $request->amount;
+            $paymentMethod = $request->payment_method ?? 'card';
+            
+            // Generate a unique reference
+            $reference = 'WAL_' . Str::uuid()->toString();
+            
+            // Create metadata for the transaction
+            $metadata = [
+                'user_id' => $user->id,
+                'wallet_id' => $user->wallet->id,
+                'product_type' => 'wallet_topup',
+                'payment_method' => $paymentMethod,
+                'timestamp' => now()->timestamp,
+            ];
+            
+            // Initialize payment with Paystack
+            $paymentResponse = $this->paymentService->initializePayment(
+                $user,
+                $amount,
+                $metadata,
+                route('payment.verify'),
+                'Wallet Top-up'
+            );
+            
+            if (!$paymentResponse['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment initialization failed: ' . 
+                        ($paymentResponse['message'] ?? 'Unknown error')
+                ], 400);
+            }
+            
+            // Create a pending wallet transaction
+            $transaction = WalletTransaction::create([
+                'user_id' => $user->id,
+                'wallet_id' => $user->wallet->id,
+                'type' => 'credit',
+                'amount' => $amount,
+                'reference' => $reference,
+                'description' => 'Wallet top-up via ' . ucfirst($paymentMethod),
+                'status' => 'pending',
+                'metadata' => [
+                    'payment_method' => $paymentMethod,
+                    'paystack_reference' => $paymentResponse['reference'],
+                ]
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'authorization_url' => $paymentResponse['authorization_url'],
+                    'reference' => $reference,
+                    'amount' => $amount,
+                    'transaction_id' => $transaction->id,
+                ],
+                'message' => 'Payment initiated successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Wallet top-up API failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while processing your request'
+            ], 500);
         }
     }
 }
