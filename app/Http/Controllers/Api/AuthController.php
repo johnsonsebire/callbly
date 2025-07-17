@@ -50,7 +50,7 @@ class AuthController extends Controller
             'phone' => $request->phone,
             'company_name' => $request->company_name,
             'call_credits' => 0,
-            'sms_credits' => 0,
+            'sms_credits' => 5, // Give 5 free SMS credits on registration
             'ussd_credits' => 0,
         ]);
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\SenderName;
 use App\Models\SmsCampaign;
+use App\Models\SmsTemplate;
 use App\Services\SmsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -30,7 +31,7 @@ class SmsController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'recipient' => 'required|string',
-            'message' => 'required|string', // Removed max:160 to allow multi-part messages
+            'message' => 'required|string',
             'sender_name' => 'required|string|exists:sender_names,name',
             'scheduled_at' => 'nullable|date|after:now',
         ]);
@@ -46,10 +47,9 @@ class SmsController extends Controller
         try {
             $user = $request->user();
             
-            // Check if sender name is available to the user (either owned or shared through teams)
+            // Check if sender name is available to the user
             $senderNameAvailable = false;
             
-            // First, check if this is the user's own sender name
             $senderName = SenderName::where('name', $request->sender_name)
                 ->where('user_id', $user->id)
                 ->where('status', 'approved')
@@ -58,7 +58,6 @@ class SmsController extends Controller
             if ($senderName) {
                 $senderNameAvailable = true;
             } else {
-                // If not, check if it's a sender name shared through a team
                 $sharedSenderNames = $user->getAvailableSenderNames();
                 $senderName = $sharedSenderNames->where('name', $request->sender_name)
                     ->where('status', 'approved')
@@ -66,12 +65,6 @@ class SmsController extends Controller
                     
                 if ($senderName) {
                     $senderNameAvailable = true;
-                    // We found a valid shared sender name
-                    Log::info('Using shared sender name from team', [
-                        'sender_name' => $senderName->name, 
-                        'owner_id' => $senderName->user_id,
-                        'user_id' => $user->id
-                    ]);
                 }
             }
             
@@ -84,9 +77,9 @@ class SmsController extends Controller
             
             // Calculate SMS parts and required credits
             $smsCount = $this->calculateSmsPartsCount($request->message);
-            $creditsNeeded = $smsCount; // 1 credit per SMS part
+            $creditsNeeded = $smsCount;
             
-            // Get the user's available SMS credits (including shared ones from teams)
+            // Get the user's available SMS credits
             $availableSmsCredits = $user->getAvailableSmsCredits();
             
             // Check if user has sufficient credits
@@ -108,7 +101,7 @@ class SmsController extends Controller
                 'scheduled_at' => $request->scheduled_at ? date('Y-m-d H:i:s', strtotime($request->scheduled_at)) : null,
             ]);
 
-            // Deduct credits before queuing the job (only if not internal call)
+            // Deduct credits before queuing the job
             if (!request()->has('_internal_call')) {
                 $teamResourceService = app(\App\Services\TeamResourceService::class);
                 $creditResult = $teamResourceService->deductSharedSmsCredits($user, $creditsNeeded);
@@ -120,21 +113,12 @@ class SmsController extends Controller
                     ], 400);
                 }
                 
-                // Update campaign with team credit info if applicable
-                if ($creditResult['team_id']) {
-                    $campaign->update([
-                        'team_id' => $creditResult['team_id'],
-                        'team_credits_used' => $creditResult['team_credits_used'],
-                        'credits_used' => $creditsNeeded
-                    ]);
-                } else {
-                    $campaign->update([
-                        'credits_used' => $creditsNeeded
-                    ]);
-                }
+                $campaign->update([
+                    'credits_used' => $creditsNeeded
+                ]);
             }
 
-            // Dispatch SMS job (with delay if scheduled)
+            // Dispatch SMS job
             $job = new \App\Jobs\SendSingleSmsJob(
                 $campaign->id,
                 $request->recipient,
@@ -142,29 +126,15 @@ class SmsController extends Controller
                 $request->sender_name
             );
             
-            // Apply delay if message is scheduled
             if ($request->scheduled_at && \Carbon\Carbon::parse($request->scheduled_at)->isAfter(now())) {
                 $scheduledTime = \Carbon\Carbon::parse($request->scheduled_at);
                 $delay = $scheduledTime->diffInSeconds(now());
                 $job->delay($delay);
                 dispatch($job);
                 
-                Log::info('Single SMS job scheduled via API', [
-                    'campaign_id' => $campaign->id,
-                    'recipient' => $request->recipient,
-                    'scheduled_at' => $request->scheduled_at,
-                    'delay_seconds' => $delay
-                ]);
-                
                 $message = 'SMS scheduled for ' . $scheduledTime->format('M d, Y H:i:s');
             } else {
                 dispatch($job);
-                
-                Log::info('Single SMS job dispatched immediately via API', [
-                    'campaign_id' => $campaign->id,
-                    'recipient' => $request->recipient
-                ]);
-                
                 $message = 'SMS is being sent';
             }
 
@@ -178,9 +148,7 @@ class SmsController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('SMS sending error: ' . $e->getMessage(), [
-                'exception' => $e
-            ]);
+            Log::error('SMS sending error: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -200,7 +168,7 @@ class SmsController extends Controller
         $validator = Validator::make($request->all(), [
             'recipients' => 'required|array|min:1',
             'recipients.*' => 'required|string',
-            'message' => 'required|string', // Removed max:160 to allow multi-part messages
+            'message' => 'required|string',
             'sender_name' => 'required|string|exists:sender_names,name',
             'name' => 'required|string|max:255',
             'scheduled_at' => 'nullable|date|after:now',
@@ -219,10 +187,9 @@ class SmsController extends Controller
             $user = $request->user();
             $recipientsCount = count($request->recipients);
             
-            // Check if sender name is available to the user (either owned or shared through teams)
+            // Check if sender name is available to the user
             $senderNameAvailable = false;
             
-            // First, check if this is the user's own sender name
             $senderName = SenderName::where('name', $request->sender_name)
                 ->where('user_id', $user->id)
                 ->where('status', 'approved')
@@ -231,7 +198,6 @@ class SmsController extends Controller
             if ($senderName) {
                 $senderNameAvailable = true;
             } else {
-                // If not, check if it's a sender name shared through a team
                 $sharedSenderNames = $user->getAvailableSenderNames();
                 $senderName = $sharedSenderNames->where('name', $request->sender_name)
                     ->where('status', 'approved')
@@ -239,12 +205,6 @@ class SmsController extends Controller
                     
                 if ($senderName) {
                     $senderNameAvailable = true;
-                    // We found a valid shared sender name, use it
-                    Log::info('Using shared sender name from team', [
-                        'sender_name' => $senderName->name, 
-                        'owner_id' => $senderName->user_id,
-                        'user_id' => $user->id
-                    ]);
                 }
             }
             
@@ -257,9 +217,9 @@ class SmsController extends Controller
             
             // Calculate SMS parts and required credits
             $smsCount = $this->calculateSmsPartsCount($request->message);
-            $creditsNeeded = $smsCount * $recipientsCount; // 1 credit per SMS part per recipient
+            $creditsNeeded = $smsCount * $recipientsCount;
             
-            // Get the user's available SMS credits (including shared ones from teams)
+            // Get the user's available SMS credits
             $availableSmsCredits = $user->getAvailableSmsCredits();
             
             // Check if user has sufficient credits
@@ -283,14 +243,12 @@ class SmsController extends Controller
                     ], 400);
                 }
                 
-                // Update campaign with new details if needed
                 $campaign->update([
                     'status' => 'processing',
                     'recipients_count' => $recipientsCount,
                     'scheduled_at' => $request->scheduled_at ? date('Y-m-d H:i:s', strtotime($request->scheduled_at)) : $campaign->scheduled_at,
                 ]);
             } else {
-                // Create new SMS campaign
                 $campaign = SmsCampaign::create([
                     'user_id' => $user->id,
                     'name' => $request->name,
@@ -302,7 +260,7 @@ class SmsController extends Controller
                 ]);
             }
 
-            // Deduct credits before queuing the job (only if not internal call)
+            // Deduct credits before queuing the job
             if (!request()->has('_internal_call')) {
                 $teamResourceService = app(\App\Services\TeamResourceService::class);
                 $creditResult = $teamResourceService->deductSharedSmsCredits($user, $creditsNeeded);
@@ -314,27 +272,12 @@ class SmsController extends Controller
                     ], 400);
                 }
                 
-                // Update campaign with team credit info if applicable
-                if ($creditResult['team_id']) {
-                    $campaign->update([
-                        'team_id' => $creditResult['team_id'],
-                        'team_credits_used' => $creditResult['team_credits_used'],
-                        'credits_used' => $creditsNeeded
-                    ]);
-                } else {
-                    $campaign->update([
-                        'credits_used' => $creditsNeeded
-                    ]);
-                }
-                
-                $personalCreditsUsed = $creditResult['personal_credits_used'] ?? 0;
-                $teamCreditsUsed = $creditResult['team_credits_used'] ?? 0;
-            } else {
-                $personalCreditsUsed = 0;
-                $teamCreditsUsed = 0;
+                $campaign->update([
+                    'credits_used' => $creditsNeeded
+                ]);
             }
 
-            // Dispatch bulk SMS job (with delay if scheduled)
+            // Dispatch bulk SMS job
             $job = new \App\Jobs\SendBulkSmsJob(
                 $campaign->id,
                 $request->recipients,
@@ -342,29 +285,15 @@ class SmsController extends Controller
                 $request->sender_name
             );
             
-            // Apply delay if message is scheduled
             if ($request->scheduled_at && \Carbon\Carbon::parse($request->scheduled_at)->isAfter(now())) {
                 $scheduledTime = \Carbon\Carbon::parse($request->scheduled_at);
                 $delay = $scheduledTime->diffInSeconds(now());
                 $job->delay($delay);
                 dispatch($job);
                 
-                Log::info('Bulk SMS job scheduled via API', [
-                    'campaign_id' => $campaign->id,
-                    'recipients_count' => $recipientsCount,
-                    'scheduled_at' => $request->scheduled_at,
-                    'delay_seconds' => $delay
-                ]);
-                
                 $message = 'Bulk SMS campaign scheduled for ' . $scheduledTime->format('M d, Y H:i:s');
             } else {
                 dispatch($job);
-                
-                Log::info('Bulk SMS job dispatched immediately via API', [
-                    'campaign_id' => $campaign->id,
-                    'recipients_count' => $recipientsCount
-                ]);
-                
                 $message = 'Bulk SMS campaign is being processed';
             }
 
@@ -375,15 +304,11 @@ class SmsController extends Controller
                     'campaign_id' => $campaign->id,
                     'recipients_count' => $recipientsCount,
                     'estimated_cost' => $creditsNeeded,
-                    'personal_credits_used' => $personalCreditsUsed,
-                    'team_credits_used' => $teamCreditsUsed,
                     'scheduled_at' => $request->scheduled_at,
                 ]
             ]);
         } catch (\Exception $e) {
-            Log::error('Bulk SMS error: ' . $e->getMessage(), [
-                'exception' => $e
-            ]);
+            Log::error('Bulk SMS error: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -415,14 +340,12 @@ class SmsController extends Controller
         try {
             $user = $request->user();
 
-            // Create sender name record
             $senderName = SenderName::create([
                 'user_id' => $user->id,
                 'name' => $request->name,
                 'status' => 'pending',
             ]);
 
-            // Initiate sender name registration with service provider
             $result = $this->smsService->registerSenderName($senderName->name, $user->id);
 
             if ($result['success']) {
@@ -436,7 +359,6 @@ class SmsController extends Controller
                     ]
                 ]);
             } else {
-                // Delete the sender name record if registration failed
                 $senderName->delete();
 
                 return response()->json([
@@ -445,9 +367,7 @@ class SmsController extends Controller
                 ], 500);
             }
         } catch (\Exception $e) {
-            Log::error('Sender name registration error: ' . $e->getMessage(), [
-                'exception' => $e
-            ]);
+            Log::error('Sender name registration error: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -465,9 +385,10 @@ class SmsController extends Controller
     public function getSenderNames(Request $request): JsonResponse
     {
         $user = $request->user();
-        $senderNames = SenderName::where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        
+        $senderNames = $user->getAvailableSenderNames()
+            ->sortByDesc('created_at')
+            ->values();
 
         return response()->json([
             'success' => true,
@@ -519,6 +440,185 @@ class SmsController extends Controller
             'success' => true,
             'data' => $campaign
         ]);
+    }
+
+    /**
+     * Get user's SMS templates
+     */
+    public function getTemplates(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            
+            $templates = SmsTemplate::where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($template) {
+                    return [
+                        'id' => $template->id,
+                        'name' => $template->name,
+                        'content' => $template->content,
+                        'description' => $template->description,
+                        'created_at' => $template->created_at->format('Y-m-d H:i:s'),
+                        'updated_at' => $template->updated_at->format('Y-m-d H:i:s'),
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $templates
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching SMS templates: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch templates'
+            ], 500);
+        }
+    }
+
+    /**
+     * Create a new SMS template
+     */
+    public function createTemplate(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:100',
+            'content' => 'required|string|max:1000',
+            'description' => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $user = $request->user();
+            
+            $template = SmsTemplate::create([
+                'user_id' => $user->id,
+                'name' => $request->name,
+                'content' => $request->content,
+                'description' => $request->description,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Template created successfully',
+                'data' => [
+                    'id' => $template->id,
+                    'name' => $template->name,
+                    'content' => $template->content,
+                    'description' => $template->description,
+                    'created_at' => $template->created_at->format('Y-m-d H:i:s'),
+                    'updated_at' => $template->updated_at->format('Y-m-d H:i:s'),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error creating SMS template: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create template'
+            ], 500);
+        }
+    }
+
+    /**
+     * Update an existing SMS template
+     */
+    public function updateTemplate(Request $request, $id): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:100',
+            'content' => 'required|string|max:1000',
+            'description' => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $user = $request->user();
+            
+            $template = SmsTemplate::where('id', $id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$template) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Template not found'
+                ], 404);
+            }
+
+            $template->update([
+                'name' => $request->name,
+                'content' => $request->content,
+                'description' => $request->description,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Template updated successfully',
+                'data' => [
+                    'id' => $template->id,
+                    'name' => $template->name,
+                    'content' => $template->content,
+                    'description' => $template->description,
+                    'created_at' => $template->created_at->format('Y-m-d H:i:s'),
+                    'updated_at' => $template->updated_at->format('Y-m-d H:i:s'),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating SMS template: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update template'
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete an SMS template
+     */
+    public function deleteTemplate(Request $request, $id): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            
+            $template = SmsTemplate::where('id', $id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$template) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Template not found'
+                ], 404);
+            }
+
+            $template->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Template deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error deleting SMS template: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete template'
+            ], 500);
+        }
     }
 
     /**
