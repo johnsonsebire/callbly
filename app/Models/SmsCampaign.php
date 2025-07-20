@@ -68,7 +68,7 @@ class SmsCampaign extends Model
     public function calculateCreditsUsed(): int
     {
         $messageLength = mb_strlen($this->message);
-        $hasUnicode = preg_match('/[\x{0080}-\x{FFFF}]/u', $this->message);
+        $hasUnicode = $this->hasUnicodeCharacters($this->message);
         
         // Calculate message pages
         if ($hasUnicode) {
@@ -78,6 +78,17 @@ class SmsCampaign extends Model
         }
         
         return $parts * $this->recipients_count;
+    }
+
+    /**
+     * Check if message contains characters that require Unicode SMS encoding
+     * More precise detection that excludes common punctuation
+     */
+    protected function hasUnicodeCharacters(string $message): bool
+    {
+        // GSM 7-bit character set + common punctuation that should use regular SMS
+        // This pattern matches characters that are NOT in the extended GSM character set
+        return preg_match('/[^\x{0000}-\x{007F}\x{00A0}-\x{00FF}\x{2010}-\x{2019}\x{201C}-\x{201D}\x{2026}\x{20AC}]/u', $message) === 1;
     }
 
     /**

@@ -493,7 +493,7 @@ class SmsService
             } else {
                 // Calculate credits used based on message pages and recipient count
                 $messageLength = mb_strlen($campaign->message);
-                $hasUnicode = preg_match('/[\x{0080}-\x{FFFF}]/u', $campaign->message);
+                $hasUnicode = $this->hasUnicodeCharacters($campaign->message);
                 
                 if ($hasUnicode) {
                     $parts = $messageLength <= 70 ? 1 : ceil($messageLength / 67);
@@ -526,5 +526,16 @@ class SmsService
                 'error' => $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Check if message contains characters that require Unicode SMS encoding
+     * More precise detection that excludes common punctuation
+     */
+    protected function hasUnicodeCharacters(string $message): bool
+    {
+        // GSM 7-bit character set + common punctuation that should use regular SMS
+        // This pattern matches characters that are NOT in the extended GSM character set
+        return preg_match('/[^\x{0000}-\x{007F}\x{00A0}-\x{00FF}\x{2010}-\x{2019}\x{201C}-\x{201D}\x{2026}\x{20AC}]/u', $message) === 1;
     }
 }

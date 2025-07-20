@@ -127,7 +127,7 @@ class SmsController extends Controller
         $campaign->updateMetrics();
         
         $messageLength = mb_strlen($campaign->message);
-        $hasUnicode = preg_match('/[\x{0080}-\x{FFFF}]/u', $campaign->message);
+        $hasUnicode = $this->hasUnicodeCharacters($campaign->message);
         
         $parts = $this->calculateMessageParts($messageLength, $hasUnicode);
         
@@ -188,6 +188,17 @@ class SmsController extends Controller
             return $messageLength <= 70 ? 1 : ceil($messageLength / 67);
         }
         return $messageLength <= 160 ? 1 : ceil($messageLength / 153);
+    }
+
+    /**
+     * Check if message contains characters that require Unicode SMS encoding
+     * More precise detection that excludes common punctuation
+     */
+    protected function hasUnicodeCharacters(string $message): bool
+    {
+        // GSM 7-bit character set + common punctuation that should use regular SMS
+        // This pattern matches characters that are NOT in the extended GSM character set
+        return preg_match('/[^\x{0000}-\x{007F}\x{00A0}-\x{00FF}\x{2010}-\x{2019}\x{201C}-\x{201D}\x{2026}\x{20AC}]/u', $message) === 1;
     }
 
     protected function calculateCampaignMetrics(SmsCampaign $campaign): array
@@ -449,7 +460,7 @@ class SmsController extends Controller
         
         // Calculate message pages and required credits
         $messageLength = mb_strlen($message);
-        $hasUnicode = preg_match('/[\x{0080}-\x{FFFF}]/u', $message);
+        $hasUnicode = $this->hasUnicodeCharacters($message);
         $parts = $this->calculateMessageParts($messageLength, $hasUnicode);
         $creditsNeeded = $parts * count($recipients);
         
@@ -721,7 +732,7 @@ class SmsController extends Controller
         
         // Calculate message pages
         $messageLength = mb_strlen($message);
-        $hasUnicode = preg_match('/[\x{0080}-\x{FFFF}]/u', $message);
+        $hasUnicode = $this->hasUnicodeCharacters($message);
         $parts = $this->calculateMessageParts($messageLength, $hasUnicode);
         
         // Calculate credits needed
@@ -1087,7 +1098,7 @@ class SmsController extends Controller
         
         // Calculate message pages for cost estimation
         $messageLength = mb_strlen($campaign->message);
-        $hasUnicode = preg_match('/[\x{0080}-\x{FFFF}]/u', $campaign->message);
+        $hasUnicode = $this->hasUnicodeCharacters($campaign->message);
         $parts = $this->calculateMessageParts($messageLength, $hasUnicode);
         
         return response()->json([

@@ -816,13 +816,20 @@
             const message = messageField.value;
             const recipientCount = parseInt(recipientsCount.textContent) || 0;
             
-            // Immediate feedback with frontend calculation
+            // More accurate frontend calculation that matches backend logic
             let parts = 1;
             const length = message.length;
-            if (length <= 160) {
-                parts = 1;
+            
+            // Check if message contains characters that require Unicode SMS
+            // This is a simplified version of the backend check
+            const hasUnicode = hasUnicodeCharacters(message);
+            
+            if (hasUnicode) {
+                // Unicode SMS: 70 chars for single, 67 for multi-part
+                parts = length <= 70 ? 1 : Math.ceil(length / 67);
             } else {
-                parts = Math.ceil(length / 153);
+                // Regular SMS: 160 chars for single, 153 for multi-part
+                parts = length <= 160 ? 1 : Math.ceil(length / 153);
             }
             
             const estimatedCredits = parts * recipientCount;
@@ -888,6 +895,18 @@
                     });
                 }, 300);
             }
+        }
+
+        /**
+         * Check if message contains characters that require Unicode SMS encoding
+         * JavaScript version of the backend Unicode detection
+         */
+        function hasUnicodeCharacters(message) {
+            // This pattern matches characters that are NOT in the extended GSM character set
+            // It excludes ASCII (0x0000-0x007F), Latin-1 Supplement (0x00A0-0x00FF), 
+            // common punctuation (0x2010-0x2019, 0x201C-0x201D, 0x2026), and Euro sign (0x20AC)
+            const nonGsmPattern = /[^\u0000-\u007F\u00A0-\u00FF\u2010-\u2019\u201C-\u201D\u2026\u20AC]/;
+            return nonGsmPattern.test(message);
         }
     });
 </script>
