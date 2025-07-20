@@ -244,12 +244,17 @@ class WalletController extends Controller
             $user = auth()->user();
             $wallet = $user->wallet;
             
+            // Ensure user has a currency, fallback to GHS
+            $currency = $user->currency;
+            $currencyCode = $currency->code ?? 'GHS';
+            $currencySymbol = $currency->symbol ?? '₵';
+            
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'balance' => $wallet->balance,
-                    'currency' => $user->currency->code,
-                    'formatted_balance' => $user->currency->symbol . number_format($wallet->balance, 2),
+                    'balance' => $wallet->balance ?? 0,
+                    'currency' => $currencyCode,
+                    'formatted_balance' => $currencySymbol . number_format($wallet->balance ?? 0, 2),
                 ]
             ]);
         } catch (\Exception $e) {

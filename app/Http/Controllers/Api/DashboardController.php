@@ -82,8 +82,8 @@ class DashboardController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'currency' => [
-                        'code' => $user->currency->code ?? 'NGN',
-                        'symbol' => $user->currency->symbol ?? '₦',
+                        'code' => $user->currency->code ?? 'GHS',
+                        'symbol' => $user->currency->symbol ?? '₵',
                     ],
                 ],
             ]
