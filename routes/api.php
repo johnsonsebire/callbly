@@ -70,7 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Contacts list for mobile app
     Route::get('/contacts', function () {
         $user = auth()->user();
-        $contacts = $user->getAvailableContacts()->take(1000); // Limit for mobile performance
+        $contacts = $user->getAvailableContacts(); // No limit - show all contacts
         
         return response()->json([
             'success' => true,
@@ -79,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     'id' => $contact->id,
                     'name' => $contact->full_name,
                     'phone' => $contact->phone_number,
+                    'phone_number' => $contact->phone_number, // Add phone_number for mobile app compatibility
                     'email' => $contact->email,
                     'first_name' => $contact->first_name,
                     'last_name' => $contact->last_name,
