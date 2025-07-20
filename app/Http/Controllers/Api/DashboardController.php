@@ -98,33 +98,33 @@ class DashboardController extends Controller
      */
     private function getSmsStatistics($userId)
     {
-        // Total sent messages
-        $totalSent = SmsCampaign::where('user_id', $userId)->sum('total_sent');
+        // Total sent messages (recipients count)
+        $totalSent = SmsCampaign::where('user_id', $userId)->sum('recipients_count');
         
         // Messages sent today
         $sentToday = SmsCampaign::where('user_id', $userId)
             ->whereDate('created_at', today())
-            ->sum('total_sent');
+            ->sum('recipients_count');
             
         // Messages sent this month
         $sentThisMonth = SmsCampaign::where('user_id', $userId)
             ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
-            ->sum('total_sent');
+            ->sum('recipients_count');
         
         // Messages sent in last 30 days
         $last30Days = SmsCampaign::where('user_id', $userId)
             ->where('created_at', '>=', now()->subDays(30))
-            ->sum('total_sent');
+            ->sum('recipients_count');
             
-        // Active campaigns count
+        // Active campaigns count (pending and processing)
         $activeCampaigns = SmsCampaign::where('user_id', $userId)
-            ->where('status', 'active')
+            ->whereIn('status', ['pending', 'processing'])
             ->count();
             
         // Delivery rate
         $deliveryStats = SmsCampaign::where('user_id', $userId)
-            ->selectRaw('SUM(total_sent) as sent, SUM(total_delivered) as delivered')
+            ->selectRaw('SUM(recipients_count) as sent, SUM(delivered_count) as delivered')
             ->first();
             
         $deliveryRate = ($deliveryStats && $deliveryStats->sent > 0) 
@@ -135,13 +135,13 @@ class DashboardController extends Controller
         $recentCampaigns = SmsCampaign::where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->take(3)
-            ->get(['id', 'name', 'total_sent', 'total_delivered', 'created_at'])
+            ->get(['id', 'name', 'recipients_count', 'delivered_count', 'created_at'])
             ->map(function ($campaign) {
                 return [
                     'id' => $campaign->id,
                     'name' => $campaign->name,
-                    'sent' => $campaign->total_sent,
-                    'delivered' => $campaign->total_delivered,
+                    'sent' => $campaign->recipients_count,
+                    'delivered' => $campaign->delivered_count,
                     'date' => $campaign->created_at->format('Y-m-d'),
                 ];
             });
