@@ -170,21 +170,19 @@ class DashboardController extends Controller
             ->where('status', 'active')
             ->count();
             
-        // Total sessions
-        $totalSessions = UssdService::where('user_id', $userId)
-            ->sum('total_sessions');
+        // Total monthly requests (since total_sessions column doesn't exist)
+        $totalMonthlyRequests = UssdService::where('user_id', $userId)
+            ->sum('monthly_requests');
             
-        // Sessions in last 30 days
-        $last30DaysSessionsQuery = DB::table('ussd_sessions')
-            ->join('ussd_services', 'ussd_sessions.ussd_service_id', '=', 'ussd_services.id')
-            ->where('ussd_services.user_id', $userId)
-            ->where('ussd_sessions.created_at', '>=', now()->subDays(30))
-            ->count();
+        // Total services count
+        $totalServices = UssdService::where('user_id', $userId)->count();
         
         return [
             'active_services' => $activeServices,
-            'total_sessions' => $totalSessions,
-            'last_30_days_sessions' => $last30DaysSessionsQuery,
+            'total_services' => $totalServices,
+            'monthly_requests' => $totalMonthlyRequests,
+            'total_sessions' => $totalMonthlyRequests, // Alias for compatibility
+            'last_30_days_sessions' => 0, // Default to 0 since no sessions table exists yet
         ];
     }
     
