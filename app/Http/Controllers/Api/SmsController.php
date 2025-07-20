@@ -166,14 +166,23 @@ class SmsController extends Controller
     public function sendBulk(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'recipients' => 'required|array|min:1',
-            'recipients.*' => 'required|string',
+            'recipients' => 'nullable|array',
+            'recipients.*' => 'string',
+            'contact_groups' => 'nullable|array',
+            'contact_groups.*' => 'integer|exists:contact_groups,id',
             'message' => 'required|string',
             'sender_name' => 'required|string|exists:sender_names,name',
             'name' => 'required|string|max:255',
             'scheduled_at' => 'nullable|date|after:now',
             'campaign_id' => 'nullable|integer|exists:sms_campaigns,id',
         ]);
+
+        // Custom validation to ensure either recipients or contact_groups is provided
+        $validator->after(function ($validator) use ($request) {
+            if (empty($request->recipients) && empty($request->contact_groups)) {
+                $validator->errors()->add('recipients', 'Either recipients or contact_groups must be provided.');
+            }
+        });
 
         if ($validator->fails()) {
             return response()->json([
@@ -185,7 +194,36 @@ class SmsController extends Controller
 
         try {
             $user = $request->user();
-            $recipientsCount = count($request->recipients);
+            
+            // Resolve recipients from direct input and contact groups
+            $allRecipients = $request->recipients ?? [];
+            
+            // Add recipients from contact groups
+            if (!empty($request->contact_groups)) {
+                $contactGroups = \App\Models\ContactGroup::whereIn('id', $request->contact_groups)
+                    ->where('user_id', $user->id)
+                    ->with('contacts')
+                    ->get();
+                
+                foreach ($contactGroups as $group) {
+                    foreach ($group->contacts as $contact) {
+                        if (!empty($contact->phone_number)) {
+                            $allRecipients[] = $contact->phone_number;
+                        }
+                    }
+                }
+            }
+            
+            // Remove duplicates and empty values
+            $allRecipients = array_unique(array_filter($allRecipients));
+            $recipientsCount = count($allRecipients);
+            
+            if ($recipientsCount === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No valid recipients found'
+                ], 400);
+            }
             
             // Check if sender name is available to the user
             $senderNameAvailable = false;
@@ -280,7 +318,7 @@ class SmsController extends Controller
             // Dispatch bulk SMS job
             $job = new \App\Jobs\SendBulkSmsJob(
                 $campaign->id,
-                $request->recipients,
+                $allRecipients,
                 $request->message,
                 $request->sender_name
             );
