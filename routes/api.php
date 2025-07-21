@@ -197,6 +197,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/balance', [WalletController::class, 'getBalance']);
         Route::get('/transactions', [WalletController::class, 'getTransactions']);
         Route::post('/topup', [WalletController::class, 'initiateTopup']);
+        Route::post('/purchase-sms', [WalletController::class, 'apiPurchaseSms']);
+        Route::post('/purchase-ussd', [WalletController::class, 'apiPurchaseUssd']);
+        Route::post('/purchase-call', [WalletController::class, 'apiPurchaseCall']);
     });
     
     // Push notification settings

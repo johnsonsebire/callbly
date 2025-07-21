@@ -76,6 +76,8 @@ return [
         'premium' => 0.029,  // Premium tier rate
         'gold' => 0.025,     // Gold tier rate
         'default' => 0.035,  // Default rate if tier is not specified
+        'ussd' => 0.05,      // USSD credit rate
+        'call' => 0.08,      // Call credit rate per minute
     ],
     
     /*

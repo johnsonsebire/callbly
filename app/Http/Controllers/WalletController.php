@@ -396,4 +396,303 @@ class WalletController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Purchase SMS credits via API
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function apiPurchaseSms(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'credits' => 'required|integer|min:1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $user = auth()->user();
+            $wallet = $user->wallet;
+
+            // Get SMS rate based on user's tier
+            $userTier = $user->billing_tier ? strtolower($user->billing_tier->name) : 'basic';
+            $smsRate = config("sms.rate.{$userTier}", config('sms.rate.default'));
+
+            // Calculate total cost
+            $totalCost = $request->credits * $smsRate;
+
+            // Validate user has sufficient balance
+            if ($wallet->balance < $totalCost) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Insufficient wallet balance. You need ' . 
+                        $user->currency->symbol . number_format($totalCost, 2) . 
+                        ' to purchase ' . number_format($request->credits) . ' SMS credits.',
+                    'data' => [
+                        'required_amount' => $totalCost,
+                        'wallet_balance' => $wallet->balance,
+                        'shortage' => $totalCost - $wallet->balance
+                    ]
+                ], 400);
+            }
+
+            DB::beginTransaction();
+
+            // Create wallet transaction record
+            $transaction = WalletTransaction::create([
+                'user_id' => $user->id,
+                'wallet_id' => $wallet->id,
+                'type' => 'debit',
+                'amount' => $totalCost,
+                'reference' => 'SMS_' . Str::uuid()->toString(),
+                'description' => 'Purchase of ' . number_format($request->credits) . ' SMS credits',
+                'status' => 'completed',
+                'metadata' => [
+                    'sms_credits' => $request->credits,
+                    'rate' => $smsRate,
+                    'tier' => $userTier,
+                ]
+            ]);
+
+            // Deduct from wallet balance
+            $wallet->balance -= $totalCost;
+            $wallet->save();
+
+            // Add SMS credits to user
+            $user->sms_credits += $request->credits;
+            $user->save();
+
+            // Check if purchase amount qualifies for tier upgrade
+            if ($totalCost >= 1500) {
+                app(\App\Services\Currency\CurrencyService::class)
+                    ->updateUserBillingTier($user, $totalCost);
+            }
+
+            DB::commit();
+
+            // Send SMS purchase invoice email
+            $user->notify(new SmsPurchaseInvoiceNotification($transaction));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Successfully purchased ' . number_format($request->credits) . 
+                    ' SMS credits for ' . $user->currency->symbol . number_format($totalCost, 2),
+                'data' => [
+                    'credits_purchased' => $request->credits,
+                    'amount_charged' => $totalCost,
+                    'remaining_balance' => $wallet->balance,
+                    'total_sms_credits' => $user->sms_credits,
+                    'transaction_reference' => $transaction->reference
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('SMS purchase failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while processing your purchase. Please try again later.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Purchase USSD credits via API
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function apiPurchaseUssd(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'credits' => 'required|integer|min:1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $user = auth()->user();
+            $wallet = $user->wallet;
+
+            // Get USSD rate (you can configure this in config/sms.php or another config file)
+            $ussdRate = config('sms.rate.ussd', 0.05); // Default USSD rate
+
+            // Calculate total cost
+            $totalCost = $request->credits * $ussdRate;
+
+            // Validate user has sufficient balance
+            if ($wallet->balance < $totalCost) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Insufficient wallet balance. You need ' . 
+                        $user->currency->symbol . number_format($totalCost, 2) . 
+                        ' to purchase ' . number_format($request->credits) . ' USSD credits.',
+                    'data' => [
+                        'required_amount' => $totalCost,
+                        'wallet_balance' => $wallet->balance,
+                        'shortage' => $totalCost - $wallet->balance
+                    ]
+                ], 400);
+            }
+
+            DB::beginTransaction();
+
+            // Create wallet transaction record
+            $transaction = WalletTransaction::create([
+                'user_id' => $user->id,
+                'wallet_id' => $wallet->id,
+                'type' => 'debit',
+                'amount' => $totalCost,
+                'reference' => 'USSD_' . Str::uuid()->toString(),
+                'description' => 'Purchase of ' . number_format($request->credits) . ' USSD credits',
+                'status' => 'completed',
+                'metadata' => [
+                    'ussd_credits' => $request->credits,
+                    'rate' => $ussdRate,
+                ]
+            ]);
+
+            // Deduct from wallet balance
+            $wallet->balance -= $totalCost;
+            $wallet->save();
+
+            // Add USSD credits to user (assuming you have a ussd_credits field)
+            $user->ussd_credits = ($user->ussd_credits ?? 0) + $request->credits;
+            $user->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Successfully purchased ' . number_format($request->credits) . 
+                    ' USSD credits for ' . $user->currency->symbol . number_format($totalCost, 2),
+                'data' => [
+                    'credits_purchased' => $request->credits,
+                    'amount_charged' => $totalCost,
+                    'remaining_balance' => $wallet->balance,
+                    'total_ussd_credits' => $user->ussd_credits,
+                    'transaction_reference' => $transaction->reference
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('USSD purchase failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while processing your purchase. Please try again later.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Purchase call credits via API
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function apiPurchaseCall(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'credits' => 'required|integer|min:1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $user = auth()->user();
+            $wallet = $user->wallet;
+
+            // Get call rate (you can configure this in config/sms.php or another config file)
+            $callRate = config('sms.rate.call', 0.08); // Default call rate per minute
+
+            // Calculate total cost
+            $totalCost = $request->credits * $callRate;
+
+            // Validate user has sufficient balance
+            if ($wallet->balance < $totalCost) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Insufficient wallet balance. You need ' . 
+                        $user->currency->symbol . number_format($totalCost, 2) . 
+                        ' to purchase ' . number_format($request->credits) . ' call credits.',
+                    'data' => [
+                        'required_amount' => $totalCost,
+                        'wallet_balance' => $wallet->balance,
+                        'shortage' => $totalCost - $wallet->balance
+                    ]
+                ], 400);
+            }
+
+            DB::beginTransaction();
+
+            // Create wallet transaction record
+            $transaction = WalletTransaction::create([
+                'user_id' => $user->id,
+                'wallet_id' => $wallet->id,
+                'type' => 'debit',
+                'amount' => $totalCost,
+                'reference' => 'CALL_' . Str::uuid()->toString(),
+                'description' => 'Purchase of ' . number_format($request->credits) . ' call credits',
+                'status' => 'completed',
+                'metadata' => [
+                    'call_credits' => $request->credits,
+                    'rate' => $callRate,
+                ]
+            ]);
+
+            // Deduct from wallet balance
+            $wallet->balance -= $totalCost;
+            $wallet->save();
+
+            // Add call credits to user (assuming you have a call_credits field)
+            $user->call_credits = ($user->call_credits ?? 0) + $request->credits;
+            $user->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Successfully purchased ' . number_format($request->credits) . 
+                    ' call credits for ' . $user->currency->symbol . number_format($totalCost, 2),
+                'data' => [
+                    'credits_purchased' => $request->credits,
+                    'amount_charged' => $totalCost,
+                    'remaining_balance' => $wallet->balance,
+                    'total_call_credits' => $user->call_credits,
+                    'transaction_reference' => $transaction->reference
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Call purchase failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while processing your purchase. Please try again later.'
+            ], 500);
+        }
+    }
 }

@@ -445,7 +445,8 @@ class SmsController extends Controller
         $user = $request->user();
         $campaigns = SmsCampaign::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->limit(50)  // Limit to 50 recent campaigns for mobile
+            ->get();
 
         return response()->json([
             'success' => true,
