@@ -443,15 +443,58 @@ class SmsController extends Controller
     public function getCampaigns(Request $request): JsonResponse
     {
         $user = $request->user();
-        $campaigns = SmsCampaign::where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->limit(50)  // Limit to 50 recent campaigns for mobile
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $campaigns
-        ]);
+        Log::info('API Campaigns request for user: ' . $user->id);
+        
+        try {
+            // Fetch the campaigns with more detailed information
+            $campaigns = SmsCampaign::where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->limit(50)  // Limit to 50 recent campaigns for mobile
+                ->get();
+            
+            Log::info('Campaigns API Response Details:', [
+                'count' => $campaigns->count(),
+                'user_id' => $user->id,
+                'first_campaign_id' => $campaigns->first() ? $campaigns->first()->id : null,
+                'campaign_statuses' => $campaigns->pluck('status')->countBy(),
+                'request_headers' => $request->headers->all(),
+                'token_info' => [
+                    'exists' => $request->bearerToken() ? 'yes' : 'no',
+                    'token_length' => $request->bearerToken() ? strlen($request->bearerToken()) : 0
+                ]
+            ]);
+            
+            if ($campaigns->isEmpty()) {
+                Log::info('No campaigns found for user: ' . $user->id);
+            } else {
+                Log::info('Sample campaign data:', [
+                    'sample' => $campaigns->first()->toArray()
+                ]);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => $campaigns,
+                'meta' => [
+                    'count' => $campaigns->count(),
+                    'user_id' => $user->id,
+                    'api_version' => '1.1'
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching campaigns: ' . $e->getMessage(), [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching campaigns: ' . $e->getMessage(),
+                'meta' => [
+                    'user_id' => $user->id
+                ]
+            ], 500);
+        }
     }
 
     /**
