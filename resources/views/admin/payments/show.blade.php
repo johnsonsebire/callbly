@@ -71,7 +71,7 @@
                             <div class="row mb-7">
                                 <label class="col-lg-4 fw-semibold text-muted">Amount</label>
                                 <div class="col-lg-8">
-                                    <span class="fw-bold fs-6 text-gray-800">₦{{ number_format($transaction->amount, 2) }}</span>
+                                    <span class="fw-bold fs-6 text-gray-800">{{ \App\Models\Currency::getDefaultCurrency()->format($transaction->amount) }}</span>
                                 </div>
                             </div>
                             <div class="row mb-7">
@@ -138,7 +138,7 @@
                             <div class="row mb-7">
                                 <label class="col-lg-4 fw-semibold text-muted">Current Wallet Balance</label>
                                 <div class="col-lg-8">
-                                    <span class="fw-bold fs-6 text-success">₦{{ number_format($transaction->wallet->balance ?? 0, 2) }}</span>
+                                    <span class="fw-bold fs-6 text-success">{{ \App\Models\Currency::getDefaultCurrency()->format($transaction->wallet->balance ?? 0) }}</span>
                                 </div>
                             </div>
                             <div class="row mb-7">
@@ -213,7 +213,7 @@
                                             <div class="fs-6 text-gray-700">
                                                 Confirming this payment will:
                                                 <ul class="mt-3">
-                                                    <li>Credit ₦{{ number_format($transaction->amount, 2) }} to the user's wallet</li>
+                                                    <li>Credit {{ \App\Models\Currency::getDefaultCurrency()->format($transaction->amount) }} to the user's wallet</li>
                                                     <li>Mark the transaction as completed</li>
                                                     <li>Log the admin action for audit purposes</li>
                                                 </ul>
@@ -279,7 +279,7 @@
                                             <div class="timeline-content mb-10 mt-n1">
                                                 <div class="pe-3 mb-5">
                                                     <div class="fs-5 fw-semibold mb-2">
-                                                        {{ $recent->type === 'credit' ? '+' : '-' }}₦{{ number_format($recent->amount, 2) }}
+                                                        {{ $recent->type === 'credit' ? '+' : '-' }}{{ \App\Models\Currency::getDefaultCurrency()->format($recent->amount) }}
                                                     </div>
                                                     <div class="d-flex align-items-center mt-1 fs-6">
                                                         <div class="text-muted me-2 fs-7">{{ $recent->created_at->diffForHumans() }}</div>
@@ -328,7 +328,7 @@
                         <textarea class="form-control form-control-solid mb-3 mb-lg-0" name="confirmation_note" rows="3" placeholder="Add any notes about this payment confirmation..."></textarea>
                     </div>
                     <div class="text-center pt-10">
-                        <p class="text-muted">Are you sure you want to confirm this payment of <strong>₦{{ number_format($transaction->amount, 2) }}</strong>? This will credit the user's wallet and mark the transaction as completed.</p>
+                        <p class="text-muted">Are you sure you want to confirm this payment of <strong>{{ \App\Models\Currency::getDefaultCurrency()->format($transaction->amount) }}</strong>? This will credit the user's wallet and mark the transaction as completed.</p>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -363,7 +363,7 @@
                         <textarea class="form-control form-control-solid mb-3 mb-lg-0" name="rejection_reason" rows="3" placeholder="Please provide a reason for rejecting this payment..." required></textarea>
                     </div>
                     <div class="text-center pt-10">
-                        <p class="text-muted">Are you sure you want to reject this payment of <strong>₦{{ number_format($transaction->amount, 2) }}</strong>? This action cannot be undone.</p>
+                        <p class="text-muted">Are you sure you want to reject this payment of <strong>{{ \App\Models\Currency::getDefaultCurrency()->format($transaction->amount) }}</strong>? This action cannot be undone.</p>
                     </div>
                 </div>
                 <div class="modal-footer">

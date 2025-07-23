@@ -307,6 +307,113 @@ class PaymentController extends Controller
     }
 
     /**
+     * Manual payment verification for mobile app
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function manualVerifyMobile(Request $request)
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'reference' => 'required|string',
+            'transaction_id' => 'nullable|integer'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $reference = $request->reference;
+        $transactionId = $request->transaction_id;
+        $user = Auth::user();
+
+        try {
+            // First, verify the payment with Paystack
+            $verificationResponse = $this->paymentService->verifyPayment($reference, $user);
+
+            if ($verificationResponse['success'] && 
+                isset($verificationResponse['data']['status']) && 
+                $verificationResponse['data']['status'] === 'success') {
+                
+                // Find the local wallet transaction if provided
+                $walletTransaction = null;
+                if ($transactionId) {
+                    $walletTransaction = WalletTransaction::where('id', $transactionId)
+                        ->where('user_id', $user->id)
+                        ->whereIn('status', ['pending', 'failed'])
+                        ->first();
+                }
+
+                // If no specific transaction provided, try to find by reference
+                if (!$walletTransaction) {
+                    $walletTransaction = WalletTransaction::where('metadata->paystack_reference', $reference)
+                        ->where('user_id', $user->id)
+                        ->whereIn('status', ['pending', 'failed'])
+                        ->first();
+                }
+
+                if ($walletTransaction) {
+                    // Process the successful payment
+                    $this->processWalletTopup($user, $verificationResponse);
+                    
+                    Log::info('Mobile manual payment verification successful', [
+                        'user_id' => $user->id,
+                        'reference' => $reference,
+                        'transaction_id' => $walletTransaction->id,
+                        'amount' => $walletTransaction->amount
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Payment verified successfully! Your wallet has been updated.',
+                        'data' => [
+                            'transaction_id' => $walletTransaction->id,
+                            'amount' => $walletTransaction->amount,
+                            'status' => 'completed'
+                        ]
+                    ]);
+                } else {
+                    // Transaction already processed or not found
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Transaction not found or already processed.'
+                    ], 404);
+                }
+                
+            } else {
+                // Payment verification failed with Paystack
+                Log::warning('Mobile manual payment verification failed', [
+                    'user_id' => $user->id,
+                    'reference' => $reference,
+                    'response' => $verificationResponse
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment verification failed. The payment may not have been completed successfully.',
+                    'details' => $verificationResponse['message'] ?? 'Payment not found or incomplete'
+                ], 400);
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Mobile manual payment verification exception', [
+                'user_id' => $user->id,
+                'reference' => $reference,
+                'error' => $e->getMessage(),
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while verifying your payment: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Process a successful SMS credits payment
      *
      * @param User $user

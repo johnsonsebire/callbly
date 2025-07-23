@@ -200,7 +200,7 @@
                                         </td>
                                         <td>
                                             <span class="badge badge-light-success fw-bold">
-                                                ₦{{ number_format($transaction->amount, 2) }}
+                                                {{ \App\Models\Currency::getDefaultCurrency()->format($transaction->amount) }}
                                             </span>
                                         </td>
                                         <td>
@@ -355,7 +355,7 @@ function loadPaymentStats() {
         .then(response => response.json())
         .then(data => {
             document.getElementById('pending-count').textContent = data.pending_count;
-            document.getElementById('pending-amount').textContent = '₦' + parseFloat(data.pending_amount).toLocaleString();
+            document.getElementById('pending-amount').textContent = '{{ \App\Models\Currency::getDefaultCurrency()->symbol }}' + parseFloat(data.pending_amount).toLocaleString();
             document.getElementById('failed-count').textContent = data.failed_count;
             document.getElementById('today-confirmed').textContent = data.today_confirmed;
         })
