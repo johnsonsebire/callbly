@@ -307,6 +307,11 @@ class NavigationService
                         'active' => $this->checkRoutePattern($currentRouteName, 'admin.sender-names.*')
                     ],
                     [
+                        'label' => 'Payment Management',
+                        'url' => route('admin.payments.index'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'admin.payments.*')
+                    ],
+                    [
                         'label' => 'User Management',
                         'url' => route('admin.users.index'),
                         'active' => $this->checkRoutePattern($currentRouteName, 'admin.users.*')

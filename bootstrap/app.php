@@ -17,11 +17,23 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SetPermissionTeamContext::class,
         ]);
         
+        // Add session timeout check middleware for web routes
+        $middleware->web(append: [
+            \App\Http\Middleware\CheckSessionTimeout::class,
+        ]);
+        
+        // Add session timeout check middleware for API routes that use web sessions
+        $middleware->api(append: [
+            \App\Http\Middleware\CheckApiSessionTimeout::class,
+        ]);
+        
         // Register Spatie permission middleware aliases
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
 'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
 'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'session.timeout' => \App\Http\Middleware\CheckSessionTimeout::class,
+            'api.session.timeout' => \App\Http\Middleware\CheckApiSessionTimeout::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -289,6 +289,15 @@ Route::middleware('auth')->group(function () {
             ->name('sender-names.download-pdf');
         Route::get('sender-names/{sender_name}/preview-pdf', [\App\Http\Controllers\Admin\SenderNameApprovalController::class, 'previewWhitelistPdf'])
             ->name('sender-names.preview-pdf');
+        
+        // Payment Management Routes
+        Route::prefix('payments')->name('payments.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('index');
+            Route::get('/{id}', [\App\Http\Controllers\Admin\PaymentController::class, 'show'])->name('show');
+            Route::post('/{id}/confirm', [\App\Http\Controllers\Admin\PaymentController::class, 'confirm'])->name('confirm');
+            Route::post('/{id}/reject', [\App\Http\Controllers\Admin\PaymentController::class, 'reject'])->name('reject');
+            Route::get('/api/stats', [\App\Http\Controllers\Admin\PaymentController::class, 'stats'])->name('stats');
+        });
         Route::post('sender-names/{sender_name}/send-whitelist', [\App\Http\Controllers\Admin\SenderNameApprovalController::class, 'sendWhitelistRequest'])
             ->name('sender-names.send-whitelist');
         

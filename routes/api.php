@@ -202,6 +202,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/purchase-call', [WalletController::class, 'apiPurchaseCall']);
     });
     
+    // Payment verification routes
+    Route::prefix('payment')->group(function () {
+        Route::post('/manual-verify', [\App\Http\Controllers\PaymentController::class, 'manualVerifyMobile']);
+    });
+    
     // Push notification settings
     Route::prefix('notifications')->group(function () {
         Route::get('/', [NotificationController::class, 'getNotifications']);
