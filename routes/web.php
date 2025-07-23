@@ -239,6 +239,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['verified'])->group(function () {
         Route::post('/payment/initiate', [PaymentController::class, 'initiate'])->name('payment.initiate');
         Route::get('/payment/verify', [PaymentController::class, 'verify'])->name('payment.verify');
+        Route::get('/payment/verify-mobile', [PaymentController::class, 'verifyMobile'])->name('payment.verify.mobile');
     });
 
     // Wallet Routes

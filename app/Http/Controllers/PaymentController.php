@@ -194,6 +194,119 @@ class PaymentController extends Controller
     }
 
     /**
+     * Verify a payment transaction for mobile app
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function verifyMobile(Request $request)
+    {
+        // Get the payment reference from the request
+        $reference = $request->get('reference');
+        
+        if (!$reference) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No payment reference found'
+            ], 400);
+        }
+        
+        $user = Auth::user();
+        
+        try {
+            // Verify the payment
+            $verificationResponse = $this->paymentService->verifyPayment($reference, $user);
+            
+            // If payment verification is successful
+            if ($verificationResponse['success'] && 
+                isset($verificationResponse['data']['status']) && 
+                $verificationResponse['data']['status'] === 'success') {
+                
+                // Get transaction details
+                $transaction = $verificationResponse['data'];
+                $metadata = $transaction['metadata'] ?? [];
+                
+                // Extract product type
+                $productType = $metadata['product_type'] ?? '';
+                
+                // Handle different product types
+                switch($productType) {
+                    case 'wallet_topup':
+                        $this->processWalletTopup($user, $verificationResponse);
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Your wallet has been successfully topped up!',
+                            'type' => 'wallet_topup'
+                        ]);
+                    
+                    case 'sms_credits':
+                        $this->processSmsCreditsPayment($user, $verificationResponse);
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'SMS credits purchase successful!',
+                            'type' => 'sms_credits'
+                        ]);
+                    
+                    case 'call_credits':
+                        $this->processCallCreditsPayment($user, $verificationResponse);
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Call credits purchase successful!',
+                            'type' => 'call_credits'
+                        ]);
+                    
+                    case 'ussd_credits':
+                        $this->processUssdCreditsPayment($user, $verificationResponse);
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'USSD credits purchase successful!',
+                            'type' => 'ussd_credits'
+                        ]);
+                    
+                    case 'virtual_number':
+                        $this->processVirtualNumberPayment($user, $verificationResponse);
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Virtual number purchase successful!',
+                            'type' => 'virtual_number'
+                        ]);
+                    
+                    default:
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Payment successful!',
+                            'type' => 'unknown'
+                        ]);
+                }
+            } else {
+                // Payment verification failed
+                Log::error('Mobile payment verification failed', [
+                    'user_id' => $user->id,
+                    'reference' => $reference,
+                    'response' => $verificationResponse,
+                ]);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment verification failed: ' . 
+                        ($verificationResponse['message'] ?? 'Unknown error')
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            Log::error('Mobile payment verification exception', [
+                'user_id' => $user->id,
+                'reference' => $reference,
+                'error' => $e->getMessage(),
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while verifying your payment: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Process a successful SMS credits payment
      *
      * @param User $user
@@ -367,8 +480,9 @@ class PaymentController extends Controller
             $wallet->balance += $amount;
             $wallet->save();
             
-            // Update transaction status
+            // Update transaction status and ensure amount is correct
             $walletTransaction->status = 'completed';
+            $walletTransaction->amount = $amount; // Ensure the transaction record has the correct amount
             $walletTransaction->metadata = array_merge($walletTransaction->metadata ?? [], [
                 'paystack_transaction_id' => $transaction['id'],
                 'paid_at' => now()->toIso8601String(),

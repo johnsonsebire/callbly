@@ -331,6 +331,7 @@ class WalletController extends Controller
             $user = auth()->user();
             $amount = $request->amount;
             $paymentMethod = $request->payment_method ?? 'card';
+            $isMobile = $request->boolean('is_mobile', false);
             
             // Generate a unique reference
             $reference = 'WAL_' . Str::uuid()->toString();
@@ -342,14 +343,20 @@ class WalletController extends Controller
                 'product_type' => 'wallet_topup',
                 'payment_method' => $paymentMethod,
                 'timestamp' => now()->timestamp,
+                'is_mobile' => $isMobile,
             ];
+            
+            // Set callback URL based on client type
+            $callbackUrl = $isMobile 
+                ? route('payment.verify.mobile')
+                : route('payment.verify');
             
             // Initialize payment with Paystack
             $paymentResponse = $this->paymentService->initializePayment(
                 $user,
                 $amount,
                 $metadata,
-                route('payment.verify'),
+                $callbackUrl,
                 'Wallet Top-up'
             );
             
