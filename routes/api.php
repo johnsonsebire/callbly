@@ -67,10 +67,20 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json($contact);
     });
     
-    // Contacts list for mobile app
+    // Contacts list for mobile app - Enhanced version
     Route::get('/contacts', function () {
         $user = auth()->user();
-        $contacts = $user->getAvailableContacts(); // No limit - show all contacts
+        
+        // Get all available contacts (includes personal + team shared contacts)
+        $contacts = $user->getAvailableContacts();
+        
+        // Log for debugging
+        \Log::info('Mobile API: Fetching contacts', [
+            'user_id' => $user->id,
+            'total_contacts' => $contacts->count(),
+            'user_personal_contacts' => $user->contacts()->count(),
+            'teams_count' => $user->teams()->count()
+        ]);
         
         return response()->json([
             'success' => true,
@@ -79,14 +89,24 @@ Route::middleware('auth:sanctum')->group(function () {
                     'id' => $contact->id,
                     'name' => $contact->full_name,
                     'phone' => $contact->phone_number,
-                    'phone_number' => $contact->phone_number, // Add phone_number for mobile app compatibility
+                    'phone_number' => $contact->phone_number, // Mobile app compatibility
                     'email' => $contact->email,
                     'first_name' => $contact->first_name,
                     'last_name' => $contact->last_name,
+                    'company' => $contact->company,
                     'created_at' => $contact->created_at,
                     'updated_at' => $contact->updated_at,
+                    // Additional metadata for debugging
+                    'is_personal' => $contact->user_id === auth()->id(),
+                    'owner_id' => $contact->user_id, // To help identify shared contacts
                 ];
-            })->values()
+            })->values(),
+            'meta' => [
+                'total_count' => $contacts->count(),
+                'personal_contacts' => $user->contacts()->count(),
+                'has_team_sharing' => $user->hasTeamWithSharedResources(),
+                'timestamp' => now()->toISOString()
+            ]
         ]);
     });
     
