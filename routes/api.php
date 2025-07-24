@@ -93,6 +93,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Contact groups for mobile app
     Route::get('/contact-groups', function () {
         $user = auth()->user();
+        
+        // Get all available contact groups (including shared from teams)
         $contactGroups = $user->getAvailableContactGroups();
         
         return response()->json([
@@ -113,9 +115,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Contact group contacts
     Route::get('/contact-groups/{id}/contacts', function ($id) {
         $user = auth()->user();
-        $contactGroup = \App\Models\ContactGroup::where('id', $id)
-            ->where('user_id', $user->id)
-            ->first();
+        
+        // Get all available contact groups (including shared from teams)
+        $availableGroups = $user->getAvailableContactGroups();
+        $contactGroup = $availableGroups->where('id', $id)->first();
             
         if (!$contactGroup) {
             return response()->json(['error' => 'Contact group not found'], 404);
@@ -130,6 +133,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     'id' => $contact->id,
                     'name' => $contact->full_name,
                     'phone' => $contact->phone_number,
+                    'phone_number' => $contact->phone_number, // Add phone_number for mobile app compatibility
                     'email' => $contact->email,
                     'first_name' => $contact->first_name,
                     'last_name' => $contact->last_name,

@@ -35,8 +35,31 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'company_name' => $request->company_name,
-            'role' => 'customer', // Default role
         ]);
+
+        // Assign default customer role for new registrations
+        // Get or create system team for role assignment
+        $systemTeam = \App\Models\Team::firstOrCreate([
+            'name' => 'System',
+            'slug' => 'system'
+        ], [
+            'owner_id' => 1, // Default to first user
+            'description' => 'System-wide roles and permissions'
+        ]);
+
+        // Set team context for permission system
+        app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($systemTeam->id);
+        
+        // Ensure customer role exists and assign it
+        $customerRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'customer']);
+        
+        // Set user's current team if they don't have one
+        if (!$user->current_team_id) {
+            $user->current_team_id = $systemTeam->id;
+            $user->save();
+        }
+        
+        $user->assignRole('customer');
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -71,6 +94,33 @@ class AuthController extends Controller
         }
 
         $user = User::where('email', $request->email)->first();
+        
+        // Check if user has any roles assigned, if not assign customer role
+        if ($user->roles()->count() === 0) {
+            // Get or create system team for role assignment
+            $systemTeam = \App\Models\Team::firstOrCreate([
+                'name' => 'System',
+                'slug' => 'system'
+            ], [
+                'owner_id' => 1, // Default to first user
+                'description' => 'System-wide roles and permissions'
+            ]);
+
+            // Set team context for permission system
+            app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($systemTeam->id);
+            
+            // Ensure customer role exists and assign it
+            $customerRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'customer']);
+            
+            // Set user's current team if they don't have one
+            if (!$user->current_team_id) {
+                $user->current_team_id = $systemTeam->id;
+                $user->save();
+            }
+            
+            $user->assignRole('customer');
+        }
+        
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([

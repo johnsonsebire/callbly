@@ -114,53 +114,53 @@
                     <!--begin::Stats Cards-->
                     <div class="row g-6 g-xl-9 mb-6" id="payment-stats">
                         <div class="col-md-6 col-lg-3">
-                            <div class="card h-md-50 mb-5 mb-xl-10">
-                                <div class="card-body d-flex flex-column">
-                                    <div class="d-flex flex-stack">
-                                        <div class="text-gray-700 fw-semibold fs-6">Pending Payments</div>
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body d-flex flex-column justify-content-between p-6">
+                                    <div class="d-flex flex-stack mb-3">
+                                        <div class="text-gray-700 fw-semibold fs-6 text-nowrap">Pending Payments</div>
                                         <i class="ki-outline ki-hourglass-3 fs-2x text-warning"></i>
                                     </div>
                                     <div class="d-flex align-items-center">
-                                        <span class="text-gray-900 fw-bold fs-2" id="pending-count">-</span>
+                                        <span class="text-gray-900 fw-bold fs-2x text-truncate" id="pending-count" title="">-</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6 col-lg-3">
-                            <div class="card h-md-50 mb-5 mb-xl-10">
-                                <div class="card-body d-flex flex-column">
-                                    <div class="d-flex flex-stack">
-                                        <div class="text-gray-700 fw-semibold fs-6">Pending Amount</div>
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body d-flex flex-column justify-content-between p-6">
+                                    <div class="d-flex flex-stack mb-3">
+                                        <div class="text-gray-700 fw-semibold fs-6 text-nowrap">Pending Amount</div>
                                         <i class="ki-outline ki-dollar fs-2x text-warning"></i>
                                     </div>
                                     <div class="d-flex align-items-center">
-                                        <span class="text-gray-900 fw-bold fs-2" id="pending-amount">-</span>
+                                        <span class="text-gray-900 fw-bold fs-2x text-truncate" id="pending-amount" title="">-</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6 col-lg-3">
-                            <div class="card h-md-50 mb-5 mb-xl-10">
-                                <div class="card-body d-flex flex-column">
-                                    <div class="d-flex flex-stack">
-                                        <div class="text-gray-700 fw-semibold fs-6">Failed Payments</div>
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body d-flex flex-column justify-content-between p-6">
+                                    <div class="d-flex flex-stack mb-3">
+                                        <div class="text-gray-700 fw-semibold fs-6 text-nowrap">Failed Payments</div>
                                         <i class="ki-outline ki-cross-circle fs-2x text-danger"></i>
                                     </div>
                                     <div class="d-flex align-items-center">
-                                        <span class="text-gray-900 fw-bold fs-2" id="failed-count">-</span>
+                                        <span class="text-gray-900 fw-bold fs-2x text-truncate" id="failed-count" title="">-</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6 col-lg-3">
-                            <div class="card h-md-50 mb-5 mb-xl-10">
-                                <div class="card-body d-flex flex-column">
-                                    <div class="d-flex flex-stack">
-                                        <div class="text-gray-700 fw-semibold fs-6">Today Confirmed</div>
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body d-flex flex-column justify-content-between p-6">
+                                    <div class="d-flex flex-stack mb-3">
+                                        <div class="text-gray-700 fw-semibold fs-6 text-nowrap">Today Confirmed</div>
                                         <i class="ki-outline ki-check-circle fs-2x text-success"></i>
                                     </div>
                                     <div class="d-flex align-items-center">
-                                        <span class="text-gray-900 fw-bold fs-2" id="today-confirmed">-</span>
+                                        <span class="text-gray-900 fw-bold fs-2x text-truncate" id="today-confirmed" title="">-</span>
                                     </div>
                                 </div>
                             </div>
@@ -354,10 +354,29 @@ function loadPaymentStats() {
     fetch('{{ route("admin.payments.stats") }}')
         .then(response => response.json())
         .then(data => {
-            document.getElementById('pending-count').textContent = data.pending_count;
-            document.getElementById('pending-amount').textContent = '{{ \App\Models\Currency::getDefaultCurrency()->symbol }}' + parseFloat(data.pending_amount).toLocaleString();
-            document.getElementById('failed-count').textContent = data.failed_count;
-            document.getElementById('today-confirmed').textContent = data.today_confirmed;
+            const pendingCountEl = document.getElementById('pending-count');
+            const pendingAmountEl = document.getElementById('pending-amount');
+            const failedCountEl = document.getElementById('failed-count');
+            const todayConfirmedEl = document.getElementById('today-confirmed');
+            
+            // Update values with proper formatting
+            const pendingCountText = data.pending_count.toLocaleString();
+            const pendingAmountText = '{{ \App\Models\Currency::getDefaultCurrency()->symbol }}' + parseFloat(data.pending_amount).toLocaleString();
+            const failedCountText = data.failed_count.toLocaleString();
+            const todayConfirmedText = data.today_confirmed.toLocaleString();
+            
+            // Set content and tooltips
+            pendingCountEl.textContent = pendingCountText;
+            pendingCountEl.setAttribute('title', pendingCountText);
+            
+            pendingAmountEl.textContent = pendingAmountText;
+            pendingAmountEl.setAttribute('title', pendingAmountText);
+            
+            failedCountEl.textContent = failedCountText;
+            failedCountEl.setAttribute('title', failedCountText);
+            
+            todayConfirmedEl.textContent = todayConfirmedText;
+            todayConfirmedEl.setAttribute('title', todayConfirmedText);
         })
         .catch(error => {
             console.error('Error loading stats:', error);

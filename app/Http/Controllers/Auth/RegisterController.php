@@ -100,6 +100,30 @@ class RegisterController extends Controller
             }
         }
 
+        // If no team invitation, assign default customer role
+        // Get or create system team for role assignment
+        $systemTeam = \App\Models\Team::firstOrCreate([
+            'name' => 'System',
+            'slug' => 'system'
+        ], [
+            'owner_id' => 1, // Default to first user
+            'description' => 'System-wide roles and permissions'
+        ]);
+
+        // Set team context for permission system
+        app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($systemTeam->id);
+        
+        // Ensure customer role exists and assign it
+        $customerRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'customer']);
+        
+        // Set user's current team if they don't have one
+        if (!$user->current_team_id) {
+            $user->current_team_id = $systemTeam->id;
+            $user->save();
+        }
+        
+        $user->assignRole('customer');
+
         return redirect()->route('dashboard');
     }
 
