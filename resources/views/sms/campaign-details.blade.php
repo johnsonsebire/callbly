@@ -600,9 +600,20 @@
                 };
 
                 window.confirmDelete = function() {
-                    if (confirm('Are you sure you want to delete this scheduled campaign? This action cannot be undone and any credits used will be refunded.')) {
-                        deleteScheduledCampaign();
-                    }
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: 'This will delete the scheduled campaign. This action cannot be undone and any credits used will be refunded.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, delete it!',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            deleteScheduledCampaign();
+                        }
+                    });
                 };
 
                 function saveScheduledChanges() {
@@ -624,21 +635,45 @@
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                            'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+                            'Accept': 'application/json'
                         },
+                        credentials: 'same-origin', // Include session cookies
                         body: JSON.stringify(formData)
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if (data.success) {
-                            location.reload(); // Reload to show updated data
+                            // Show success message with SweetAlert
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'Campaign updated successfully',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then(() => {
+                                location.reload(); // Reload to show updated data
+                            });
                         } else {
-                            alert('Error: ' + (data.message || 'Failed to update campaign'));
+                            Swal.fire({
+                                title: 'Error!',
+                                text: data.message || 'Failed to update campaign',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        alert('An error occurred while updating the campaign');
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'An error occurred while updating the campaign',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
                     })
                     .finally(() => {
                         saveBtn.innerHTML = originalText;
@@ -651,21 +686,43 @@
                         method: 'DELETE',
                         headers: {
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                            'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
-                        }
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'same-origin' // Include session cookies
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if (data.success) {
-                            alert('Campaign deleted successfully. Credits have been refunded.');
-                            window.location.href = '{{ route("sms.campaigns") }}';
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'Campaign deleted successfully. Credits have been refunded.',
+                                icon: 'success',
+                                confirmButtonText: 'OK'
+                            }).then(() => {
+                                window.location.href = '{{ route("sms.campaigns") }}';
+                            });
                         } else {
-                            alert('Error: ' + (data.message || 'Failed to delete campaign'));
+                            Swal.fire({
+                                title: 'Error!',
+                                text: data.message || 'Failed to delete campaign',
+                                icon: 'error',
+                                confirmButtonText: 'OK'
+                            });
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        alert('An error occurred while deleting the campaign');
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'An error occurred while deleting the campaign',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
                     });
                 }
             });
