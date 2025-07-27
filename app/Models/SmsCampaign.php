@@ -132,9 +132,24 @@ class SmsCampaign extends Model
             return 'pending';
         }
 
+        // If campaign was manually marked as failed, keep it failed
+        if ($this->status === 'failed' && $this->completed_at) {
+            return 'failed';
+        }
+
         // If all messages failed
         if ($failedCount === $totalCount) {
             return 'failed';
+        }
+
+        // If there are still pending messages, it's processing (not pending)
+        if ($pendingCount > 0) {
+            // If no messages have been sent yet, it's pending
+            if ($deliveredCount === 0 && $failedCount === 0) {
+                return 'pending';
+            }
+            // Otherwise it's processing
+            return 'processing';
         }
 
         // If some or all messages delivered and none pending
@@ -142,18 +157,8 @@ class SmsCampaign extends Model
             return 'completed';
         }
 
-        // If all messages pending
-        if ($pendingCount === $totalCount) {
-            return 'pending';
-        }
-
-        // Mixed status with some pending
-        if ($pendingCount > 0) {
-            return 'processing';
-        }
-
-        // Default fallback
-        return 'sent';
+        // Default fallback for edge cases
+        return $this->status ?? 'pending';
     }
 
     /**

@@ -96,7 +96,7 @@ class SendBulkSmsJob implements ShouldQueue
                     'total_failed' => $result['failed_count'] ?? 0
                 ]);
                 
-                // Send completion notification
+                // Send completion notification only on success
                 $campaign->user->notify(new \App\Notifications\SmsCampaignCompleted($campaign));
             } else {
                 $campaign->update([
@@ -109,7 +109,9 @@ class SendBulkSmsJob implements ShouldQueue
                     'error' => $result['message'] ?? 'Unknown error'
                 ]);
                 
-                // Send failure notification
+                // Send failure notification - but mark the campaign to prevent duplicate
+                // notifications if the job also triggers failed() method
+                $campaign->update(['status' => 'failed']);
                 $campaign->user->notify(new \App\Notifications\SmsCampaignCompleted($campaign));
             }
 
@@ -120,15 +122,15 @@ class SendBulkSmsJob implements ShouldQueue
                 'trace' => $e->getTraceAsString()
             ]);
 
-            // Update campaign status to failed
-            if (isset($campaign)) {
+            // Update campaign status to failed if not already failed
+            if (isset($campaign) && $campaign->status !== 'failed') {
                 $campaign->update([
                     'status' => 'failed',
                     'completed_at' => now()
                 ]);
             }
 
-            // Re-throw to trigger job failure
+            // Re-throw to trigger job failure (this will call failed() method)
             throw $e;
         }
     }
@@ -146,13 +148,14 @@ class SendBulkSmsJob implements ShouldQueue
 
         // Update campaign status to failed
         $campaign = SmsCampaign::find($this->campaignId);
-        if ($campaign) {
+        if ($campaign && $campaign->status !== 'failed') {
             $campaign->update([
                 'status' => 'failed',
                 'completed_at' => now()
             ]);
             
-            // Send failure notification
+            // Only send notification if campaign wasn't already marked as failed
+            // to prevent duplicate notifications
             $campaign->user->notify(new \App\Notifications\SmsCampaignCompleted($campaign));
         }
     }

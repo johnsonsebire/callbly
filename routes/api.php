@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\VirtualNumberController;
 use App\Http\Controllers\WalletController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Log;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,7 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
         $contacts = $user->getAvailableContacts();
         
         // Log for debugging
-        \Log::info('Mobile API: Fetching contacts', [
+        Log::info('Mobile API: Fetching contacts', [
             'user_id' => $user->id,
             'total_contacts' => $contacts->count(),
             'user_personal_contacts' => $user->contacts()->count(),
