@@ -34,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
 'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'session.timeout' => \App\Http\Middleware\CheckSessionTimeout::class,
             'api.session.timeout' => \App\Http\Middleware\CheckApiSessionTimeout::class,
+            'coming.soon' => \App\Http\Middleware\ComingSoonForCustomers::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

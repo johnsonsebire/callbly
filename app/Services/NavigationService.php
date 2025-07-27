@@ -317,6 +317,11 @@ class NavigationService
                         'active' => $this->checkRoutePattern($currentRouteName, 'admin.users.*')
                     ],
                     [
+                        'label' => 'Service Plans',
+                        'url' => route('admin.service-plans.index'),
+                        'active' => $this->checkRoutePattern($currentRouteName, 'admin.service-plans.*')
+                    ],
+                    [
                         'label' => 'System Settings',
                         'url' => route('admin.settings.index'),
                         'active' => $this->checkRoutePattern($currentRouteName, 'admin.settings.*')

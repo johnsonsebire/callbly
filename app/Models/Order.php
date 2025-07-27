@@ -26,6 +26,7 @@ class Order extends Model
         'payment_details',
         'notes',
         'paid_at',
+        'expires_at',
         'affiliate_referral_id',
     ];
 
@@ -38,6 +39,7 @@ class Order extends Model
         'amount' => 'decimal:2',
         'payment_details' => 'json',
         'paid_at' => 'datetime',
+        'expires_at' => 'datetime',
     ];
 
     /**

@@ -197,7 +197,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // USSD Routes
-    Route::middleware(['verified'])->prefix('ussd')->name('ussd.')->group(function () {
+    Route::middleware(['verified', 'coming.soon:ussd'])->prefix('ussd')->name('ussd.')->group(function () {
         Route::get('/', [UssdController::class, 'dashboard'])->name('dashboard');
         Route::get('/services', [UssdController::class, 'services'])->name('services');
         Route::get('/create', [UssdController::class, 'create'])->name('create');
@@ -209,7 +209,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Virtual Numbers Routes
-    Route::middleware(['verified'])->prefix('virtual-numbers')->name('virtual-numbers.')->group(function () {
+    Route::middleware(['verified', 'coming.soon:virtual-numbers'])->prefix('virtual-numbers')->name('virtual-numbers.')->group(function () {
         Route::get('/', [VirtualNumberController::class, 'index'])->name('index');
         Route::get('/browse', [VirtualNumberController::class, 'browse'])->name('browse');
         Route::get('/my-numbers', [VirtualNumberController::class, 'myNumbers'])->name('my-numbers');
@@ -219,7 +219,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Contact Center Routes
-    Route::middleware(['auth', 'verified'])->prefix('contact-center')->name('contact-center.')->group(function () {
+    Route::middleware(['auth', 'verified', 'coming.soon:contact-center'])->prefix('contact-center')->name('contact-center.')->group(function () {
         Route::get('/', [ContactCenterController::class, 'dashboard'])->name('dashboard');
         Route::post('/call', [ContactCenterController::class, 'initiateCall'])->name('initiate-call');
         Route::get('/calls/{id}/recording', [ContactCenterController::class, 'getCallRecording'])->name('call.recording');
@@ -309,6 +309,11 @@ Route::middleware('auth')->group(function () {
             ->name('users.update-role');
         Route::post('users/{user}/add-credits', [\App\Http\Controllers\Admin\UserController::class, 'addCredits'])
             ->name('users.add-credits');
+            
+        // Service Plan Management for Super Admin
+        Route::resource('service-plans', \App\Http\Controllers\Admin\ServicePlanController::class);
+        Route::put('service-plans/{servicePlan}/toggle-status', [\App\Http\Controllers\Admin\ServicePlanController::class, 'toggleStatus'])
+            ->name('service-plans.toggle-status');
             
         // User Impersonation routes
         Route::get('impersonate/{user}', [\App\Http\Controllers\Admin\ImpersonationController::class, 'impersonate'])

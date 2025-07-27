@@ -14,13 +14,35 @@ class ServicePlanController extends Controller
     /**
      * Display a listing of available service plans.
      *
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index()
+    public function index(Request $request)
     {
+        $user = $request->user();
+        
         $plans = ServicePlan::where('is_active', true)
             ->orderBy('price', 'asc')
-            ->get();
+            ->get()
+            ->map(function ($plan) use ($user) {
+                return [
+                    'id' => $plan->id,
+                    'name' => $plan->name,
+                    'type' => $plan->type,
+                    'description' => $plan->description,
+                    'price' => (float) $plan->price,
+                    'formatted_price' => $user->formatAmount($plan->price),
+                    'currency' => $user->currency->code,
+                    'currency_symbol' => $user->currency->symbol,
+                    'validity_days' => $plan->validity_days,
+                    'features' => $plan->features,
+                    'units' => $plan->units,
+                    'is_popular' => $plan->is_popular,
+                    'is_active' => $plan->is_active,
+                    'created_at' => $plan->created_at,
+                    'updated_at' => $plan->updated_at,
+                ];
+            });
 
         return response()->json([
             'success' => true,
@@ -31,11 +53,14 @@ class ServicePlanController extends Controller
     /**
      * Display the specified service plan.
      *
+     * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
+        $user = $request->user();
+        
         $plan = ServicePlan::where('id', $id)
             ->where('is_active', true)
             ->first();
@@ -47,9 +72,27 @@ class ServicePlanController extends Controller
             ], 404);
         }
 
+        $planData = [
+            'id' => $plan->id,
+            'name' => $plan->name,
+            'type' => $plan->type,
+            'description' => $plan->description,
+            'price' => (float) $plan->price,
+            'formatted_price' => $user->formatAmount($plan->price),
+            'currency' => $user->currency->code,
+            'currency_symbol' => $user->currency->symbol,
+            'validity_days' => $plan->validity_days,
+            'features' => $plan->features,
+            'units' => $plan->units,
+            'is_popular' => $plan->is_popular,
+            'is_active' => $plan->is_active,
+            'created_at' => $plan->created_at,
+            'updated_at' => $plan->updated_at,
+        ];
+
         return response()->json([
             'success' => true,
-            'data' => $plan
+            'data' => $planData
         ]);
     }
 

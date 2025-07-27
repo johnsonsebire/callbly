@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ServicePlanController;
+use App\Http\Controllers\Api\ShopController;
 use App\Http\Controllers\Api\SmsController;
 use App\Http\Controllers\Api\UssdController;
 use App\Http\Controllers\Api\VirtualNumberController;
@@ -200,6 +201,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}', [ServicePlanController::class, 'show']);
         Route::post('/{id}/purchase', [ServicePlanController::class, 'purchase']);
     });
+    
+    // Shop routes for mobile app
+    Route::prefix('shop')->group(function () {
+        Route::get('/plans', [ShopController::class, 'getPlans']);
+        Route::get('/service-plans', [ShopController::class, 'getServicePlans']);
+        Route::post('/plans/{planId}/purchase', [ShopController::class, 'purchasePlan']);
+    });
+    
+    // Subscriptions route for mobile app
+    Route::get('/subscriptions', [ShopController::class, 'getSubscriptions']);
     
     // Order history routes
     Route::prefix('orders')->group(function () {
