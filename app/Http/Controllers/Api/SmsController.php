@@ -156,11 +156,13 @@ class SmsController extends Controller
                 ]);
                 
                 if ($scheduledTimeServerTz->isAfter($now)) {
-                    $delay = $scheduledTimeServerTz->diffInSeconds($now);
+                    $delay = $now->diffInSeconds($scheduledTimeServerTz);
                     
                     Log::info('=== APPLYING DELAY TO SINGLE SMS ===', [
                         'delay_seconds' => $delay,
+                        'delay_minutes' => round($delay / 60, 2),
                         'scheduled_time_display' => $scheduledTime->format('M d, Y H:i:s T'),
+                        'will_execute_at' => $now->addSeconds($delay)->format('Y-m-d H:i:s T'),
                     ]);
                     
                     $job->delay($delay);
@@ -384,41 +386,48 @@ class SmsController extends Controller
                 $userTimezone = $request->timezone ?? 'UTC';
                 
                 try {
-                    // Parse the date in user's timezone and convert to server timezone
-                    $scheduledTime = \Carbon\Carbon::createFromFormat(
+                    // Parse the date in user's timezone
+                    $userScheduledTime = \Carbon\Carbon::createFromFormat(
                         'Y-m-d H:i:s',
                         $request->scheduled_at,
                         $userTimezone
-                    )->setTimezone(config('app.timezone'));
+                    );
+                    
+                    // Convert to server timezone (UTC)
+                    $serverScheduledTime = $userScheduledTime->setTimezone(config('app.timezone'));
+                    $currentServerTime = now();
                     
                     Log::info('=== TIMEZONE CONVERSION DEBUG ===', [
                         'original_time' => $request->scheduled_at,
                         'user_timezone' => $userTimezone,
-                        'converted_time' => $scheduledTime->format('Y-m-d H:i:s'),
+                        'user_scheduled_time' => $userScheduledTime->format('Y-m-d H:i:s T'),
+                        'server_scheduled_time' => $serverScheduledTime->format('Y-m-d H:i:s T'),
+                        'current_server_time' => $currentServerTime->format('Y-m-d H:i:s T'),
                         'server_timezone' => config('app.timezone'),
-                        'is_future' => $scheduledTime->isAfter(now()),
-                        'delay_seconds' => $scheduledTime->isAfter(now()) ? $scheduledTime->diffInSeconds(now()) : 0,
+                        'is_future' => $serverScheduledTime->isAfter($currentServerTime),
                     ]);
                     
-                    if ($scheduledTime->isAfter(now())) {
-                        $delay = $scheduledTime->diffInSeconds(now());
+                    if ($serverScheduledTime->isAfter($currentServerTime)) {
+                        $delay = $currentServerTime->diffInSeconds($serverScheduledTime);
                         
                         Log::info('=== APPLYING DELAY TO BULK SMS ===', [
-                            'parsed_time' => $scheduledTime->format('Y-m-d H:i:s'),
+                            'server_scheduled_time' => $serverScheduledTime->format('Y-m-d H:i:s T'),
+                            'current_server_time' => $currentServerTime->format('Y-m-d H:i:s T'),
                             'delay_seconds' => $delay,
-                            'will_dispatch_at' => now()->addSeconds($delay)->format('Y-m-d H:i:s'),
+                            'delay_minutes' => round($delay / 60, 2),
+                            'will_dispatch_at' => $currentServerTime->addSeconds($delay)->format('Y-m-d H:i:s T'),
                         ]);
                         
                         $job->delay($delay);
                         dispatch($job);
                         
                         // Format the time back to user's timezone for display
-                        $userDisplayTime = $scheduledTime->setTimezone($userTimezone);
+                        $userDisplayTime = $userScheduledTime;
                         $message = 'Bulk SMS campaign scheduled for ' . $userDisplayTime->format('M d, Y H:i:s') . ' (' . $userTimezone . ')';
                     } else {
                         Log::info('=== NO DELAY - SCHEDULED TIME IS IN PAST ===', [
-                            'scheduled_time' => $scheduledTime->format('Y-m-d H:i:s'),
-                            'current_time' => now()->format('Y-m-d H:i:s'),
+                            'server_scheduled_time' => $serverScheduledTime->format('Y-m-d H:i:s T'),
+                            'current_server_time' => $currentServerTime->format('Y-m-d H:i:s T'),
                             'sending_immediately' => true,
                         ]);
                         
