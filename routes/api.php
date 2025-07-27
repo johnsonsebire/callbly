@@ -49,6 +49,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/campaigns', [SmsController::class, 'getCampaigns']);
         Route::get('/campaigns/{id}', [SmsController::class, 'getCampaignDetails']);
         
+        // Scheduled campaign management
+        Route::put('/campaigns/{id}/scheduled', [SmsController::class, 'updateScheduledCampaign']);
+        Route::delete('/campaigns/{id}/scheduled', [SmsController::class, 'deleteScheduledCampaign']);
+        
         // SMS Templates routes
         Route::get('/templates', [SmsController::class, 'getTemplates']);
         Route::post('/templates', [SmsController::class, 'createTemplate']);

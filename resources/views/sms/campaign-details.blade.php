@@ -29,9 +29,19 @@
                                     <h2 class="mb-1">Campaign Details</h2>
                                     <p class="text-muted mb-0">Viewing details for campaign #{{ $campaign->id }}</p>
                                 </div>
-                                <a href="{{ route('sms.campaigns') }}" class="btn btn-outline-secondary">
-                                    <i class="fas fa-arrow-left me-2"></i> Back to Campaigns
-                                </a>
+                                <div class="d-flex gap-2">
+                                    @if($campaign->scheduled_at && $campaign->scheduled_at > now() && $campaign->status === 'pending')
+                                        <button type="button" class="btn btn-warning btn-sm" onclick="openEditModal()">
+                                            <i class="fas fa-edit me-2"></i> Edit Schedule
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete()">
+                                            <i class="fas fa-trash me-2"></i> Delete
+                                        </button>
+                                    @endif
+                                    <a href="{{ route('sms.campaigns') }}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left me-2"></i> Back to Campaigns
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -85,6 +95,12 @@
                                                 </span>
                                             </p>
                                         </div>
+                                        @if($campaign->scheduled_at)
+                                        <div class="col-md-6 mb-3">
+                                            <label class="text-muted small text-uppercase">Scheduled Time</label>
+                                            <p class="fs-5 fw-semibold">{{ $campaign->scheduled_at->format('M d, Y H:i:s') }}</p>
+                                        </div>
+                                        @endif
                                         <div class="col-md-12">
                                             <label class="text-muted small text-uppercase">Message</label>
                                             <div class="p-3 bg-light rounded border">
@@ -352,6 +368,56 @@
         }
     </style>
 
+    <!-- Edit Schedule Modal -->
+    <div class="modal fade" id="editScheduleModal" tabindex="-1" aria-labelledby="editScheduleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editScheduleModalLabel">
+                        <i class="fas fa-edit me-2"></i>Edit Scheduled Campaign
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editScheduleForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_campaign_name" class="form-label">Campaign Name</label>
+                                <input type="text" class="form-control" id="edit_campaign_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_sender_name" class="form-label">Sender Name</label>
+                                <select class="form-select" id="edit_sender_name" required>
+                                    @foreach(auth()->user()->getAvailableSenderNames()->where('status', 'approved') as $senderName)
+                                        <option value="{{ $senderName->name }}">{{ $senderName->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_message" class="form-label">Message</label>
+                            <textarea class="form-control" id="edit_message" rows="4" required></textarea>
+                            <div class="form-text">
+                                <span id="edit_char_count">0</span> characters
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_scheduled_at" class="form-label">Scheduled Time</label>
+                            <input type="datetime-local" class="form-control" id="edit_scheduled_at" required>
+                            <div class="form-text">Time will be scheduled in your local timezone</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save-changes-btn" onclick="saveScheduledChanges()">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function() {
@@ -508,6 +574,100 @@
 
                 // Clean up on page unload
                 window.addEventListener('beforeunload', stopPolling);
+
+                // Character counting for edit modal
+                document.getElementById('edit_message').addEventListener('input', function() {
+                    document.getElementById('edit_char_count').textContent = this.value.length;
+                });
+
+                // Edit Schedule Modal Functions
+                window.openEditModal = function() {
+                    const modal = new bootstrap.Modal(document.getElementById('editScheduleModal'));
+                    
+                    // Pre-fill current values
+                    document.getElementById('edit_campaign_name').value = '{{ $campaign->name }}';
+                    document.getElementById('edit_message').value = `{{ addslashes($campaign->message) }}`;
+                    document.getElementById('edit_sender_name').value = '{{ $campaign->sender_name }}';
+                    
+                    @if($campaign->scheduled_at)
+                        // Format the current scheduled time for the datetime-local input
+                        const currentScheduled = new Date('{{ $campaign->scheduled_at->format('Y-m-d\\TH:i:s') }}');
+                        const localTimeString = currentScheduled.toISOString().slice(0, 16);
+                        document.getElementById('edit_scheduled_at').value = localTimeString;
+                    @endif
+                    
+                    modal.show();
+                };
+
+                window.confirmDelete = function() {
+                    if (confirm('Are you sure you want to delete this scheduled campaign? This action cannot be undone and any credits used will be refunded.')) {
+                        deleteScheduledCampaign();
+                    }
+                };
+
+                function saveScheduledChanges() {
+                    const formData = {
+                        name: document.getElementById('edit_campaign_name').value,
+                        message: document.getElementById('edit_message').value,
+                        sender_name: document.getElementById('edit_sender_name').value,
+                        scheduled_at: document.getElementById('edit_scheduled_at').value.replace('T', ' '),
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                    };
+
+                    const saveBtn = document.getElementById('save-changes-btn');
+                    const originalText = saveBtn.innerHTML;
+                    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+                    saveBtn.disabled = true;
+
+                    fetch(`/api/sms/campaigns/{{ $campaign->id }}/scheduled`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+                        },
+                        body: JSON.stringify(formData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload(); // Reload to show updated data
+                        } else {
+                            alert('Error: ' + (data.message || 'Failed to update campaign'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while updating the campaign');
+                    })
+                    .finally(() => {
+                        saveBtn.innerHTML = originalText;
+                        saveBtn.disabled = false;
+                    });
+                }
+
+                function deleteScheduledCampaign() {
+                    fetch(`/api/sms/campaigns/{{ $campaign->id }}/scheduled`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Campaign deleted successfully. Credits have been refunded.');
+                            window.location.href = '{{ route("sms.campaigns") }}';
+                        } else {
+                            alert('Error: ' + (data.message || 'Failed to delete campaign'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while deleting the campaign');
+                    });
+                }
             });
         </script>
     @endpush

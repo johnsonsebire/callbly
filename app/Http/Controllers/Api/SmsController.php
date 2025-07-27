@@ -823,6 +823,291 @@ class SmsController extends Controller
     }
 
     /**
+     * Update a scheduled SMS campaign.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function updateScheduledCampaign(Request $request, int $id): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'message' => 'sometimes|required|string|max:1000',
+            'sender_name' => 'sometimes|required|string|exists:sender_names,name',
+            'scheduled_at' => 'sometimes|nullable|date|after:now',
+            'timezone' => 'nullable|string',
+            'name' => 'sometimes|required|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $user = $request->user();
+            
+            // Find the campaign and ensure it belongs to the user
+            $campaign = SmsCampaign::where('id', $id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$campaign) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Campaign not found'
+                ], 404);
+            }
+
+            // Only allow editing of pending campaigns
+            if ($campaign->status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only pending campaigns can be edited'
+                ], 400);
+            }
+
+            // Check if campaign is scheduled (has a future scheduled_at)
+            if (!$campaign->scheduled_at || $campaign->scheduled_at <= now()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only scheduled campaigns can be edited'
+                ], 400);
+            }
+
+            // Validate sender name if provided
+            if ($request->has('sender_name')) {
+                $senderNameAvailable = false;
+                
+                $senderName = SenderName::where('name', $request->sender_name)
+                    ->where('user_id', $user->id)
+                    ->where('status', 'approved')
+                    ->first();
+                    
+                if ($senderName) {
+                    $senderNameAvailable = true;
+                } else {
+                    $sharedSenderNames = $user->getAvailableSenderNames();
+                    $senderName = $sharedSenderNames->where('name', $request->sender_name)
+                        ->where('status', 'approved')
+                        ->first();
+                        
+                    if ($senderName) {
+                        $senderNameAvailable = true;
+                    }
+                }
+                
+                if (!$senderNameAvailable) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Sender name not found or not approved'
+                    ], 400);
+                }
+            }
+
+            // Prepare update data
+            $updateData = [];
+            
+            if ($request->has('message')) {
+                $updateData['message'] = $request->message;
+                
+                // Recalculate credits if message changed
+                $smsCount = $this->calculateSmsPartsCount($request->message);
+                $creditsNeeded = $smsCount * $campaign->recipients_count;
+                
+                // Check if user has sufficient credits for the updated message
+                $availableSmsCredits = $user->getAvailableSmsCredits();
+                
+                if ($availableSmsCredits < $creditsNeeded) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Insufficient SMS credits for updated message. You need ' . $creditsNeeded . ' credits but have ' . $availableSmsCredits
+                    ], 400);
+                }
+                
+                // Update credits_used if different
+                if ($campaign->credits_used !== $creditsNeeded) {
+                    $creditDifference = $creditsNeeded - $campaign->credits_used;
+                    
+                    if ($creditDifference > 0) {
+                        // Need more credits - deduct additional
+                        $teamResourceService = app(\App\Services\TeamResourceService::class);
+                        $creditResult = $teamResourceService->deductSharedSmsCredits($user, $creditDifference);
+                        
+                        if (!$creditResult['success']) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Failed to deduct additional SMS credits: ' . $creditResult['message']
+                            ], 400);
+                        }
+                    } else {
+                        // Need fewer credits - refund difference
+                        $refundAmount = abs($creditDifference);
+                        $teamResourceService = app(\App\Services\TeamResourceService::class);
+                        $teamResourceService->refundSharedSmsCredits($user, $refundAmount);
+                    }
+                    
+                    $updateData['credits_used'] = $creditsNeeded;
+                }
+            }
+            
+            if ($request->has('sender_name')) {
+                $updateData['sender_name'] = $request->sender_name;
+            }
+            
+            if ($request->has('name')) {
+                $updateData['name'] = $request->name;
+            }
+            
+            if ($request->has('scheduled_at')) {
+                // Handle timezone-aware scheduling update
+                $userTimezone = $request->timezone ?? 'UTC';
+                
+                if ($request->scheduled_at) {
+                    try {
+                        // Parse the date in user's timezone
+                        $userScheduledTime = \Carbon\Carbon::createFromFormat(
+                            'Y-m-d H:i:s',
+                            $request->scheduled_at,
+                            $userTimezone
+                        );
+                        
+                        // Convert to server timezone for storage
+                        $serverScheduledTime = $userScheduledTime->setTimezone(config('app.timezone'));
+                        
+                        // Ensure it's in the future
+                        if ($serverScheduledTime->isAfter(now())) {
+                            $updateData['scheduled_at'] = $serverScheduledTime;
+                        } else {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Scheduled time must be in the future'
+                            ], 400);
+                        }
+                    } catch (\Exception $e) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Invalid scheduled time format'
+                        ], 400);
+                    }
+                } else {
+                    $updateData['scheduled_at'] = null;
+                }
+            }
+
+            // Update the campaign
+            $campaign->update($updateData);
+
+            Log::info('Scheduled campaign updated', [
+                'campaign_id' => $campaign->id,
+                'user_id' => $user->id,
+                'updated_fields' => array_keys($updateData)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Scheduled campaign updated successfully',
+                'data' => [
+                    'campaign_id' => $campaign->id,
+                    'updated_at' => $campaign->updated_at,
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error updating scheduled campaign: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while updating the campaign'
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete a scheduled SMS campaign.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return JsonResponse
+     */
+    public function deleteScheduledCampaign(Request $request, int $id): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            
+            // Find the campaign and ensure it belongs to the user
+            $campaign = SmsCampaign::where('id', $id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$campaign) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Campaign not found'
+                ], 404);
+            }
+
+            // Only allow deletion of pending campaigns
+            if ($campaign->status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only pending campaigns can be deleted'
+                ], 400);
+            }
+
+            // Check if campaign is scheduled (has a future scheduled_at)
+            if (!$campaign->scheduled_at || $campaign->scheduled_at <= now()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only scheduled campaigns can be deleted'
+                ], 400);
+            }
+
+            // Refund credits if any were used
+            if ($campaign->credits_used > 0) {
+                $teamResourceService = app(\App\Services\TeamResourceService::class);
+                $teamResourceService->refundSharedSmsCredits($user, $campaign->credits_used);
+                
+                Log::info('Refunded credits for deleted campaign', [
+                    'campaign_id' => $campaign->id,
+                    'user_id' => $user->id,
+                    'refunded_credits' => $campaign->credits_used
+                ]);
+            }
+
+            // Store campaign info for logging before deletion
+            $campaignId = $campaign->id;
+            $campaignName = $campaign->name;
+
+            // Delete the campaign and related recipients
+            $campaign->recipients()->delete();
+            $campaign->delete();
+
+            Log::info('Scheduled campaign deleted', [
+                'campaign_id' => $campaignId,
+                'campaign_name' => $campaignName,
+                'user_id' => $user->id
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Scheduled campaign deleted successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error deleting scheduled campaign: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while deleting the campaign'
+            ], 500);
+        }
+    }
+
+    /**
      * Calculate the number of SMS parts required for a given message.
      *
      * @param string $message
