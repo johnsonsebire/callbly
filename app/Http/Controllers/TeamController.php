@@ -6,11 +6,13 @@ use App\Models\Team;
 use App\Models\User;
 use App\Models\SenderName;
 use App\Models\Contact;
+use App\Models\ContactGroup;
 use App\Models\TeamUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TeamController extends Controller
 {
@@ -104,8 +106,41 @@ class TeamController extends Controller
      */
     public function update(Request $request, Team $team)
     {
+        // For AJAX requests, only clear flash messages (not entire session)
+        if ($request->ajax() || $request->wantsJson()) {
+            // Clear only flash messages, preserve authentication and other session data
+            session()->forget(['_flash']);
+            $request->session()->flash('_flash.old', []);
+            $request->session()->flash('_flash.new', []);
+            
+            Log::info('Cleared flash messages for AJAX team update', [
+                'team_id' => $team->id,
+                'user_id' => auth()->id()
+            ]);
+        }
+        
+        // Log the start of the request
+        Log::info('Team update request started', [
+            'team_id' => $team->id,
+            'user_id' => auth()->id(),
+            'request_method' => $request->method(),
+            'is_ajax' => $request->ajax(),
+            'wants_json' => $request->wantsJson(),
+            'content_type' => $request->header('Content-Type'),
+            'accept_header' => $request->header('Accept'),
+            'x_requested_with' => $request->header('X-Requested-With'),
+            'all_headers' => $request->headers->all(),
+            'raw_input' => $request->all()
+        ]);
+
         // Check if user can update team using ownsTeam method
         if (!auth()->user()->ownsTeam($team)) {
+            Log::warning('Unauthorized team update attempt', [
+                'team_id' => $team->id,
+                'user_id' => auth()->id(),
+                'is_ajax' => $request->ajax()
+            ]);
+            
             if ($request->ajax()) {
                 return response()->json([
                     'success' => false,
@@ -117,7 +152,13 @@ class TeamController extends Controller
 
         try {
             // Process form data with proper boolean casting
-            $data = $request->only(['name', 'description', 'share_sms_credits', 'share_contacts', 'share_sender_names']);
+            $data = $request->only(['name', 'description', 'share_sms_credits', 'share_contacts', 'share_sender_names', 'share_contact_groups']);
+            
+            Log::info('Processing team update data', [
+                'team_id' => $team->id,
+                'raw_data' => $data,
+                'data_types' => array_map('gettype', $data)
+            ]);
             
             // Explicitly cast checkbox values to boolean
             if (isset($data['share_sms_credits'])) {
@@ -132,14 +173,30 @@ class TeamController extends Controller
                 $data['share_sender_names'] = filter_var($data['share_sender_names'], FILTER_VALIDATE_BOOLEAN);
             }
             
+            if (isset($data['share_contact_groups'])) {
+                $data['share_contact_groups'] = filter_var($data['share_contact_groups'], FILTER_VALIDATE_BOOLEAN);
+            }
+            
+            Log::info('After boolean casting', [
+                'team_id' => $team->id,
+                'processed_data' => $data,
+                'data_types' => array_map('gettype', $data)
+            ]);
+            
             // Validate after casting
             $validated = validator($data, [
                 'name' => ['sometimes', 'string', 'max:255'],
                 'description' => ['sometimes', 'nullable', 'string'],
                 'share_sms_credits' => ['sometimes', 'boolean'],
                 'share_contacts' => ['sometimes', 'boolean'],
-                'share_sender_names' => ['sometimes', 'boolean']
+                'share_sender_names' => ['sometimes', 'boolean'],
+                'share_contact_groups' => ['sometimes', 'boolean']
             ])->validate();
+
+            Log::info('Validation successful', [
+                'team_id' => $team->id,
+                'validated_data' => $validated
+            ]);
 
             DB::transaction(function () use ($team, $validated) {
                 // Update the team settings
@@ -170,9 +227,27 @@ class TeamController extends Controller
                             ->delete();
                     }
                 }
+
+                // Handle contact groups sharing
+                if (isset($validated['share_contact_groups'])) {
+                    if ($validated['share_contact_groups']) {
+                        $contactGroups = ContactGroup::where('user_id', $team->owner_id)->get();
+                        $team->syncResources($contactGroups, 'contact_group');
+                    } else {
+                        $team->teamResources()
+                            ->where('resource_type', 'contact_group')
+                            ->delete();
+                    }
+                }
             });
 
             if ($request->ajax() || $request->wantsJson()) {
+                // For AJAX: Return clean JSON response with no session flash messages
+                Log::info('AJAX response sent successfully', [
+                    'team_id' => $team->id,
+                    'response' => ['success' => true, 'message' => 'Team settings updated successfully.']
+                ]);
+                
                 return response()->json([
                     'success' => true,
                     'message' => 'Team settings updated successfully.'
@@ -181,13 +256,20 @@ class TeamController extends Controller
 
             return back()->with('success', 'Team settings updated successfully.');
         } catch (\Exception $e) {
-            \Log::error('Team update error: ' . $e->getMessage(), [
+            Log::error('Team update error: ' . $e->getMessage(), [
                 'team_id' => $team->id,
                 'user_id' => auth()->id(),
-                'data' => $request->all()
+                'data' => $request->all(),
+                'validated_data' => $validated ?? null,
+                'trace' => $e->getTraceAsString()
             ]);
             
             if ($request->ajax() || $request->wantsJson()) {
+                Log::info('AJAX error response sent', [
+                    'team_id' => $team->id,
+                    'error' => $e->getMessage()
+                ]);
+                
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to update team settings.',

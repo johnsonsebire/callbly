@@ -7,17 +7,20 @@
     <div class="d-flex flex-column flex-column-fluid">
         <div id="kt_app_content" class="app-content flex-column-fluid">
             <div id="kt_app_content_container" class="app-container container-fluid">
-                @if(session('success'))
-                    <div class="alert alert-success mb-4">
-                        {{ session('success') }}
-                    </div>
-                @endif
+                <!-- Session messages - completely hidden for team settings AJAX -->
+                <div id="session-messages" style="display: none !important; visibility: hidden !important; opacity: 0 !important; height: 0 !important; overflow: hidden !important;">
+                    @if(session('success'))
+                        <div class="alert alert-success mb-4" id="session-success-alert" style="display: none !important;">
+                            {{ session('success') }}
+                        </div>
+                    @endif
 
-                @if(session('error'))
-                    <div class="alert alert-danger mb-4">
-                        {{ session('error') }}
-                    </div>
-                @endif
+                    @if(session('error'))
+                        <div class="alert alert-danger mb-4" id="session-error-alert" style="display: none !important;">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+                </div>
 
                 <div class="card mb-5">
                     <div class="card-body py-5">
@@ -489,6 +492,26 @@
         // Initial filter application
         filterMembers();
         filterInvitations();
+        
+        // Hide session messages when team settings form is used
+        const teamSettingsForm = document.getElementById('team-settings-form');
+        const sessionMessages = document.getElementById('session-messages');
+        
+        if (teamSettingsForm && sessionMessages) {
+            // Hide session messages when the form is interacted with
+            teamSettingsForm.addEventListener('submit', function() {
+                sessionMessages.style.display = 'none';
+            });
+            
+            // Also hide them when any input changes (to prevent confusion)
+            teamSettingsForm.querySelectorAll('input').forEach(input => {
+                input.addEventListener('change', function() {
+                    setTimeout(() => {
+                        sessionMessages.style.display = 'none';
+                    }, 100);
+                });
+            });
+        }
     });
 </script>
 @endpush
