@@ -34,6 +34,7 @@ class SmsController extends Controller
             'message' => 'required|string',
             'sender_name' => 'required|string|exists:sender_names,name',
             'scheduled_at' => 'nullable|date|after:now',
+            'timezone' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -126,14 +127,58 @@ class SmsController extends Controller
                 $request->sender_name
             );
             
-            if ($request->scheduled_at && \Carbon\Carbon::parse($request->scheduled_at)->isAfter(now())) {
-                $scheduledTime = \Carbon\Carbon::parse($request->scheduled_at);
-                $delay = $scheduledTime->diffInSeconds(now());
-                $job->delay($delay);
-                dispatch($job);
+            // Enhanced debugging for scheduling
+            Log::info('=== SINGLE SMS SCHEDULING DEBUG ===', [
+                'campaign_id' => $campaign->id,
+                'raw_scheduled_at' => $request->scheduled_at,
+                'timezone' => $request->timezone,
+                'has_scheduled_at' => !is_null($request->scheduled_at),
+                'current_time' => now()->format('Y-m-d H:i:s'),
+                'server_timezone' => config('app.timezone'),
+            ]);
+
+            if ($request->scheduled_at) {
+                // Parse the scheduled time considering user's timezone
+                $userTimezone = $request->timezone ?: config('app.timezone');
+                $scheduledTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $request->scheduled_at, $userTimezone);
                 
-                $message = 'SMS scheduled for ' . $scheduledTime->format('M d, Y H:i:s');
+                // Convert to server timezone for comparison
+                $scheduledTimeServerTz = $scheduledTime->setTimezone(config('app.timezone'));
+                $now = now();
+                
+                Log::info('=== TIMEZONE CONVERSION DEBUG ===', [
+                    'user_timezone' => $userTimezone,
+                    'original_time' => $request->scheduled_at,
+                    'parsed_user_tz' => $scheduledTime->format('Y-m-d H:i:s T'),
+                    'converted_server_tz' => $scheduledTimeServerTz->format('Y-m-d H:i:s T'),
+                    'current_server_time' => $now->format('Y-m-d H:i:s T'),
+                    'is_after_now' => $scheduledTimeServerTz->isAfter($now),
+                ]);
+                
+                if ($scheduledTimeServerTz->isAfter($now)) {
+                    $delay = $scheduledTimeServerTz->diffInSeconds($now);
+                    
+                    Log::info('=== APPLYING DELAY TO SINGLE SMS ===', [
+                        'delay_seconds' => $delay,
+                        'scheduled_time_display' => $scheduledTime->format('M d, Y H:i:s T'),
+                    ]);
+                    
+                    $job->delay($delay);
+                    dispatch($job);
+                    
+                    $message = 'SMS scheduled for ' . $scheduledTime->format('M d, Y H:i:s T');
+                } else {
+                    Log::info('=== NO DELAY - SCHEDULED TIME IN PAST ===', [
+                        'scheduled_time' => $scheduledTimeServerTz->format('Y-m-d H:i:s T'),
+                        'current_time' => $now->format('Y-m-d H:i:s T'),
+                    ]);
+                    
+                    dispatch($job);
+                    $message = 'SMS is being sent (scheduled time was in the past)';
+                }
             } else {
+                Log::info('=== NO DELAY - NO SCHEDULED TIME PROVIDED ===');
+                
                 dispatch($job);
                 $message = 'SMS is being sent';
             }
@@ -174,6 +219,7 @@ class SmsController extends Controller
             'sender_name' => 'required|string|exists:sender_names,name',
             'name' => 'required|string|max:255',
             'scheduled_at' => 'nullable|date|after:now',
+            'timezone' => 'nullable|string',
             'campaign_id' => 'nullable|integer|exists:sms_campaigns,id',
         ]);
 
@@ -323,14 +369,78 @@ class SmsController extends Controller
                 $request->sender_name
             );
             
-            if ($request->scheduled_at && \Carbon\Carbon::parse($request->scheduled_at)->isAfter(now())) {
-                $scheduledTime = \Carbon\Carbon::parse($request->scheduled_at);
-                $delay = $scheduledTime->diffInSeconds(now());
-                $job->delay($delay);
-                dispatch($job);
+            // Enhanced debugging for bulk SMS scheduling with timezone awareness
+            Log::info('=== BULK SMS SCHEDULING DEBUG ===', [
+                'campaign_id' => $campaign->id,
+                'raw_scheduled_at' => $request->scheduled_at,
+                'user_timezone' => $request->timezone,
+                'has_scheduled_at' => !is_null($request->scheduled_at),
+                'current_time' => now()->format('Y-m-d H:i:s'),
+                'server_timezone' => config('app.timezone'),
+            ]);
+
+            if ($request->scheduled_at) {
+                // Handle timezone-aware scheduling
+                $userTimezone = $request->timezone ?? 'UTC';
                 
-                $message = 'Bulk SMS campaign scheduled for ' . $scheduledTime->format('M d, Y H:i:s');
+                try {
+                    // Parse the date in user's timezone and convert to server timezone
+                    $scheduledTime = \Carbon\Carbon::createFromFormat(
+                        'Y-m-d H:i:s',
+                        $request->scheduled_at,
+                        $userTimezone
+                    )->setTimezone(config('app.timezone'));
+                    
+                    Log::info('=== TIMEZONE CONVERSION DEBUG ===', [
+                        'original_time' => $request->scheduled_at,
+                        'user_timezone' => $userTimezone,
+                        'converted_time' => $scheduledTime->format('Y-m-d H:i:s'),
+                        'server_timezone' => config('app.timezone'),
+                        'is_future' => $scheduledTime->isAfter(now()),
+                        'delay_seconds' => $scheduledTime->isAfter(now()) ? $scheduledTime->diffInSeconds(now()) : 0,
+                    ]);
+                    
+                    if ($scheduledTime->isAfter(now())) {
+                        $delay = $scheduledTime->diffInSeconds(now());
+                        
+                        Log::info('=== APPLYING DELAY TO BULK SMS ===', [
+                            'parsed_time' => $scheduledTime->format('Y-m-d H:i:s'),
+                            'delay_seconds' => $delay,
+                            'will_dispatch_at' => now()->addSeconds($delay)->format('Y-m-d H:i:s'),
+                        ]);
+                        
+                        $job->delay($delay);
+                        dispatch($job);
+                        
+                        // Format the time back to user's timezone for display
+                        $userDisplayTime = $scheduledTime->setTimezone($userTimezone);
+                        $message = 'Bulk SMS campaign scheduled for ' . $userDisplayTime->format('M d, Y H:i:s') . ' (' . $userTimezone . ')';
+                    } else {
+                        Log::info('=== NO DELAY - SCHEDULED TIME IS IN PAST ===', [
+                            'scheduled_time' => $scheduledTime->format('Y-m-d H:i:s'),
+                            'current_time' => now()->format('Y-m-d H:i:s'),
+                            'sending_immediately' => true,
+                        ]);
+                        
+                        dispatch($job);
+                        $message = 'Scheduled time was in the past, bulk SMS campaign is being processed immediately';
+                    }
+                } catch (\Exception $e) {
+                    Log::error('=== TIMEZONE PARSING ERROR ===', [
+                        'error' => $e->getMessage(),
+                        'scheduled_at' => $request->scheduled_at,
+                        'timezone' => $userTimezone,
+                        'fallback_action' => 'sending_immediately'
+                    ]);
+                    
+                    dispatch($job);
+                    $message = 'Invalid schedule time format, bulk SMS campaign is being processed immediately';
+                }
             } else {
+                Log::info('=== NO DELAY - NO SCHEDULED TIME PROVIDED ===', [
+                    'immediate_processing' => true,
+                ]);
+                
                 dispatch($job);
                 $message = 'Bulk SMS campaign is being processed';
             }
