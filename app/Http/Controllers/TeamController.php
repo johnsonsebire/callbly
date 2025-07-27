@@ -102,6 +102,19 @@ class TeamController extends Controller
     }
 
     /**
+     * Show the form for editing the specified team.
+     */
+    public function edit(Team $team)
+    {
+        // Check if user can edit team using ownsTeam method
+        if (!auth()->user()->ownsTeam($team)) {
+            abort(403, 'Only team owners can edit teams.');
+        }
+
+        return view('teams.edit', compact('team'));
+    }
+
+    /**
      * Update the specified team in storage.
      */
     public function update(Request $request, Team $team)
@@ -254,7 +267,8 @@ class TeamController extends Controller
                 ]);
             }
 
-            return back()->with('success', 'Team settings updated successfully.');
+            // For regular form submission (edit page)
+            return back()->with('success', 'Team information and resource sharing settings have been updated successfully.');
         } catch (\Exception $e) {
             Log::error('Team update error: ' . $e->getMessage(), [
                 'team_id' => $team->id,
@@ -277,7 +291,8 @@ class TeamController extends Controller
                 ], 500);
             }
             
-            return back()->with('error', 'Failed to update team settings.');
+            // For regular form submission (edit page)
+            return back()->with('error', 'Failed to update team information. Please try again.');
         }
     }
 
