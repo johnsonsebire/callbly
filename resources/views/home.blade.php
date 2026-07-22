@@ -1019,71 +1019,68 @@
             <thead>
                 <tr>
                     <th></th>
-                    <th>Starter</th>
-                    <th class="featured">Professional</th>
-                    <th>Enterprise</th>
+                    <th>Basic</th>
+                    <th>Plus</th>
+                    <th class="featured">Premium</th>
+                    <th>Gold</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>Monthly price</td>
-                    <td><div class="plan-price">$29<span>/agent</span></div></td>
-                    <td class="featured-col"><div class="plan-price featured-price">$79<span>/agent</span></div></td>
-                    <td><div class="plan-price">Custom</div></td>
+                    <td>Price per SMS</td>
+                    <td><div class="plan-price">₵0.035</div></td>
+                    <td><div class="plan-price">₵0.032</div></td>
+                    <td class="featured-col"><div class="plan-price featured-price">₵0.029</div></td>
+                    <td><div class="plan-price">₵0.025</div></td>
                 </tr>
                 <tr>
-                    <td>Included minutes</td>
-                    <td>1,000</td>
-                    <td class="featured-col">5,000</td>
-                    <td>Unlimited</td>
+                    <td>Target Audience</td>
+                    <td>For businesses just getting started</td>
+                    <td>Better rates for regular users</td>
+                    <td class="featured-col">Great value for high volume</td>
+                    <td>Best rates for enterprise</td>
                 </tr>
                 <tr>
-                    <td>SMS credits</td>
-                    <td>500</td>
-                    <td class="featured-col">3,000</td>
-                    <td>Unlimited</td>
+                    <td>SMS Features</td>
+                    <td>All SMS Features</td>
+                    <td>All Basic Features</td>
+                    <td class="featured-col">All Plus Features</td>
+                    <td>All Premium Features</td>
                 </tr>
                 <tr>
-                    <td>IVR & call routing</td>
-                    <td><span class="check">✓</span></td>
-                    <td class="featured-col"><span class="check">✓</span></td>
-                    <td><span class="check">✓</span></td>
-                </tr>
-                <tr>
-                    <td>Call recording & transcription</td>
+                    <td>Cost Savings</td>
                     <td><span class="dash">—</span></td>
-                    <td class="featured-col"><span class="check">✓</span></td>
-                    <td><span class="check">✓</span></td>
+                    <td>8.6% Savings</td>
+                    <td class="featured-col">17% Savings</td>
+                    <td>29% Savings</td>
                 </tr>
                 <tr>
-                    <td>Omnichannel contact center</td>
-                    <td><span class="dash">—</span></td>
-                    <td class="featured-col"><span class="check">✓</span></td>
-                    <td><span class="check">✓</span></td>
+                    <td>Purchase Range</td>
+                    <td>₵0 - ₵1,499</td>
+                    <td>₵1,500 - ₵2,999</td>
+                    <td class="featured-col">₵3,000 - ₵5,999</td>
+                    <td>₵6,000+</td>
                 </tr>
                 <tr>
-                    <td>Real-time analytics dashboard</td>
-                    <td>Basic</td>
-                    <td class="featured-col">Advanced</td>
-                    <td>Custom</td>
+                    <td>Support Level</td>
+                    <td>Standard</td>
+                    <td>Priority Support</td>
+                    <td class="featured-col">Dedicated Account Manager</td>
+                    <td>24/7 Premium Support</td>
                 </tr>
                 <tr>
-                    <td>Dedicated account manager</td>
-                    <td><span class="dash">—</span></td>
-                    <td class="featured-col"><span class="dash">—</span></td>
-                    <td><span class="check">✓</span></td>
-                </tr>
-                <tr>
-                    <td>SLA guarantee</td>
-                    <td>99.9%</td>
-                    <td class="featured-col">99.99%</td>
-                    <td>99.999%</td>
+                    <td>Additional Perks</td>
+                    <td>Custom Sender Names<br>Delivery Reports<br>API Access</td>
+                    <td>Advanced Analytics</td>
+                    <td class="featured-col">Custom Integrations</td>
+                    <td>SLA Guarantee</td>
                 </tr>
                 <tr class="pricing-cta-row">
                     <td></td>
-                    <td><button class="pricing-cta-btn">Start Trial</button></td>
-                    <td class="featured-col"><button class="pricing-cta-btn primary">Start Trial</button></td>
-                    <td><button class="pricing-cta-btn">Contact Us</button></td>
+                    <td><button class="pricing-cta-btn">Buy Credits</button></td>
+                    <td><button class="pricing-cta-btn">Buy Credits</button></td>
+                    <td class="featured-col"><button class="pricing-cta-btn primary">Buy Credits</button></td>
+                    <td><button class="pricing-cta-btn">Buy Credits</button></td>
                 </tr>
             </tbody>
         </table>
