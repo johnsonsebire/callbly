@@ -21,7 +21,7 @@ class ReCaptchaServiceProvider extends ServiceProvider
     /**
      * Get the appropriate reCAPTCHA key based on version.
      */
-    private function getRecaptchaSecret(): string
+    private function getRecaptchaSecret(): ?string
     {
         return config('recaptcha.version') === 'v3' 
             ? config('recaptcha.v3_secret_key') 
@@ -31,7 +31,7 @@ class ReCaptchaServiceProvider extends ServiceProvider
     /**
      * Get the appropriate site key based on version.
      */
-    private function getRecaptchaSiteKey(): string
+    private function getRecaptchaSiteKey(): ?string
     {
         return config('recaptcha.version') === 'v3' 
             ? config('recaptcha.v3_site_key') 

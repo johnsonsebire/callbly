@@ -112,7 +112,7 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="text-muted fw-semibold d-block fs-7">{{ $tier->description }}</span>
+                                            <span class="text-muted fw-semibold d-block fs-7">{!! nl2br(e($tier->description)) !!}</span>
                                         </td>
                                     </tr>
                                     @endforeach

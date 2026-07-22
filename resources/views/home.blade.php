@@ -1,678 +1,1103 @@
-@extends('layouts.app')
-
-@section('title', 'Callbly - Modern Cloud Telephony Solutions')
-
-@push('styles')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- skill:chrome -->
 <style>
-/* Hero Button White Text Styling */
-.btn-primary-modern {
-    background: linear-gradient(135deg, #3ABFF8 0%, #1E40AF 100%);
-    border: none;
-    color: #ffffff !important;
-    font-weight: 600;
-    padding: 12px 32px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(58, 191, 248, 0.3);
+/* Credit line — bottom-right */
+.design-ui-credit {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  font: 11px/1 system-ui, sans-serif;
+  color: rgba(128,128,128,0.5);
+  pointer-events: none;
+  z-index: 2147483647;
+  transition: opacity 0.4s ease;
+  user-select: none;
+  letter-spacing: 0.02em;
 }
 
-.btn-primary-modern:hover {
-    background: linear-gradient(135deg, #22D3EE 0%, #1D4ED8 100%);
-    color: #ffffff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(58, 191, 248, 0.4);
+/* Hide chrome on touch devices */
+@media (hover: none) {
+  .design-ui-credit { display: none; }
 }
 
-.btn-primary-modern:focus,
-.btn-primary-modern:active {
-    color: #ffffff !important;
-    background: linear-gradient(135deg, #0EA5E9 0%, #1E3A8A 100%);
-    box-shadow: 0 2px 10px rgba(58, 191, 248, 0.5);
+/* Print fixes */
+@media print {
+  * {
+    transition: none !important;
+    animation: none !important;
+    box-shadow: none !important;
+  }
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .design-ui-credit { display: none !important; }
 }
 
-/* Mobile responsive adjustments for auth buttons */
-@media (max-width: 991.98px) {
-    .flex-equal .d-flex {
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-    
-    .flex-equal .d-flex a {
-        font-size: 14px;
-        padding: 8px 16px;
-        min-width: auto;
-        white-space: nowrap;
-    }
-    
-    .btn-sm {
-        padding: 6px 12px;
-        font-size: 13px;
-    }
-}
-
-@media (max-width: 575.98px) {
-    .flex-equal .d-flex {
-        justify-content: center !important;
-        margin-top: 8px;
-    }
-    
-    .flex-equal .d-flex a {
-        font-size: 13px;
-        padding: 6px 12px;
-    }
-}
 </style>
-@endpush
+<script>
+(function () {
+    // Design-ui pages are single compositions, so the whole body is editable.
+    function markEditable() {
+        document.body.classList.add('artifact-editable');
+    }
 
-@section('hero')
-<!--begin::Landing hero-->
-					<div class="d-flex flex-column flex-center w-100 min-h-350px min-h-lg-500px px-9 hero-section-modern">
-						<!--begin::Heading-->
-						<div class="text-center mb-5 mb-lg-10 py-10 py-lg-15">
-							<!--begin::Title-->
-							<h1 class="text-white lh-base fw-bold mb-7" data-aos="fade-down">Communication Re-Imagined.
-							<br />Experience  
-							<span style="background: linear-gradient(to right, #3ABFF8 0%, #fff 100%);-webkit-background-clip: text;-webkit-text-fill-color: transparent;">
-								<span id="kt_landing_hero_text">Callbly</span>
-							</span></h1>
-							<!--end::Title-->
-							<!--begin::Sub-title-->
-							<p class="lead mb-8" data-aos="fade-up" data-aos-delay="100">
-								Empowering your business with seamless, intelligent, and scalable cloud communication services.
-							</p>
-							<!--end::Sub-title-->
-							<!--begin::Action-->
-							<a href="{{ route('register') }}" class="btn btn-primary-modern" data-aos="fade-up" data-aos-delay="200">Get Started Free</a>
-							<!--end::Action-->
-						</div>
-						<!--end::Heading-->
-						<!--begin::Clients-->
-						<div class="d-flex flex-center flex-wrap position-relative px-5">
-							<!--begin::Client-->
-							<div class="d-flex flex-center m-3 m-md-6" data-bs-toggle="tooltip" title="Fujifilm">
-								<img src="{{ asset('assets/media/svg/brand-logos/fujifilm.svg') }}" class="mh-30px mh-lg-40px" alt="Fujifilm" data-aos="fade-up" data-aos-delay="300"/>
-							</div>
-							<!--end::Client-->
-							<!--begin::Client-->
-							<div class="d-flex flex-center m-3 m-md-6" data-bs-toggle="tooltip" title="Vodafone">
-								<img src="{{ asset('assets/media/svg/brand-logos/vodafone.svg') }}" class="mh-30px mh-lg-40px" alt="Vodafone" data-aos="fade-up" data-aos-delay="350"/>
-							</div>
-							<!--end::Client-->
-							<!--begin::Client-->
-							<div class="d-flex flex-center m-3 m-md-6" data-bs-toggle="tooltip" title="KPMG International">
-								<img src="{{ asset('assets/media/svg/brand-logos/kpmg.svg') }}" class="mh-30px mh-lg-40px" alt="KPMG" data-aos="fade-up" data-aos-delay="400"/>
-							</div>
-							<!--end::Client-->
-							<!--begin::Client-->
-							<div class="d-flex flex-center m-3 m-md-6" data-bs-toggle="tooltip" title="Nasa">
-								<img src="{{ asset('assets/media/svg/brand-logos/nasa.svg') }}" class="mh-30px mh-lg-40px" alt="Nasa" data-aos="fade-up" data-aos-delay="450"/>
-							</div>
-							<!--end::Client-->
-							<!--begin::Client-->
-							<div class="d-flex flex-center m-3 m-md-6" data-bs-toggle="tooltip" title="Aspnetzero">
-								<img src="{{ asset('assets/media/svg/brand-logos/aspnetzero.svg') }}" class="mh-30px mh-lg-40px" alt="Aspnetzero" data-aos="fade-up" data-aos-delay="500"/>
-							</div>
-							<!--end::Client-->
-							<!--begin::Client-->
-							<div class="d-flex flex-center m-3 m-md-6" data-bs-toggle="tooltip" title="AON - Empower Results">
-								<img src="{{ asset('assets/media/svg/brand-logos/aon.svg') }}" class="mh-30px mh-lg-40px" alt="AON" data-aos="fade-up" data-aos-delay="550"/>
-							</div>
-							<!--end::Client-->
-							<!--begin::Client-->
-							<div class="d-flex flex-center m-3 m-md-6" data-bs-toggle="tooltip" title="Hewlett-Packard">
-								<img src="{{ asset('assets/media/svg/brand-logos/hp-3.svg') }}" class="mh-30px mh-lg-40px" alt="HP" data-aos="fade-up" data-aos-delay="600"/>
-							</div>
-							<!--end::Client-->
-							<!--begin::Client-->
-							<div class="d-flex flex-center m-3 m-md-6" data-bs-toggle="tooltip" title="Truman">
-								<img src="{{ asset('assets/media/svg/brand-logos/truman.svg') }}" class="mh-30px mh-lg-40px" alt="Truman" data-aos="fade-up" data-aos-delay="650"/>
-							</div>
-							<!--end::Client-->
-						</div>
-						<!--end::Clients-->
-					</div>
-					<!--end::Landing hero-->
-@endsection
+    // Credit badge with idle-fade. Hover devices only.
+    function initChromeUI() {
+        if (!matchMedia('(hover: hover)').matches) return;
 
-                    @section('content')
-                        <!--begin::How It Works Section-->
-                        <div class="py-10 py-lg-20">
-                            <div class="container">
-                                <div class="text-center mb-12 section-title" data-aos="fade-up">
-                                    <h2 class="text-dark">How Callbly Works</h2>
-                                    <p class="lead">Get started in just a few simple steps.</p>
-                                </div>
-                                <div class="row g-5 g-lg-10 text-center">
-                                    <!-- Step 1 -->
-                                    <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
-                                        <div class="feature-card-modern p-lg-5 p-4">
-                                            <div class="icon-box mx-auto fs-1">
-                                                <i class="ki-outline ki-user fs-2x text-primary"></i>
-                                            </div>
-                                            <h4>1. Sign Up Free</h4>
-                                            <p class="text-muted fs-6">Create your Callbly account in minutes, no credit card required.</p>
-                                        </div>
-                                    </div>
-                                    <!-- Step 2 -->
-                                    <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
-                                        <div class="feature-card-modern p-lg-5 p-4">
-                                            <div class="icon-box mx-auto fs-1">
-                                                <i class="ki-outline ki-gear fs-2x text-primary"></i>
-                                            </div>
-                                            <h4>2. Configure Services</h4>
-                                            <p class="text-muted fs-6">Easily set up virtual numbers, IVR, and other communication tools.</p>
-                                        </div>
-                                    </div>
-                                    <!-- Step 3 -->
-                                    <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
-                                        <div class="feature-card-modern p-lg-5 p-4">
-                                            <div class="icon-box mx-auto fs-1">
-                                                <i class="ki-outline ki-rocket fs-2x text-primary"></i>
-                                            </div>
-                                            <h4>3. Connect & Grow</h4>
-                                            <p class="text-muted fs-6">Start communicating smarter and watch your business thrive.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!--end::How It Works Section-->
+        var credit = document.createElement('div');
+        credit.className = 'design-ui-credit';
+        credit.setAttribute('aria-hidden', 'true');
+        credit.innerHTML = '\u{1F49C} by ClickUp Brain';
+        document.body.appendChild(credit);
 
-                        <!--begin::Services Section-->
-        <div class="py-10 py-lg-20">
-            <div class="container">
-                <div class="text-center mb-12 section-title" data-aos="fade-up">
-                    <h3 class="fs-2hx text-dark mb-5" id="services" data-kt-scroll-offset="{default: 100, lg: 150}">Our Cloud Telephony Services</h3>
-                    <div class="lead">Callbly provides innovative cloud telephony solutions <br />designed to enhance your business communication infrastructure</div>
-                </div>
-                <!-- Modern grid for services -->
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-center">
-                    <div class="col">
-                        <div class="card h-100 border-1 text-center p-4">
-                            <div class="d-flex align-items-center justify-content-center mb-3 mx-auto bg-light-primary rounded-circle" style="width:64px;height:64px;">
-                                <i class="ki-outline ki-call fs-2x text-primary"></i>
-                            </div>
-                            <h4 class="fs-4 fw-bold mb-2">Virtual Numbers</h4>
-                            <p class="text-muted">Get local and international virtual phone numbers for your business with customized instant routing.</p>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="card h-100 border-1 text-center p-4">
-                            <div class="d-flex align-items-center justify-content-center mb-3 mx-auto bg-light-primary rounded-circle" style="width:64px;height:64px;">
-                                <i class="ki-outline ki-message-text-2 fs-2x text-primary"></i>
-                            </div>
-                            <h4 class="fs-4 fw-bold mb-2">Bulk SMS</h4>
-                            <p class="text-muted">High-throughput bulk SMS messaging platform for marketing or notifications.</p>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="card h-100 border-1 text-center p-4">
-                            <div class="d-flex align-items-center justify-content-center mb-3 mx-auto bg-light-primary rounded-circle" style="width:64px;height:64px;">
-                                <i class="ki-outline ki-tablet-ok fs-2x text-primary"></i>
-                            </div>
-                            <h4 class="fs-4 fw-bold mb-2">IVR System</h4>
-                            <p class="text-muted">Create customized Interactive Voice Response menus to direct callers efficiently.</p>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="card h-100 border-1 text-center p-4">
-                            <div class="d-flex align-items-center justify-content-center mb-3 mx-auto bg-light-primary rounded-circle" style="width:64px;height:64px;">
-                                <i class="ki-outline ki-chart-line-star fs-2x text-primary"></i>
-                            </div>
-                            <h4 class="fs-4 fw-bold mb-2">Call Analytics</h4>
-                            <p class="text-muted">Access detailed call reports and analytics to optimize your team's performance.</p>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="card h-100 border-1 text-center p-4">
-                            <div class="d-flex align-items-center justify-content-center mb-3 mx-auto bg-light-primary rounded-circle" style="width:64px;height:64px;">
-                                <i class="ki-outline ki-badge fs-2x text-primary"></i>
-                            </div>
-                            <h4 class="fs-4 fw-bold mb-2">Sender Names</h4>
-                            <p class="text-muted">Custom sender names that reflect your brand identity to recipients.</p>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="card h-100 border-1 text-center p-4">
-                            <div class="d-flex align-items-center justify-content-center mb-3 mx-auto bg-light-primary rounded-circle" style="width:64px;height:64px;">
-                                <i class="ki-outline ki-phone fs-2x text-primary"></i>
-                            </div>
-                            <h4 class="fs-4 fw-bold mb-2">USSD Solutions</h4>
-                            <p class="text-muted">Build interactive USSD applications to engage with customers directly on their mobile devices.</p>
-                        </div>
-                    </div>
-                </div>
-                <!-- End modern grid -->
+        var timer = null;
+        var fade = function (out) { credit.style.opacity = out ? '0' : ''; };
+        fade(true);
+        var show = function () {
+            fade(false);
+            clearTimeout(timer);
+            timer = setTimeout(function () { fade(true); }, 3000);
+        };
+        document.addEventListener('mousemove', show);
+        show();
+    }
+
+    function init() {
+        markEditable();
+        initChromeUI();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+
+</script>
+<!-- /skill:chrome -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Callbly — Cloud Telephony Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-primary: oklch(78% 0.19 250);
+            --neon-primary-dim: oklch(60% 0.14 250);
+            --neon-secondary: oklch(72% 0.16 290);
+            --neon-warm: oklch(75% 0.18 50);
+            --surface-0: oklch(12% 0.012 250);
+            --surface-1: oklch(16% 0.012 250);
+            --surface-2: oklch(20% 0.012 250);
+            --surface-3: oklch(25% 0.012 250);
+            --text-primary: oklch(92% 0.008 250);
+            --text-secondary: oklch(68% 0.01 250);
+            --text-tertiary: oklch(50% 0.008 250);
+            --border: oklch(25% 0.015 250);
+            --glow-primary: oklch(78% 0.19 250 / 0.35);
+            --glow-secondary: oklch(72% 0.16 290 / 0.25);
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 350;
+            font-size: 1rem;
+            line-height: 1.65;
+            letter-spacing: 0.012em;
+            color: var(--text-primary);
+            background: var(--surface-0);
+            font-optical-sizing: auto;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        article p { text-wrap: pretty; }
+        h1, h2, h3 { text-wrap: balance; }
+
+        /* Nav */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 20px 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: oklch(12% 0.012 250 / 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-brand {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--neon-primary);
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-brand svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 36px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 400;
+            transition: color 200ms var(--ease-out-expo);
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-cta {
+            padding: 10px 24px;
+            background: var(--neon-primary);
+            color: oklch(15% 0.02 250);
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 150ms var(--ease-out-expo), box-shadow 200ms var(--ease-out-expo);
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 24px var(--glow-primary);
+        }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 140px 48px 96px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, oklch(78% 0.19 250 / 0.07) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-eyebrow {
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--neon-primary);
+            margin-bottom: 24px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: 1px solid oklch(78% 0.19 250 / 0.25);
+            border-radius: 100px;
+            background: oklch(78% 0.19 250 / 0.05);
+        }
+
+        .hero-eyebrow::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--neon-primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .hero h1 {
+            font-size: clamp(2.8rem, 6vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.08;
+            letter-spacing: -0.035em;
+            max-width: 900px;
+            margin-bottom: 28px;
+        }
+
+        .hero h1 span {
+            color: var(--neon-primary);
+        }
+
+        .hero-sub {
+            font-size: 1.2rem;
+            font-weight: 350;
+            color: var(--text-secondary);
+            max-width: 560px;
+            margin-bottom: 48px;
+            line-height: 1.7;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .btn-primary {
+            padding: 16px 36px;
+            background: var(--neon-primary);
+            color: oklch(12% 0.02 250);
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 150ms var(--ease-out-expo), box-shadow 200ms var(--ease-out-expo);
+            box-shadow: 0 0 32px var(--glow-primary), 0 2px 8px oklch(0% 0 0 / 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 48px var(--glow-primary), 0 8px 32px oklch(0% 0 0 / 0.4);
+        }
+
+        .btn-secondary {
+            padding: 16px 36px;
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: border-color 200ms var(--ease-out-expo), background 200ms var(--ease-out-expo);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--text-tertiary);
+            background: var(--surface-1);
+        }
+
+        .hero-stats {
+            margin-top: 80px;
+            display: flex;
+            gap: 64px;
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .hero-stat-label {
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+        }
+
+        /* Features */
+        .features {
+            padding: 120px 48px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--neon-primary);
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 3.5vw, 2.8rem);
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            line-height: 1.15;
+            margin-bottom: 64px;
+            max-width: 600px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+        }
+
+        .feature-item {
+            padding: 48px 36px;
+            background: var(--surface-1);
+            position: relative;
+            transition: background 300ms var(--ease-out-expo);
+        }
+
+        .feature-item:first-child {
+            border-radius: 16px 0 0 16px;
+        }
+
+        .feature-item:last-child {
+            border-radius: 0 16px 16px 0;
+        }
+
+        .feature-item:hover {
+            background: var(--surface-2);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            color: var(--neon-primary);
+        }
+
+        .feature-item:nth-child(2) .feature-icon {
+            color: var(--neon-secondary);
+        }
+
+        .feature-item:nth-child(3) .feature-icon {
+            color: var(--neon-warm);
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: -0.015em;
+            margin-bottom: 12px;
+        }
+
+        .feature-desc {
+            font-size: 0.925rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            max-width: 65ch;
+        }
+
+        .feature-metric {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .feature-metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--neon-primary);
+        }
+
+        .feature-item:nth-child(2) .feature-metric-value {
+            color: var(--neon-secondary);
+        }
+
+        .feature-item:nth-child(3) .feature-metric-value {
+            color: var(--neon-warm);
+        }
+
+        .feature-metric-label {
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+            margin-top: 2px;
+        }
+
+        /* Video Demo */
+        .demo {
+            padding: 120px 48px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        .demo-player {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: var(--surface-1);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: border-color 300ms var(--ease-out-expo);
+        }
+
+        .demo-player:hover {
+            border-color: var(--neon-primary);
+        }
+
+        .demo-player:hover .play-btn {
+            transform: scale(1.08);
+            box-shadow: 0 0 48px var(--glow-primary);
+        }
+
+        .demo-player-bg {
+            position: absolute;
+            inset: 0;
+            background: 
+                linear-gradient(135deg, oklch(78% 0.19 250 / 0.03) 0%, transparent 50%),
+                linear-gradient(225deg, oklch(72% 0.16 290 / 0.03) 0%, transparent 50%);
+        }
+
+        .demo-player-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 60px 60px;
+            opacity: 0.3;
+        }
+
+        .play-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--neon-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            box-shadow: 0 0 32px var(--glow-primary);
+            transition: transform 200ms var(--ease-out-expo), box-shadow 200ms var(--ease-out-expo);
+        }
+
+        .play-btn svg {
+            width: 28px;
+            height: 28px;
+            margin-left: 4px;
+            color: oklch(12% 0.02 250);
+        }
+
+        .demo-caption {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+        }
+
+        /* Social Proof */
+        .proof {
+            padding: 96px 48px;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .proof-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .proof-logos {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 64px;
+            margin-bottom: 72px;
+            flex-wrap: wrap;
+        }
+
+        .proof-logo {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            letter-spacing: -0.01em;
+            opacity: 0.6;
+            transition: opacity 200ms var(--ease-out-expo);
+        }
+
+        .proof-logo:hover {
+            opacity: 1;
+        }
+
+        .proof-testimonial {
+            max-width: 720px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .proof-quote {
+            font-size: 1.4rem;
+            font-weight: 400;
+            line-height: 1.65;
+            color: var(--text-primary);
+            margin-bottom: 32px;
+            font-style: italic;
+        }
+
+        .proof-author {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .proof-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--surface-2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--neon-primary);
+        }
+
+        .proof-author-info {
+            text-align: left;
+        }
+
+        .proof-author-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .proof-author-role {
+            font-size: 0.825rem;
+            color: var(--text-tertiary);
+        }
+
+        /* Pricing */
+        .pricing {
+            padding: 120px 48px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        .pricing-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: var(--surface-1);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .pricing-table thead {
+            background: var(--surface-2);
+        }
+
+        .pricing-table th {
+            padding: 28px 32px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .pricing-table th:not(:first-child) {
+            text-align: center;
+        }
+
+        .pricing-table th.featured {
+            color: var(--neon-primary);
+            position: relative;
+        }
+
+        .pricing-table th.featured::after {
+            content: 'Popular';
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            font-size: 0.65rem;
+            padding: 3px 8px;
+            background: var(--neon-primary);
+            color: oklch(12% 0.02 250);
+            border-radius: 4px;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .pricing-table td {
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.925rem;
+            color: var(--text-secondary);
+        }
+
+        .pricing-table td:not(:first-child) {
+            text-align: center;
+        }
+
+        .pricing-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .pricing-table .plan-price {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .pricing-table .plan-price span {
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: var(--text-tertiary);
+        }
+
+        .pricing-table .plan-price.featured-price {
+            color: var(--neon-primary);
+        }
+
+        .pricing-table .check {
+            color: var(--neon-primary);
+            font-size: 1.1rem;
+        }
+
+        .pricing-table .dash {
+            color: var(--text-tertiary);
+        }
+
+        .pricing-table .featured-col {
+            background: oklch(78% 0.19 250 / 0.03);
+        }
+
+        .pricing-cta-row td {
+            padding: 28px 32px !important;
+        }
+
+        .pricing-cta-btn {
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-primary);
+            transition: all 200ms var(--ease-out-expo);
+        }
+
+        .pricing-cta-btn:hover {
+            border-color: var(--text-tertiary);
+            background: var(--surface-2);
+        }
+
+        .pricing-cta-btn.primary {
+            background: var(--neon-primary);
+            color: oklch(12% 0.02 250);
+            border-color: var(--neon-primary);
+            box-shadow: 0 0 20px var(--glow-primary);
+        }
+
+        .pricing-cta-btn.primary:hover {
+            box-shadow: 0 0 32px var(--glow-primary);
+            transform: translateY(-1px);
+        }
+
+        /* Footer */
+        .footer {
+            padding: 64px 48px;
+            border-top: 1px solid var(--border);
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-brand {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-tertiary);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .footer-links a {
+            color: var(--text-tertiary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 200ms var(--ease-out-expo);
+        }
+
+        .footer-links a:hover {
+            color: var(--text-primary);
+        }
+
+        /* Animations */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-eyebrow, .hero h1, .hero-sub, .hero-actions, .hero-stats {
+            animation: fadeUp 800ms var(--ease-out-expo) backwards;
+        }
+
+        .hero h1 { animation-delay: 100ms; }
+        .hero-sub { animation-delay: 200ms; }
+        .hero-actions { animation-delay: 300ms; }
+        .hero-stats { animation-delay: 450ms; }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 2px;
+            }
+
+            .feature-item:first-child {
+                border-radius: 16px 16px 0 0;
+            }
+
+            .feature-item:last-child {
+                border-radius: 0 0 16px 16px;
+            }
+
+            .hero-stats {
+                gap: 40px;
+            }
+
+            .proof-logos {
+                gap: 32px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav {
+                padding: 16px 24px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 120px 24px 80px;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn-primary, .btn-secondary {
+                width: 100%;
+                text-align: center;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 24px;
+            }
+
+            .features, .demo, .pricing {
+                padding: 80px 24px;
+            }
+
+            .proof {
+                padding: 64px 24px;
+            }
+
+            .pricing-table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            .footer {
+                flex-direction: column;
+                gap: 24px;
+                text-align: center;
+                padding: 48px 24px;
+            }
+
+            .proof-quote {
+                font-size: 1.15rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-brand">
+            <img src="{{ asset('assets/images/callbly-logo.png') }}" alt="Callbly Logo" style="height: 40px; width: auto; object-fit: contain;">
+        </div>
+        <ul class="nav-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#demo">Demo</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="#docs">Docs</a></li>
+        </ul>
+        <a href="{{ route('register') }}" class="nav-cta" style="text-decoration:none; display:inline-block; text-align:center;">Start Free Trial</a>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-eyebrow">Now available in 140+ countries</div>
+        <h1>Business calls, SMS, and contact center. <span>One platform.</span></h1>
+        <p class="hero-sub">Route calls intelligently, send messages at scale, and manage your entire contact center from a single cloud-native platform. No hardware, no headaches.</p>
+        <div class="hero-actions">
+            <a href="{{ route('register') }}" class="btn-primary" style="text-decoration:none; display:inline-block; text-align:center;">Start Free</a>
+            <a href="{{ route('login') }}" class="btn-secondary" style="text-decoration:none; display:inline-block; text-align:center;">Log In</a>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <div class="hero-stat-value">99.99%</div>
+                <div class="hero-stat-label">Uptime SLA</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value">4.2M+</div>
+                <div class="hero-stat-label">Calls routed daily</div>
+            </div>
+            <div class="hero-stat">
+                <div class="hero-stat-value">&lt;200ms</div>
+                <div class="hero-stat-label">Avg. latency</div>
             </div>
         </div>
-        <!--end::Services Section-->
+    </section>
 
-                        <!--begin::Pricing Section-->
-                        <div class="py-10 py-lg-20 bg-light">
-                            <!--begin::Container-->
-                            <div class="container">
-                                <!--begin::Plans-->
-                                <div class="d-flex flex-column container pricing-table-modern">
-                                    <!--begin::Heading-->
-                                    <div class="mb-13 text-center section-title" data-aos="fade-up">
-                                        <h1 class="fs-2hx fw-bold text-dark mb-5" id="pricing" data-kt-scroll-offset="{default: 100, lg: 150}">SMS Billing Tiers</h1>
-                                        <div class="lead">Enjoy better rates as you send more SMS messages</div>
-                                    </div>
-                                    <!--end::Heading-->
+    <!-- Features -->
+    <section class="features" id="features">
+        <div class="section-label">Capabilities</div>
+        <h2 class="section-title">Everything your team needs to connect with customers</h2>
+        <div class="features-grid">
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
+                    </svg>
+                </div>
+                <h3 class="feature-title">Programmable Voice</h3>
+                <p class="feature-desc">Build IVR trees, route calls by skill or geography, record and transcribe in real-time. Full API control over every leg of every call.</p>
+                <div class="feature-metric">
+                    <div class="feature-metric-value">140+</div>
+                    <div class="feature-metric-label">Countries with local numbers</div>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                    </svg>
+                </div>
+                <h3 class="feature-title">SMS & Messaging</h3>
+                <p class="feature-desc">Transactional alerts, marketing campaigns, two-way conversations. High-throughput delivery with carrier-grade reliability and compliance built in.</p>
+                <div class="feature-metric">
+                    <div class="feature-metric-value">98.7%</div>
+                    <div class="feature-metric-label">Delivery rate globally</div>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 010 7.75"/>
+                    </svg>
+                </div>
+                <h3 class="feature-title">Contact Center</h3>
+                <p class="feature-desc">Omnichannel queues, agent presence, live dashboards, whisper coaching. Spin up a full contact center without procurement cycles.</p>
+                <div class="feature-metric">
+                    <div class="feature-metric-value">47%</div>
+                    <div class="feature-metric-label">Avg. reduction in wait time</div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                                    <!--begin::Row-->
-                                    <div class="row g-5 g-lg-10 mb-10">
-                                        <!--begin::Col - Basic Tier-->
-                                        <div class="col-xl-3" data-aos="fade-up" data-aos-delay="100">
-                                            <div class="card h-100">
-                                                <!--begin::Header-->
-                                                <div class="card-header text-center">
-                                                    <h3 class="card-title fw-bolder text-dark">Basic</h3>
-                                                    <div class="card-text text-muted">For businesses just getting started</div>
-                                                </div>
-                                                <!--end::Header-->
+    <!-- Video Demo -->
+    <section class="demo" id="demo">
+        <div class="demo-header">
+            <div class="section-label">See it in action</div>
+            <h2 class="section-title" style="margin: 0 auto;">Two minutes to understand the platform</h2>
+        </div>
+        <div class="demo-player" onclick="this.querySelector('.play-btn').style.display='none'; this.innerHTML='<iframe src=\'about:blank\' style=\'width:100%;height:100%;border:none;\' allow=\'autoplay\'></iframe>'">
+            <div class="demo-player-bg"></div>
+            <div class="demo-player-grid"></div>
+            <div class="play-btn">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5,3 19,12 5,21"/>
+                </svg>
+            </div>
+        </div>
+        <p class="demo-caption">Watch how Meridian Health cut their call abandonment rate by 62% in 3 weeks</p>
+    </section>
 
-                                                <!--begin::Card body-->
-                                                <div class="card-body pt-10">
-                                                    <!--begin::Price-->
-                                                    <div class="text-center">
-                                                        <span class="price">{{ app(\App\Services\Currency\CurrencyService::class)->format(0.035, app(\App\Services\Currency\CurrencyService::class)->getDefaultCurrency(), true, 3) }}</span>
-                                                        <span class="period">/SMS</span>
-                                                    </div>
-                                                    <!--end::Price-->
+    <!-- Social Proof -->
+    <section class="proof">
+        <div class="proof-inner">
+            <div class="proof-logos">
+                <span class="proof-logo">Meridian Health</span>
+                <span class="proof-logo">Nordex Financial</span>
+                <span class="proof-logo">Relay Logistics</span>
+                <span class="proof-logo">Canopy Insurance</span>
+                <span class="proof-logo">Arcline Retail</span>
+                <span class="proof-logo">Vertex SaaS</span>
+            </div>
+            <div class="proof-testimonial">
+                <p class="proof-quote">"We migrated 400 agents from legacy PBX to Callbly in a weekend. Monday morning, the team didn't even notice the switch: they just noticed calls were clearer."</p>
+                <div class="proof-author">
+                    <div class="proof-avatar">RL</div>
+                    <div class="proof-author-info">
+                        <div class="proof-author-name">Rachel Liu</div>
+                        <div class="proof-author-role">VP Operations, Relay Logistics</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                                                    <!--begin::Features-->
-                                                    <ul class="list-unstyled mt-8 mb-0">
-                                                        <li class="d-flex align-items-center mb-2">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">All SMS Features</span>
-                                                        </li>
-                                                        <li class="d-flex align-items-center mb-2">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">Custom Sender Names</span>
-                                                        </li>
-                                                        <li class="d-flex align-items-center mb-2">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">Delivery Reports</span>
-                                                        </li>
-                                                        <li class="d-flex align-items-center mb-2">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">API Access</span>
-                                                        </li>
-                                                        <li class="d-flex align-items-center">
-                                                            <i class="ki-outline ki-information fs-1 text-primary me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-600">Purchase: ₵0 - ₵1,499</span>
-                                                        </li>
-                                                    </ul>
-                                                    <!--end::Features-->
+    <!-- Pricing -->
+    <section class="pricing" id="pricing">
+        <div class="pricing-header">
+            <div class="section-label">Pricing</div>
+            <h2 class="section-title" style="margin: 0 auto;">Transparent pricing, no per-minute surprises</h2>
+        </div>
+        <table class="pricing-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Starter</th>
+                    <th class="featured">Professional</th>
+                    <th>Enterprise</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Monthly price</td>
+                    <td><div class="plan-price">$29<span>/agent</span></div></td>
+                    <td class="featured-col"><div class="plan-price featured-price">$79<span>/agent</span></div></td>
+                    <td><div class="plan-price">Custom</div></td>
+                </tr>
+                <tr>
+                    <td>Included minutes</td>
+                    <td>1,000</td>
+                    <td class="featured-col">5,000</td>
+                    <td>Unlimited</td>
+                </tr>
+                <tr>
+                    <td>SMS credits</td>
+                    <td>500</td>
+                    <td class="featured-col">3,000</td>
+                    <td>Unlimited</td>
+                </tr>
+                <tr>
+                    <td>IVR & call routing</td>
+                    <td><span class="check">✓</span></td>
+                    <td class="featured-col"><span class="check">✓</span></td>
+                    <td><span class="check">✓</span></td>
+                </tr>
+                <tr>
+                    <td>Call recording & transcription</td>
+                    <td><span class="dash">—</span></td>
+                    <td class="featured-col"><span class="check">✓</span></td>
+                    <td><span class="check">✓</span></td>
+                </tr>
+                <tr>
+                    <td>Omnichannel contact center</td>
+                    <td><span class="dash">—</span></td>
+                    <td class="featured-col"><span class="check">✓</span></td>
+                    <td><span class="check">✓</span></td>
+                </tr>
+                <tr>
+                    <td>Real-time analytics dashboard</td>
+                    <td>Basic</td>
+                    <td class="featured-col">Advanced</td>
+                    <td>Custom</td>
+                </tr>
+                <tr>
+                    <td>Dedicated account manager</td>
+                    <td><span class="dash">—</span></td>
+                    <td class="featured-col"><span class="dash">—</span></td>
+                    <td><span class="check">✓</span></td>
+                </tr>
+                <tr>
+                    <td>SLA guarantee</td>
+                    <td>99.9%</td>
+                    <td class="featured-col">99.99%</td>
+                    <td>99.999%</td>
+                </tr>
+                <tr class="pricing-cta-row">
+                    <td></td>
+                    <td><button class="pricing-cta-btn">Start Trial</button></td>
+                    <td class="featured-col"><button class="pricing-cta-btn primary">Start Trial</button></td>
+                    <td><button class="pricing-cta-btn">Contact Us</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
 
-                                                    <!--begin::Action-->
-                                                    <div class="text-center mt-8">
-                                                        <a href="{{ route('register') }}" class="btn btn-primary">Get Started</a>
-                                                    </div>
-                                                    <!--end::Action-->
-                                                </div>
-                                                <!--end::Card body-->
-                                            </div>
-                                        </div>
-                                        <!--end::Col-->
-
-                                        <!--begin::Col - Plus Tier-->
-                                        <div class="col-xl-3" data-aos="fade-up" data-aos-delay="200">
-                                            <div class="card h-100">
-                                                <!--begin::Header-->
-                                                <div class="card-header text-center">
-                                                    <h3 class="card-title fw-bolder text-dark">Plus</h3>
-                                                    <div class="card-text text-muted">Better rates for regular users</div>
-                                                </div>
-                                                <!--end::Header-->
-
-                                                <!--begin::Card body-->
-                                                <div class="card-body pt-10">
-                                                    <!--begin::Price-->
-                                                    <div class="text-center">
-                                                        <span class="price">{{ app(\App\Services\Currency\CurrencyService::class)->format(0.032, app(\App\Services\Currency\CurrencyService::class)->getDefaultCurrency(), true, 3) }}</span>
-                                                        <span class="period">/SMS</span>
-                                                    </div>
-                                                    <!--end::Price-->
-
-                                                    <!--begin::Features-->
-                                                    <ul class="list-unstyled mt-8 mb-0">
-                                                        <li class="d-flex align-items-center mb-2">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">All Basic Features</span>
-                                                        </li>
-                                                        <li class="d-flex align-items-center mb-2">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">8.6% Cost Savings</span>
-                                                        </li>
-                                                        <li class="d-flex align-items-center mb-2">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">Priority Support</span>
-                                                        </li>
-                                                        <li class="d-flex align-items-center mb-2">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">Advanced Analytics</span>
-                                                        </li>
-                                                        <li class="d-flex align-items-center">
-                                                            <i class="ki-outline ki-information fs-1 text-primary me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-600">Purchase: ₵1,500 - ₵2,999</span>
-                                                        </li>
-                                                    </ul>
-                                                    <!--end::Features-->
-
-                                                    <!--begin::Action-->
-                                                    <div class="text-center mt-8">
-                                                        <a href="{{ route('register') }}" class="btn btn-primary">Get Started</a>
-                                                    </div>
-                                                    <!--end::Action-->
-                                                </div>
-                                                <!--end::Card body-->
-                                            </div>
-                                        </div>
-                                        <!--end::Col-->
-
-                                        <!--begin::Col - Premium Tier-->
-                                        <div class="col-xl-3" data-aos="fade-up" data-aos-delay="300">
-                                            <div class="card h-100 popular">
-                                                <!--begin::Header-->
-                                                <div class="card-header text-center">
-                                                    <h3 class="card-title fw-bolder">Premium</h3>
-                                                    <div class="card-text text-muted">Great value for high volume</div>
-                                                    <span class="position-absolute top-0 start-50 translate-middle badge badge-primary">Popular</span>
-                                                </div>
-                                                <!--end::Header-->
-
-                                                <!--begin::Card body-->
-                                                <div class="card-body pt-10">
-                                                    <!--begin::Price-->
-                                                    <div class="text-center">
-                                                        <span class="price">{{ app(\App\Services\Currency\CurrencyService::class)->format(0.029, app(\App\Services\Currency\CurrencyService::class)->getDefaultCurrency(), true, 3) }}</span>
-                                                        <span class="period">/SMS</span>
-                                                    </div>
-                                                    <!--end::Price-->
-
-                                                    <!--begin::Features-->
-                                                    <ul class="list-unstyled mt-8 mb-0">
-                                                        <li class="d-flex align-items-center mb-2">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">All Plus Features</span>
-                                                        </li>
-                                                        <li class="d-flex align-items-center mb-2">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">17% Cost Savings</span>
-                                                        </li>
-                                                        <li class="d-flex align-items-center mb-2">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">Dedicated Account Manager</span>
-                                                        </li>
-                                                        <li class="d-flex align-items-center mb-2">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">Custom Integrations</span>
-                                                        </li>
-                                                        <li class="d-flex align-items-center">
-                                                            <i class="ki-outline ki-information fs-1 text-primary me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-600">Purchase: ₵3,000 - ₵5,999</span>
-                                                        </li>
-                                                    </ul>
-                                                    <!--end::Features-->
-
-                                                    <!--begin::Action-->
-                                                    <div class="text-center mt-8">
-                                                        <a href="{{ route('register') }}" class="btn btn-primary">Get Started</a>
-                                                    </div>
-                                                    <!--end::Action-->
-                                                </div>
-                                                <!--end::Card body-->
-                                            </div>
-                                        </div>
-                                        <!--end::Col-->
-
-                                        <!--begin::Col - Gold Tier-->
-                                        <div class="col-xl-3" data-aos="fade-up" data-aos-delay="400">
-                                            <div class="card h-100">
-                                                <!--begin::Header-->
-                                                <div class="card-header text-center">
-                                                    <h3 class="card-title fw-bolder text-dark">Gold</h3>
-                                                    <div class="card-text text-muted">Best rates for enterprise</div>
-                                                </div>
-                                                <!--end::Header-->
-
-                                                <!--begin::Card body-->
-                                                <div class="card-body pt-10">
-                                                    <!--begin::Price-->
-                                                    <div class="text-center">
-                                                        <span class="price">{{ app(\App\Services\Currency\CurrencyService::class)->format(0.025, app(\App\Services\Currency\CurrencyService::class)->getDefaultCurrency(), true, 3) }}</span>
-                                                        <span class="period">/SMS</span>
-                                                    </div>
-                                                    <!--end::Price-->
-
-                                                    <!--begin::Features-->
-                                                    <ul class="list-unstyled mt-8 mb-0">
-                                                        <li class="d-flex align-items-center mb-2">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">All Premium Features</span>
-                                                        </li>
-                                                        <li class="d-flex align-items-center mb-2">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">29% Cost Savings</span>
-                                                        </li>
-                                                        <li class="d-flex align-items-center mb-2">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">24/7 Premium Support</span>
-                                                        </li>
-                                                        <li class="d-flex align-items-center mb-2">
-                                                            <i class="ki-outline ki-check-circle fs-1 text-success me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-800">SLA Guarantee</span>
-                                                        </li>
-                                                        <li class="d-flex align-items-center">
-                                                            <i class="ki-outline ki-information fs-1 text-primary me-2"></i>
-                                                            <span class="fw-semibold fs-6 text-gray-600">Purchase: ₵6,000+</span>
-                                                        </li>
-                                                    </ul>
-                                                    <!--end::Features-->
-
-                                                    <!--begin::Action-->
-                                                    <div class="text-center mt-8">
-                                                        <a href="{{ route('register') }}" class="btn btn-primary">Get Started</a>
-                                                    </div>
-                                                    <!--end::Action-->
-                                                </div>
-                                                <!--end::Card body-->
-                                            </div>
-                                        </div>
-                                        <!--end::Col-->
-                                    </div>
-                                    <!--end::Row-->
-
-                                    <!--begin::Tier Info-->
-                                    <div class="row justify-content-center">
-                                        <div class="col-lg-8">
-                                            <div class="alert alert-info d-flex align-items-center p-5">
-                                                <i class="ki-outline ki-information-5 fs-2tx text-info me-4"></i>
-                                                <div class="d-flex flex-column">
-                                                    <h4 class="mb-1 text-info">How It Works</h4>
-                                                    <span>Your billing tier is automatically upgraded based on your purchase volume. Once upgraded, you maintain your tier level for all future SMS sending.</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!--end::Tier Info-->
-                                </div>
-                                <!--end::Plans-->
-                            </div>
-                            <!--end::Container-->
-                        </div>
-                        <!--end::Pricing Section-->
-                        
-                        <!--begin::Testimonials Section-->
-                        <div class="py-10 py-lg-20">
-                            <!--begin::Container-->
-                            <div class="container">
-                                <!--begin::Heading-->
-                                <div class="text-center mb-12 section-title" data-aos="fade-up">
-                                    <!--begin::Title-->
-                                    <h3 class="fs-2hx text-dark mb-5" id="testimonials" data-kt-scroll-offset="{default: 100, lg: 150}">What Our Clients Say</h3>
-                                    <!--end::Title-->
-                                    <!--begin::Sub-title-->
-                                    <div class="lead">Hear from businesses that have transformed their communication with Callbly</div>
-                                    <!--end::Sub-title=-->
-                                </div>
-                                <!--end::Heading-->
-
-                                <!--begin::Testimonials-->
-                                <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel" data-aos="fade-up" data-aos-delay="100">
-                                    <div class="carousel-inner">
-                                        <div class="carousel-item active">
-                                            <div class="row justify-content-center">
-                                                <div class="col-lg-8">
-                                                    <div class="testimonial-card-modern">
-                                                        <img src="{{ asset('assets/media/avatars/300-1.jpg') }}" class="avatar" alt="Michael Johnson" />
-                                                        <div class="stars mb-3">
-                                                            <i class="ki-outline ki-star fs-6 me-1"></i><i class="ki-outline ki-star fs-6 me-1"></i><i class="ki-outline ki-star fs-6 me-1"></i><i class="ki-outline ki-star fs-6 me-1"></i><i class="ki-outline ki-star fs-6 me-1"></i>
-                                                        </div>
-                                                        <p class="quote">"Callbly has revolutionized how we handle customer calls. The virtual number system and call routing have made our small team appear much larger and more professional to clients."</p>
-                                                        <div class="name">Michael Johnson</div>
-                                                        <div class="company">TechSmart Solutions</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="carousel-item">
-                                             <div class="row justify-content-center">
-                                                <div class="col-lg-8">
-                                                    <div class="testimonial-card-modern">
-                                                        <img src="{{ asset('assets/media/avatars/300-2.jpg') }}" class="avatar" alt="Sarah Williams" />
-                                                        <div class="stars mb-3">
-                                                            <i class="ki-outline ki-star fs-6 me-1"></i><i class="ki-outline ki-star fs-6 me-1"></i><i class="ki-outline ki-star fs-6 me-1"></i><i class="ki-outline ki-star fs-6 me-1"></i><i class="ki-outline ki-star fs-6 me-1"></i>
-                                                        </div>
-                                                        <p class="quote">"The analytics and reporting features have given us insights we never had before. We've been able to optimize our call handling and significantly improve customer satisfaction."</p>
-                                                        <div class="name">Sarah Williams</div>
-                                                        <div class="company">Global Connections Ltd</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="carousel-item">
-                                             <div class="row justify-content-center">
-                                                <div class="col-lg-8">
-                                                    <div class="testimonial-card-modern">
-                                                        <img src="{{ asset('assets/media/avatars/300-5.jpg') }}" class="avatar" alt="David Akpan" />
-                                                        <div class="stars mb-3">
-                                                           <i class="ki-outline ki-star fs-6 me-1"></i><i class="ki-outline ki-star fs-6 me-1"></i><i class="ki-outline ki-star fs-6 me-1"></i><i class="ki-outline ki-star fs-6 me-1"></i><i class="ki-outline ki-star-half fs-6 me-1"></i>
-                                                        </div>
-                                                        <p class="quote">"Setting up our custom IVR was incredibly easy with Callbly. Our customers now get directed to the right department immediately, increasing efficiency by over 40%."</p>
-                                                        <div class="name">David Akpan</div>
-                                                        <div class="company">Rapid Logistics</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <button class="carousel-control-prev" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="prev">
-                                        <i class="ki-outline ki-arrow-left" aria-hidden="true"></i>
-                                        <span class="visually-hidden">Previous</span>
-                                    </button>
-                                    <button class="carousel-control-next" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="next">
-                                        <i class="ki-outline ki-arrow-right" aria-hidden="true"></i>
-                                        <span class="visually-hidden">Next</span>
-                                    </button>
-                                </div>
-                                <!--end::Testimonials-->
-                            </div>
-                            <!--end::Container-->
-                        </div>
-                        <!--end::Testimonials Section-->
-                        
-                        <!--begin::CTA Section-->
-                        <div class="py-10 py-lg-20">
-                            <!--begin::Container-->
-                            <div class="container">
-                                <!--begin::Highlight-->
-                                <div class="cta-section-modern text-center" data-aos="fade-up">
-                                    <!--begin::Content-->
-                                    <div class="my-2">
-                                        <!--begin::Title-->
-                                        <h2 class="mb-4">Ready to Transform Your Business Communication?</h2>
-                                        <!--end::Title-->
-                                        <!--begin::Description-->
-                                        <p class="mb-8">Join thousands of businesses using Callbly's cloud telephony solutions to enhance customer interactions and drive growth.</p>
-                                        <!--end::Description-->
-                                    </div>
-                                    <!--end::Content-->
-                                    <!--begin::Link-->
-                                    <a href="{{ route('register') }}" class="btn btn-cta-modern">Sign Up & Explore</a>
-                                    <!--end::Link-->
-                                </div>
-                                <!--end::Highlight-->
-                            </div>
-                            <!--end::Container-->
-                        </div>
-                        <!--end::CTA Section-->
-
-                        <!--begin::Contact Section-->
-                        <div class="py-10 py-lg-20 bg-white" id="contact">
-                            <div class="container">
-                                <div class="text-center mb-12 section-title" data-aos="fade-up">
-                                    <h2 class="text-dark">Contact Us</h2>
-                                    <p class="lead">Have questions or need support? Reach out to our team.</p>
-                                </div>
-                                <div class="row justify-content-center">
-                                    <div class="col-lg-8">
-                                        {{-- Display success/error messages --}}
-                                        @if(session('success'))
-                                            <div class="alert alert-success d-flex align-items-center p-5 mb-10" data-aos="fade-up">
-                                                <i class="ki-outline ki-shield-tick fs-2hx text-success me-4"></i>
-                                                <div class="d-flex flex-column">
-                                                    <h4 class="mb-1 text-success">Success</h4>
-                                                    <span>{{ session('success') }}</span>
-                                                </div>
-                                                <button type="button" class="position-absolute position-sm-relative m-2 m-sm-0 top-0 end-0 btn btn-icon ms-sm-auto" data-bs-dismiss="alert">
-                                                    <i class="ki-outline ki-cross fs-2 text-success"></i>
-                                                </button>
-                                            </div>
-                                        @endif
-
-                                        @if(session('error'))
-                                            <div class="alert alert-danger d-flex align-items-center p-5 mb-10" data-aos="fade-up">
-                                                <i class="ki-outline ki-shield-cross fs-2hx text-danger me-4"></i>
-                                                <div class="d-flex flex-column">
-                                                    <h4 class="mb-1 text-danger">Error</h4>
-                                                    <span>{{ session('error') }}</span>
-                                                </div>
-                                                <button type="button" class="position-absolute position-sm-relative m-2 m-sm-0 top-0 end-0 btn btn-icon ms-sm-auto" data-bs-dismiss="alert">
-                                                    <i class="ki-outline ki-cross fs-2 text-danger"></i>
-                                                </button>
-                                            </div>
-                                        @endif
-
-                                        <form method="POST" action="{{ route('contact.send') }}" class="card p-5 border-1 bg-white">
-                                            @csrf
-                                            <div class="mb-4">
-                                                <label for="name" class="form-label">Your Name</label>
-                                                <input type="text" class="form-control form-control-lg" id="name" placeholder="Your Name" name="name" required>
-                                            </div>
-                                            <div class="mb-4">
-                                                <label for="email" class="form-label">Your Email</label>
-                                                <input type="email" class="form-control form-control-lg" id="email" name="email" placeholder="Your Email" required>
-                                            </div>
-                                            <div class="mb-4">
-                                                <label for="message" class="form-label">Message</label>
-                                                <textarea class="form-control form-control-lg" id="message" name="message" rows="5" placeholder="Your message" required></textarea>
-                                            </div>
-
-                                            @recaptcha
-
-                                            <div class="text-center">
-                                                <button type="submit" class="btn btn-primary btn-lg px-5">Send Message</button>
-                                            </div>
-                                            <div class="mt-3 text-center text-muted" style="font-size: 0.95rem;">
-                                                Or email us directly at <a href="mailto:support@callbly.com">support@callbly.com</a>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!--end::Contact Section-->
-@endsection
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-brand">© 2026 Callbly</div>
+        <ul class="footer-links">
+            <li><a href="#">Privacy</a></li>
+            <li><a href="#">Terms</a></li>
+            <li><a href="#">Status</a></li>
+            <li><a href="#">API Docs</a></li>
+        </ul>
+    </footer>
+</body>
+</html>
