@@ -31,6 +31,9 @@ Route::get('/', function () {
     return view('home'); // Use Blade view for home
 });
 
+// API Documentation Route
+Route::view('/developers/api', 'api-docs')->name('api.docs');
+
 // Team Invitation Public Routes (must be before auth middleware)
 Route::prefix('team-invitations')->name('team-invitations.')->group(function() {
     Route::get('/{token}', [TeamInvitationController::class, 'show'])->name('show');

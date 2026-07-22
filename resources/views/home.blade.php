@@ -1093,7 +1093,7 @@
             <li><a href="#">Privacy</a></li>
             <li><a href="#">Terms</a></li>
             <li><a href="#">Status</a></li>
-            <li><a href="#">API Docs</a></li>
+            <li><a href="{{ route('api.docs') }}">API Docs</a></li>
         </ul>
     </footer>
 </body>
