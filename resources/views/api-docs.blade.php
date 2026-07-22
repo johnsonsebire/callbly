@@ -22,10 +22,13 @@
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', '"Liberation Mono"', '"Courier New"', 'monospace'],
                     },
                     colors: {
                         primary: '#10B981', // Emerald 500
+                        primaryHover: '#059669',
                         dark: '#111827',
+                        terminal: '#0D1117'
                     }
                 }
             }
@@ -59,13 +62,52 @@
             color: #9CA3AF;
             border-bottom: 2px solid transparent;
             cursor: pointer;
+            transition: all 0.2s;
         }
+        .tab-btn:hover { color: #D1D5DB; }
         .tab-btn.active {
             color: #10B981;
             border-bottom-color: #10B981;
         }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+
+        /* Terminal Window */
+        .terminal-output {
+            background-color: #0D1117;
+            color: #58A6FF;
+            font-family: inherit;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            min-height: 120px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            border: 1px solid #30363D;
+        }
+        
+        /* Form Inputs */
+        .live-input {
+            width: 100%;
+            background-color: #1F2937;
+            border: 1px solid #374151;
+            color: #F3F4F6;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+        .live-input:focus {
+            outline: none;
+            border-color: #10B981;
+        }
+        .live-label {
+            display: block;
+            font-size: 0.75rem;
+            color: #9CA3AF;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -116,14 +158,32 @@
             <a href="/" class="text-xl font-bold text-gray-900">Callbly API Docs</a>
         </div>
 
-        <div id="introduction" class="mb-16">
+        <div id="introduction" class="mb-10">
             <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight mb-4">Callbly API Reference</h1>
             <p class="text-lg text-gray-600 leading-relaxed mb-6">
                 Welcome to the Callbly API! You can use our REST API to programmatically send SMS messages, check your wallet balance, and manage your account.
             </p>
-            <p class="text-md text-gray-600 leading-relaxed">
-                Our API is organized around REST. Our API has predictable resource-oriented URLs, accepts form-encoded request bodies, returns JSON-encoded responses, and uses standard HTTP response codes, authentication, and verbs.
-            </p>
+            
+            <!-- Global API Token configuration for live runner -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mt-8 mb-6">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 mt-1">
+                        <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                        </svg>
+                    </div>
+                    <div class="ml-4 w-full">
+                        <h3 class="text-lg font-medium text-gray-900">Interactive Playground</h3>
+                        <p class="text-sm text-gray-500 mb-4">Set your API Token here to test the endpoints directly from this page.</p>
+                        
+                        <div>
+                            <label for="global_api_token" class="block text-sm font-medium text-gray-700 mb-1">Your Bearer Token</label>
+                            <input type="password" id="global_api_token" placeholder="Paste your API token here..." class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-4 py-2 border">
+                            <p class="mt-1 text-xs text-gray-500">This token is stored temporarily in your browser's memory and is used when you click "Run Live".</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <hr class="border-gray-200 mb-12">
@@ -197,14 +257,19 @@
 
             <div class="bg-dark rounded-lg overflow-hidden shadow-lg mt-8">
                 <div class="flex border-b border-gray-700 bg-gray-900 px-2 pt-2">
-                    <button class="tab-btn active" onclick="switchTab(this, 'bulk-php')">PHP</button>
+                    <button class="tab-btn" onclick="switchTab(this, 'bulk-php')">PHP</button>
                     <button class="tab-btn" onclick="switchTab(this, 'bulk-node')">Node.js</button>
                     <button class="tab-btn" onclick="switchTab(this, 'bulk-python')">Python</button>
                     <button class="tab-btn" onclick="switchTab(this, 'bulk-curl')">cURL</button>
+                    <div class="flex-1"></div>
+                    <button class="tab-btn active text-primary flex items-center" onclick="switchTab(this, 'bulk-live')">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Try it Live
+                    </button>
                 </div>
                 
                 <div class="p-4 bg-dark text-sm">
-                    <div id="bulk-php" class="tab-content active">
+                    <div id="bulk-php" class="tab-content">
 <pre class="!m-0"><code class="language-php">&lt;?php
 $response = Http::withToken('YOUR_API_TOKEN')
     ->acceptJson()
@@ -263,6 +328,35 @@ print(response.json())</code></pre>
            "sender_name": "MyBrand"
          }'</code></pre>
                     </div>
+                    
+                    <!-- Live Runner Tab -->
+                    <div id="bulk-live" class="tab-content active">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Input Form -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="live-label">recipients (comma separated)</label>
+                                    <input type="text" id="bulk_recipients" class="live-input" placeholder="+233201234567, +233241234567" value="+233201234567">
+                                </div>
+                                <div>
+                                    <label class="live-label">message</label>
+                                    <textarea id="bulk_message" class="live-input" rows="3" placeholder="Write your message here...">Hello from Callbly Live Playground!</textarea>
+                                </div>
+                                <div>
+                                    <label class="live-label">sender_name</label>
+                                    <input type="text" id="bulk_sender" class="live-input" placeholder="Callbly" value="Callbly">
+                                </div>
+                                <button onclick="runLiveBulk()" class="w-full bg-primary hover:bg-primaryHover text-white font-medium py-2 px-4 rounded-md transition-colors flex justify-center items-center">
+                                    Send Request
+                                </button>
+                            </div>
+                            <!-- Terminal Output -->
+                            <div>
+                                <label class="live-label text-gray-400">Terminal Output</label>
+                                <div id="bulk_terminal" class="terminal-output font-mono text-sm">> Ready. Awaiting request...</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -311,12 +405,17 @@ print(response.json())</code></pre>
 
             <div class="bg-dark rounded-lg overflow-hidden shadow-lg mt-8">
                 <div class="flex border-b border-gray-700 bg-gray-900 px-2 pt-2">
-                    <button class="tab-btn active" onclick="switchTab(this, 'single-php')">PHP</button>
+                    <button class="tab-btn" onclick="switchTab(this, 'single-php')">PHP</button>
                     <button class="tab-btn" onclick="switchTab(this, 'single-curl')">cURL</button>
+                    <div class="flex-1"></div>
+                    <button class="tab-btn active text-primary flex items-center" onclick="switchTab(this, 'single-live')">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Try it Live
+                    </button>
                 </div>
                 
                 <div class="p-4 bg-dark text-sm">
-                    <div id="single-php" class="tab-content active">
+                    <div id="single-php" class="tab-content">
 <pre class="!m-0"><code class="language-php">&lt;?php
 $response = Http::withToken('YOUR_API_TOKEN')
     ->post('https://callbly.com/api/v1/sms/send', [
@@ -334,6 +433,35 @@ $response = Http::withToken('YOUR_API_TOKEN')
            "message": "Hello from Callbly!",
            "sender_name": "MyBrand"
          }'</code></pre>
+                    </div>
+                    
+                    <!-- Live Runner Tab -->
+                    <div id="single-live" class="tab-content active">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Input Form -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="live-label">recipient</label>
+                                    <input type="text" id="single_recipient" class="live-input" placeholder="+233201234567" value="+233201234567">
+                                </div>
+                                <div>
+                                    <label class="live-label">message</label>
+                                    <textarea id="single_message" class="live-input" rows="3" placeholder="Write your message here...">Hello single recipient!</textarea>
+                                </div>
+                                <div>
+                                    <label class="live-label">sender_name</label>
+                                    <input type="text" id="single_sender" class="live-input" placeholder="Callbly" value="Callbly">
+                                </div>
+                                <button onclick="runLiveSingle()" class="w-full bg-primary hover:bg-primaryHover text-white font-medium py-2 px-4 rounded-md transition-colors flex justify-center items-center">
+                                    Send Request
+                                </button>
+                            </div>
+                            <!-- Terminal Output -->
+                            <div>
+                                <label class="live-label text-gray-400">Terminal Output</label>
+                                <div id="single_terminal" class="terminal-output font-mono text-sm">> Ready. Awaiting request...</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -355,14 +483,19 @@ $response = Http::withToken('YOUR_API_TOKEN')
 
             <div class="bg-dark rounded-lg overflow-hidden shadow-lg mt-8">
                 <div class="flex border-b border-gray-700 bg-gray-900 px-2 pt-2">
-                    <button class="tab-btn active" onclick="switchTab(this, 'balance-php')">PHP</button>
+                    <button class="tab-btn" onclick="switchTab(this, 'balance-php')">PHP</button>
                     <button class="tab-btn" onclick="switchTab(this, 'balance-node')">Node.js</button>
                     <button class="tab-btn" onclick="switchTab(this, 'balance-python')">Python</button>
                     <button class="tab-btn" onclick="switchTab(this, 'balance-curl')">cURL</button>
+                    <div class="flex-1"></div>
+                    <button class="tab-btn active text-primary flex items-center" onclick="switchTab(this, 'balance-live')">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Try it Live
+                    </button>
                 </div>
                 
                 <div class="p-4 bg-dark text-sm">
-                    <div id="balance-php" class="tab-content active">
+                    <div id="balance-php" class="tab-content">
 <pre class="!m-0"><code class="language-php">&lt;?php
 $response = Http::withToken('YOUR_API_TOKEN')
     ->acceptJson()
@@ -401,6 +534,26 @@ print(response.json()['data']['balance'])</code></pre>
 <pre class="!m-0"><code class="language-bash">curl -X GET "https://callbly.com/api/v1/wallet/balance" \
      -H "Authorization: Bearer YOUR_API_TOKEN" \
      -H "Accept: application/json"</code></pre>
+                    </div>
+                    
+                    <!-- Live Runner Tab -->
+                    <div id="balance-live" class="tab-content active">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Instruction -->
+                            <div class="space-y-4 flex flex-col justify-center">
+                                <p class="text-gray-400 leading-relaxed">
+                                    Click the button below to fetch the wallet balance for the API token you entered at the top of the page.
+                                </p>
+                                <button onclick="runLiveBalance()" class="w-full bg-primary hover:bg-primaryHover text-white font-medium py-2 px-4 rounded-md transition-colors flex justify-center items-center">
+                                    Check My Balance
+                                </button>
+                            </div>
+                            <!-- Terminal Output -->
+                            <div>
+                                <label class="live-label text-gray-400">Terminal Output</label>
+                                <div id="balance_terminal" class="terminal-output font-mono text-sm">> Ready. Awaiting request...</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -442,6 +595,139 @@ print(response.json()['data']['balance'])</code></pre>
         // Add active class to clicked button and target content
         btn.classList.add('active');
         document.getElementById(targetId).classList.add('active');
+    }
+
+    // Helper: print to terminal
+    function writeToTerminal(terminalId, text, isError = false) {
+        const terminal = document.getElementById(terminalId);
+        if (isError) {
+            terminal.innerHTML = `<span style="color: #FF7B72;">${text}</span>`;
+        } else {
+            terminal.innerHTML = text;
+        }
+    }
+
+    // Helper: get API token
+    function getApiToken() {
+        const token = document.getElementById('global_api_token').value.trim();
+        if (!token) {
+            alert('Please enter your API Token in the "Interactive Playground" section at the top of the page.');
+            return null;
+        }
+        return token;
+    }
+
+    // Live Request: Send Bulk
+    async function runLiveBulk() {
+        const token = getApiToken();
+        if (!token) return;
+        
+        const terminalId = 'bulk_terminal';
+        writeToTerminal(terminalId, '> Executing POST /api/v1/sms/send-bulk...\n> Awaiting response...');
+        
+        const recipientsInput = document.getElementById('bulk_recipients').value;
+        const message = document.getElementById('bulk_message').value;
+        const sender = document.getElementById('bulk_sender').value;
+        
+        // Parse recipients into array
+        const recipients = recipientsInput.split(',').map(s => s.trim()).filter(s => s !== '');
+
+        try {
+            const res = await fetch('/api/v1/sms/send-bulk', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    recipients: recipients,
+                    message: message,
+                    sender_name: sender
+                })
+            });
+            
+            const data = await res.json();
+            const formatted = JSON.stringify(data, null, 2);
+            
+            if (res.ok) {
+                writeToTerminal(terminalId, `<span style="color: #7EE787;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
+            } else {
+                writeToTerminal(terminalId, `<span style="color: #FF7B72;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
+            }
+        } catch (err) {
+            writeToTerminal(terminalId, '> Error connecting to the API:\n' + err.message, true);
+        }
+    }
+
+    // Live Request: Send Single
+    async function runLiveSingle() {
+        const token = getApiToken();
+        if (!token) return;
+        
+        const terminalId = 'single_terminal';
+        writeToTerminal(terminalId, '> Executing POST /api/v1/sms/send...\n> Awaiting response...');
+        
+        const recipient = document.getElementById('single_recipient').value.trim();
+        const message = document.getElementById('single_message').value;
+        const sender = document.getElementById('single_sender').value;
+        
+        try {
+            const res = await fetch('/api/v1/sms/send', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    recipient: recipient,
+                    message: message,
+                    sender_name: sender
+                })
+            });
+            
+            const data = await res.json();
+            const formatted = JSON.stringify(data, null, 2);
+            
+            if (res.ok) {
+                writeToTerminal(terminalId, `<span style="color: #7EE787;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
+            } else {
+                writeToTerminal(terminalId, `<span style="color: #FF7B72;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
+            }
+        } catch (err) {
+            writeToTerminal(terminalId, '> Error connecting to the API:\n' + err.message, true);
+        }
+    }
+
+    // Live Request: Balance
+    async function runLiveBalance() {
+        const token = getApiToken();
+        if (!token) return;
+        
+        const terminalId = 'balance_terminal';
+        writeToTerminal(terminalId, '> Executing GET /api/v1/wallet/balance...\n> Awaiting response...');
+        
+        try {
+            const res = await fetch('/api/v1/wallet/balance', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            });
+            
+            const data = await res.json();
+            const formatted = JSON.stringify(data, null, 2);
+            
+            if (res.ok) {
+                writeToTerminal(terminalId, `<span style="color: #7EE787;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
+            } else {
+                writeToTerminal(terminalId, `<span style="color: #FF7B72;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
+            }
+        } catch (err) {
+            writeToTerminal(terminalId, '> Error connecting to the API:\n' + err.message, true);
+        }
     }
 </script>
 

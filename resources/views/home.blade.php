@@ -887,7 +887,7 @@
             <li><a href="#features">Features</a></li>
             <li><a href="#demo">Demo</a></li>
             <li><a href="#pricing">Pricing</a></li>
-            <li><a href="#docs">Docs</a></li>
+            <li><a href="{{ route('api.docs') }}">API Docs</a></li>
         </ul>
         <a href="{{ route('register') }}" class="nav-cta" style="text-decoration:none; display:inline-block; text-align:center;">Start Free Trial</a>
     </nav>
