@@ -1172,11 +1172,11 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <div class="footer-brand">© 2026 Callbly</div>
+        <div class="footer-brand">© {{ date('Y') }} Callbly</div>
         <ul class="footer-links">
-            <li><a href="#">Privacy</a></li>
-            <li><a href="#">Terms</a></li>
-            <li><a href="#">Status</a></li>
+            <li><a href="{{ route('privacy') }}">Privacy</a></li>
+            <li><a href="{{ route('terms') }}">Terms</a></li>
+            <li><a href="{{ route('status') }}">Status</a></li>
             <li><a href="{{ route('api.docs') }}">API Docs</a></li>
         </ul>
     </footer>

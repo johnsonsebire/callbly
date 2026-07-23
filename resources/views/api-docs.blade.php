@@ -832,7 +832,9 @@ print(response.json()['data']['balance'])</code></pre>
         </div>
         <div class="flex space-x-4">
             <a href="/" class="hover:underline">Home</a>
-            <a href="/login" class="hover:underline">Dashboard</a>
+            <a href="{{ route('privacy') }}" class="hover:underline">Privacy</a>
+            <a href="{{ route('terms') }}" class="hover:underline">Terms</a>
+            <a href="{{ route('status') }}" class="hover:underline">Status</a>
             <a href="#introduction" class="hover:underline">API Docs</a>
         </div>
     </div>

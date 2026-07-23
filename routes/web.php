@@ -34,6 +34,11 @@ Route::get('/', function () {
 // API Documentation Route
 Route::view('/developers/api', 'api-docs')->name('api.docs');
 
+// Public Informational Routes
+Route::view('/privacy', 'privacy')->name('privacy');
+Route::view('/terms', 'terms')->name('terms');
+Route::view('/status', 'status')->name('status');
+
 // Team Invitation Public Routes (must be before auth middleware)
 Route::prefix('team-invitations')->name('team-invitations.')->group(function() {
     Route::get('/{token}', [TeamInvitationController::class, 'show'])->name('show');
