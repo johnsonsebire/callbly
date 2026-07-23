@@ -49,89 +49,178 @@ use Illuminate\Support\Str;
                     </div>
                 </div>
 
-                <!-- 4 Stats Cards Grid -->
-                <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
+@push('styles')
+<style>
+    .stat-card {
+        background: #ffffff;
+        border-radius: 1.25rem !important;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        position: relative;
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04) !important;
+        border: 1px solid rgba(0, 0, 0, 0.04) !important;
+    }
+    
+    [data-bs-theme="dark"] .stat-card {
+        background: #1e1e2d !important;
+        border-color: rgba(255, 255, 255, 0.06) !important;
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25) !important;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-4px) !important;
+        box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    [data-bs-theme="dark"] .stat-card:hover {
+        box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.4) !important;
+    }
+    
+    .stat-card .stat-arrow {
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    
+    .stat-card:hover .stat-arrow {
+        transform: translateX(4px) !important;
+    }
+
+    .stat-card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover .stat-card-icon {
+        transform: scale(1.08);
+    }
+</style>
+@endpush
+
+                <!-- 4 Enhanced Modern Stats Cards Grid -->
+                <div class="row g-5 g-xl-6 mb-5 mb-xl-10">
                     
                     <!-- SMS Credits -->
                     <div class="col-sm-6 col-xl-3">
-                        <div class="card card-flush h-lg-100 border-0 shadow-sm hover-top transition-all">
-                            <div class="card-header pt-5 pb-2">
-                                <div class="card-title d-flex flex-column">
-                                    <span class="fs-2hx font-extrabold text-primary me-2 lh-1">{{ number_format($smsBalance ?? 0) }}</span>
-                                    <span class="text-gray-400 pt-1 font-medium fs-7">SMS Credits Available</span>
+                        <a href="{{ route('sms.credits') }}" class="card stat-card h-100 text-decoration-none group overflow-hidden" style="border-top: 4px solid #0284c7 !important;">
+                            <div class="card-body p-6 d-flex flex-column justify-content-between">
+                                <div>
+                                    <!-- Header: Label & Icon -->
+                                    <div class="d-flex align-items-center justify-content-between mb-4">
+                                        <span class="text-gray-500 font-bold fs-8 uppercase tracking-wider">SMS Credits</span>
+                                        <div class="stat-card-icon shadow-xs" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.12) 0%, rgba(56, 189, 248, 0.22) 100%);">
+                                            <i class="ki-outline ki-message-text-2 text-primary fs-1"></i>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Metric Value & Badge -->
+                                    <div class="d-flex align-items-baseline gap-2 mb-1">
+                                        <span class="fs-2hx font-extrabold text-gray-900 lh-1">{{ number_format($smsBalance ?? 0) }}</span>
+                                        <span class="badge badge-light-primary fs-8 font-bold px-2.5 py-1 rounded-pill">Available</span>
+                                    </div>
+                                    <span class="text-gray-400 fs-7 font-medium">Outbound messaging quota</span>
+                                </div>
+                                
+                                <!-- Footer Action Link -->
+                                <div class="pt-4 mt-4 border-top border-gray-100 d-flex align-items-center justify-content-between text-primary font-bold fs-7">
+                                    <span>Top Up Credits</span>
+                                    <i class="ki-outline ki-arrow-right fs-5 stat-arrow"></i>
                                 </div>
                             </div>
-                            <div class="card-body d-flex align-items-center justify-content-between pt-0 pb-4">
-                                <a href="{{ route('sms.credits') }}" class="text-primary font-semibold fs-7 hover-underline">Top up &rarr;</a>
-                                <div class="symbol symbol-45px">
-                                    <span class="symbol-label bg-light-primary rounded-xl">
-                                        <i class="ki-outline ki-message-text-2 text-primary fs-2x"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                        </a>
                     </div>
                     
                     <!-- USSD Credits -->
                     <div class="col-sm-6 col-xl-3">
-                        <div class="card card-flush h-lg-100 border-0 shadow-sm hover-top transition-all">
-                            <div class="card-header pt-5 pb-2">
-                                <div class="card-title d-flex flex-column">
-                                    <span class="fs-2hx font-extrabold text-success me-2 lh-1">{{ number_format($ussdBalance ?? 0) }}</span>
-                                    <span class="text-gray-400 pt-1 font-medium fs-7">USSD Credits</span>
+                        <a href="{{ route('ussd.dashboard') }}" class="card stat-card h-100 text-decoration-none group overflow-hidden" style="border-top: 4px solid #10b981 !important;">
+                            <div class="card-body p-6 d-flex flex-column justify-content-between">
+                                <div>
+                                    <!-- Header: Label & Icon -->
+                                    <div class="d-flex align-items-center justify-content-between mb-4">
+                                        <span class="text-gray-500 font-bold fs-8 uppercase tracking-wider">USSD Credits</span>
+                                        <div class="stat-card-icon shadow-xs" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(52, 211, 153, 0.22) 100%);">
+                                            <i class="ki-outline ki-call text-success fs-1"></i>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Metric Value & Badge -->
+                                    <div class="d-flex align-items-baseline gap-2 mb-1">
+                                        <span class="fs-2hx font-extrabold text-gray-900 lh-1">{{ number_format($ussdBalance ?? 0) }}</span>
+                                        <span class="badge badge-light-success fs-8 font-bold px-2.5 py-1 rounded-pill">Active</span>
+                                    </div>
+                                    <span class="text-gray-400 fs-7 font-medium">Interactive session units</span>
+                                </div>
+                                
+                                <!-- Footer Action Link -->
+                                <div class="pt-4 mt-4 border-top border-gray-100 d-flex align-items-center justify-content-between text-success font-bold fs-7">
+                                    <span>Manage Service</span>
+                                    <i class="ki-outline ki-arrow-right fs-5 stat-arrow"></i>
                                 </div>
                             </div>
-                            <div class="card-body d-flex align-items-center justify-content-between pt-0 pb-4">
-                                <a href="{{ route('ussd.dashboard') }}" class="text-success font-semibold fs-7 hover-underline">Manage &rarr;</a>
-                                <div class="symbol symbol-45px">
-                                    <span class="symbol-label bg-light-success rounded-xl">
-                                        <i class="ki-outline ki-call text-success fs-2x"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                        </a>
                     </div>
                     
                     <!-- Active Contacts -->
                     <div class="col-sm-6 col-xl-3">
-                        <div class="card card-flush h-lg-100 border-0 shadow-sm hover-top transition-all">
-                            <div class="card-header pt-5 pb-2">
-                                <div class="card-title d-flex flex-column">
-                                    <span class="fs-2hx font-extrabold text-info me-2 lh-1">{{ number_format($activeContacts ?? 0) }}</span>
-                                    <span class="text-gray-400 pt-1 font-medium fs-7">Active Audience Contacts</span>
+                        <a href="{{ route('contacts.index') }}" class="card stat-card h-100 text-decoration-none group overflow-hidden" style="border-top: 4px solid #06b6d4 !important;">
+                            <div class="card-body p-6 d-flex flex-column justify-content-between">
+                                <div>
+                                    <!-- Header: Label & Icon -->
+                                    <div class="d-flex align-items-center justify-content-between mb-4">
+                                        <span class="text-gray-500 font-bold fs-8 uppercase tracking-wider">Audience Contacts</span>
+                                        <div class="stat-card-icon shadow-xs" style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(34, 211, 238, 0.22) 100%);">
+                                            <i class="ki-outline ki-people text-info fs-1"></i>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Metric Value & Badge -->
+                                    <div class="d-flex align-items-baseline gap-2 mb-1">
+                                        <span class="fs-2hx font-extrabold text-gray-900 lh-1">{{ number_format($activeContacts ?? 0) }}</span>
+                                        <span class="badge badge-light-info fs-8 font-bold px-2.5 py-1 rounded-pill">Subscribers</span>
+                                    </div>
+                                    <span class="text-gray-400 fs-7 font-medium">Verified phone contacts</span>
+                                </div>
+                                
+                                <!-- Footer Action Link -->
+                                <div class="pt-4 mt-4 border-top border-gray-100 d-flex align-items-center justify-content-between text-info font-bold fs-7">
+                                    <span>View Audience</span>
+                                    <i class="ki-outline ki-arrow-right fs-5 stat-arrow"></i>
                                 </div>
                             </div>
-                            <div class="card-body d-flex align-items-center justify-content-between pt-0 pb-4">
-                                <a href="{{ route('contacts.index') }}" class="text-info font-semibold fs-7 hover-underline">Contacts &rarr;</a>
-                                <div class="symbol symbol-45px">
-                                    <span class="symbol-label bg-light-info rounded-xl">
-                                        <i class="ki-outline ki-people text-info fs-2x"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                        </a>
                     </div>
                     
                     <!-- Wallet Balance -->
                     <div class="col-sm-6 col-xl-3">
-                        <div class="card card-flush h-lg-100 border-0 shadow-sm hover-top transition-all">
-                            <div class="card-header pt-5 pb-2">
-                                <div class="card-title d-flex flex-column">
-                                    <span class="fs-2hx font-extrabold text-warning me-2 lh-1">{{ $balance ?? '₵0.00' }}</span>
-                                    <span class="text-gray-400 pt-1 font-medium fs-7">Prepaid Wallet Balance</span>
+                        <a href="{{ route('wallet.topup') }}" class="card stat-card h-100 text-decoration-none group overflow-hidden" style="border-top: 4px solid #f59e0b !important;">
+                            <div class="card-body p-6 d-flex flex-column justify-content-between">
+                                <div>
+                                    <!-- Header: Label & Icon -->
+                                    <div class="d-flex align-items-center justify-content-between mb-4">
+                                        <span class="text-gray-500 font-bold fs-8 uppercase tracking-wider">Prepaid Wallet</span>
+                                        <div class="stat-card-icon shadow-xs" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(251, 191, 36, 0.22) 100%);">
+                                            <i class="ki-outline ki-wallet text-warning fs-1"></i>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Metric Value & Badge -->
+                                    <div class="d-flex align-items-baseline gap-2 mb-1">
+                                        <span class="fs-2hx font-extrabold text-gray-900 lh-1">{{ $balance ?? '₵0.00' }}</span>
+                                        <span class="badge badge-light-warning fs-8 font-bold px-2.5 py-1 rounded-pill">GHS</span>
+                                    </div>
+                                    <span class="text-gray-400 fs-7 font-medium">Main platform funds</span>
+                                </div>
+                                
+                                <!-- Footer Action Link -->
+                                <div class="pt-4 mt-4 border-top border-gray-100 d-flex align-items-center justify-content-between text-warning font-bold fs-7">
+                                    <span>Add Funds</span>
+                                    <i class="ki-outline ki-arrow-right fs-5 stat-arrow"></i>
                                 </div>
                             </div>
-                            <div class="card-body d-flex align-items-center justify-content-between pt-0 pb-4">
-                                <a href="{{ route('wallet.topup') }}" class="text-warning font-semibold fs-7 hover-underline">Add Funds &rarr;</a>
-                                <div class="symbol symbol-45px">
-                                    <span class="symbol-label bg-light-warning rounded-xl">
-                                        <i class="ki-outline ki-wallet text-warning fs-2x"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                        </a>
                     </div>
-
                 </div>
 
                 <!-- Recent Activity & Quick Actions Grid -->

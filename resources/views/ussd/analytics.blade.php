@@ -1,122 +1,121 @@
 @extends('layouts.master')
 
+@section('title', 'USSD Performance Telemetry')
+
 @section('content')
 <div class="app-main flex-column flex-row-fluid">
-    <!--begin::Content wrapper-->
     <div class="d-flex flex-column flex-column-fluid">
-        <!--begin::Content-->
         <div id="kt_app_content" class="app-content flex-column-fluid">
-            <!--begin::Content container-->
             <div id="kt_app_content_container" class="app-container container-fluid">
-                <!-- Header Section -->
-                <div class="card mb-5 mb-xl-8">
-                    <div class="card-body pt-9 pb-0">
-                        <div class="d-flex flex-wrap flex-sm-nowrap">
-                            <div class="me-7 mb-4">
-                                <div class="symbol symbol-100px symbol-lg-160px symbol-fixed position-relative">
-                                    <div class="symbol-label bg-light-primary text-primary fs-2 fw-bold">
-                                        <i class="ki-outline ki-call fs-1"></i>
+                
+                <!-- Welcome Banner Hero Card -->
+                <div class="card mb-5 mb-xl-8 border-0 shadow-lg overflow-hidden" style="background: linear-gradient(135deg, #090d16 0%, #0f172a 50%, #1e293b 100%);">
+                    <div class="card-body p-6 sm:p-8 text-white relative">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-6">
+                            <div class="d-flex align-items-center gap-4">
+                                <div class="symbol symbol-60px symbol-lg-75px symbol-circle border border-2 border-cyan-400/40 p-1 shadow-inner" style="background: rgba(14, 165, 233, 0.15);">
+                                    <div class="symbol-label font-extrabold text-cyan-400 fs-1 rounded-circle" style="background: #0ea5e9; color: #ffffff;">
+                                        <i class="ki-outline ki-chart-line-up fs-2x text-white"></i>
                                     </div>
+                                </div>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <h1 class="text-white font-extrabold fs-2x mb-0">USSD Performance Telemetry</h1>
+                                        <span class="badge badge-light-primary fs-8 font-bold px-2.5 py-1">Session Analytics</span>
+                                    </div>
+                                    <p class="text-gray-400 fs-7 mb-0">Track real-time session volume, active unique users, and menu navigation duration across all shortcodes.</p>
                                 </div>
                             </div>
-                            <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-start flex-wrap mb-2">
-                                    <div class="d-flex flex-column">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <h2 class="text-gray-900 fs-2 fw-bold me-1">USSD Analytics</h2>
-                                        </div>
-                                        <div class="d-flex flex-wrap fw-semibold fs-6 mb-4 pe-2">
-                                            <span class="d-flex align-items-center text-muted me-5 mb-2">
-                                                <i class="ki-outline ki-calendar fs-4 me-1"></i>
-                                                {{ now()->format('F d, Y') }}
-                                            </span>
-                                            <span class="d-flex align-items-center text-muted mb-2">
-                                                <i class="ki-outline ki-compass fs-4 me-1"></i>
-                                                Track your USSD service performance
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex my-4">
-                                        <a href="{{ route('ussd.services') }}" class="btn btn-sm btn-primary me-2">
-                                            <i class="ki-outline ki-element-11 fs-3"></i>
-                                            View All Services
-                                        </a>
-                                        <a href="{{ route('ussd.create') }}" class="btn btn-sm btn-light-primary">
-                                            <i class="ki-outline ki-plus-square fs-3"></i>
-                                            Create New Service
-                                        </a>
-                                    </div>
-                                </div>
+                            
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="{{ route('ussd.services') }}" class="btn btn-primary btn-sm px-4 shadow-sm">
+                                    <i class="ki-outline ki-element-11 me-1 fs-5"></i> View Services
+                                </a>
+                                <a href="{{ route('ussd.create') }}" class="btn btn-light-primary btn-sm px-4">
+                                    <i class="ki-outline ki-plus me-1 fs-5"></i> Create Service
+                                </a>
+                                <a href="{{ route('ussd.dashboard') }}" class="btn btn-outline btn-outline-secondary text-gray-300 btn-sm px-4">
+                                    <i class="ki-outline ki-phone me-1 fs-5"></i> USSD Console
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Analytics Data -->
-                <div class="card card-flush h-lg-100">
-                    <div class="card-header pt-5">
-                        <h3 class="card-title align-items-start flex-column">
-                            <span class="card-label fw-bold text-dark">USSD Analytics</span>
-                            <span class="text-gray-400 mt-1 fw-semibold fs-6">Performance metrics for your USSD services</span>
+                <!-- Main Analytics Section -->
+                <div class="card border-0 shadow-sm overflow-hidden mb-5 mb-xl-8" style="border-top: 4px solid #0284c7 !important; border-radius: 1.25rem;">
+                    <div class="card-header pt-6 pb-2 border-0">
+                        <h3 class="card-title flex-column">
+                            <span class="card-label font-bold text-gray-900 fs-3">Service Performance Metrics</span>
+                            <span class="text-gray-400 mt-1 fs-7">Real-time session throughput and customer engagement per shortcode</span>
                         </h3>
                     </div>
-                    <div class="card-body pt-6">
+                    <div class="card-body pt-4">
                         @if($analyticsData->isEmpty())
-                            <div class="text-center py-10">
-                                <div class="d-flex flex-column align-items-center">
-                                    <i class="ki-outline ki-chart-simple fs-3x text-gray-300 mb-5"></i>
-                                    <span class="text-gray-600 fs-5 fw-semibold">No analytics data available yet</span>
-                                    <span class="text-gray-400 fs-7 mb-5">Create a USSD service to start tracking usage</span>
-                                    <a href="{{ route('ussd.services') }}" class="btn btn-primary">View USSD Services</a>
+                            <div class="text-center py-12">
+                                <div class="symbol symbol-70px symbol-circle bg-light-primary mb-4 p-3">
+                                    <i class="ki-outline ki-chart-line-up fs-3hx text-primary"></i>
                                 </div>
+                                <h3 class="fs-2 font-extrabold text-gray-900 mb-2">No Session Telemetry Available</h3>
+                                <p class="text-gray-400 fs-6 max-w-500px mx-auto mb-6">Create and activate USSD shortcodes to start capturing live session traffic and user interactions.</p>
+                                <a href="{{ route('ussd.services') }}" class="btn btn-primary font-bold px-6 shadow-sm">
+                                    <i class="ki-outline ki-element-11 fs-4 me-2"></i>View USSD Services
+                                </a>
                             </div>
                         @else
                             <div class="row g-5">
                                 @foreach($analyticsData as $data)
                                     <div class="col-md-6 col-xl-4">
-                                        <div class="card card-flush h-lg-100">
-                                            <div class="card-header pt-5">
-                                                <h3 class="card-title align-items-start flex-column">
-                                                    <span class="card-label fw-bold text-dark">{{ $data['name'] }}</span>
-                                                </h3>
+                                        <div class="card border border-gray-200 shadow-xs h-100 p-5 overflow-hidden" style="border-radius: 1rem; border-top: 3px solid #0284c7 !important;">
+                                            <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom border-gray-200">
+                                                <div class="d-flex align-items-center me-2">
+                                                    <div class="symbol symbol-35px me-3">
+                                                        <span class="symbol-label bg-light-primary text-primary rounded-circle">
+                                                            <i class="ki-outline ki-phone fs-4"></i>
+                                                        </span>
+                                                    </div>
+                                                    <h4 class="font-extrabold text-gray-900 fs-6 mb-0">{{ $data['name'] }}</h4>
+                                                </div>
                                             </div>
-                                            <div class="card-body pt-5">
-                                                <div class="d-flex flex-column gap-5">
+
+                                            <div class="d-flex flex-column gap-3.5">
+                                                <!-- Total Sessions -->
+                                                <div class="d-flex align-items-center justify-content-between p-3 bg-light-soft rounded-3">
                                                     <div class="d-flex align-items-center">
-                                                        <div class="symbol symbol-30px me-5">
-                                                            <span class="symbol-label bg-light-primary">
-                                                                <i class="ki-outline ki-ranking fs-3 text-primary"></i>
+                                                        <div class="symbol symbol-32px me-3">
+                                                            <span class="symbol-label bg-light-primary text-primary rounded-circle">
+                                                                <i class="ki-outline ki-ranking fs-4"></i>
                                                             </span>
                                                         </div>
-                                                        <div class="d-flex justify-content-between flex-grow-1">
-                                                            <span class="text-gray-800 fw-semibold fs-6">Total Sessions</span>
-                                                            <span class="fw-bold fs-6 text-primary">{{ number_format($data['total_sessions']) }}</span>
-                                                        </div>
+                                                        <span class="text-gray-700 font-bold fs-7">Total Sessions</span>
                                                     </div>
-                                                    
+                                                    <span class="font-extrabold fs-6 text-primary">{{ number_format($data['total_sessions']) }}</span>
+                                                </div>
+                                                
+                                                <!-- Active Users -->
+                                                <div class="d-flex align-items-center justify-content-between p-3 bg-light-soft rounded-3">
                                                     <div class="d-flex align-items-center">
-                                                        <div class="symbol symbol-30px me-5">
-                                                            <span class="symbol-label bg-light-success">
-                                                                <i class="ki-outline ki-people fs-3 text-success"></i>
+                                                        <div class="symbol symbol-32px me-3">
+                                                            <span class="symbol-label bg-light-success text-success rounded-circle">
+                                                                <i class="ki-outline ki-profile-user fs-4"></i>
                                                             </span>
                                                         </div>
-                                                        <div class="d-flex justify-content-between flex-grow-1">
-                                                            <span class="text-gray-800 fw-semibold fs-6">Active Users</span>
-                                                            <span class="fw-bold fs-6 text-success">{{ number_format($data['active_users']) }}</span>
-                                                        </div>
+                                                        <span class="text-gray-700 font-bold fs-7">Active Users</span>
                                                     </div>
-                                                    
+                                                    <span class="font-extrabold fs-6 text-success">{{ number_format($data['active_users']) }}</span>
+                                                </div>
+                                                
+                                                <!-- Avg Session Duration -->
+                                                <div class="d-flex align-items-center justify-content-between p-3 bg-light-soft rounded-3">
                                                     <div class="d-flex align-items-center">
-                                                        <div class="symbol symbol-30px me-5">
-                                                            <span class="symbol-label bg-light-info">
-                                                                <i class="ki-outline ki-timer fs-3 text-info"></i>
+                                                        <div class="symbol symbol-32px me-3">
+                                                            <span class="symbol-label bg-light-info text-info rounded-circle">
+                                                                <i class="ki-outline ki-timer fs-4"></i>
                                                             </span>
                                                         </div>
-                                                        <div class="d-flex justify-content-between flex-grow-1">
-                                                            <span class="text-gray-800 fw-semibold fs-6">Avg. Session Duration</span>
-                                                            <span class="fw-bold fs-6 text-info">{{ $data['average_session_duration'] }}s</span>
-                                                        </div>
+                                                        <span class="text-gray-700 font-bold fs-7">Avg. Duration</span>
                                                     </div>
+                                                    <span class="font-extrabold fs-6 text-info">{{ $data['average_session_duration'] }}s</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -126,11 +125,9 @@
                         @endif
                     </div>
                 </div>
+
             </div>
-            <!--end::Content container-->
         </div>
-        <!--end::Content-->
     </div>
-    <!--end::Content wrapper-->
 </div>
 @endsection

@@ -1,209 +1,162 @@
 @extends('layouts.master')
 
+@section('title', 'Audience Contacts Directory')
+
 @section('content')
 <div class="app-main flex-column flex-row-fluid">
-    <!--begin::Content wrapper-->
     <div class="d-flex flex-column flex-column-fluid">
-        <!--begin::Content-->
         <div id="kt_app_content" class="app-content flex-column-fluid">
-            <!--begin::Content container-->
             <div id="kt_app_content_container" class="app-container container-fluid">
-                <!-- Contacts Card -->
-                <div class="card mb-5 mb-xl-8">
-                    <div class="card-header pt-5">
-                        <h3 class="card-title align-items-start flex-column">
-                            <span class="card-label fw-bold text-dark">My Contacts</span>
-                            <span class="text-gray-400 mt-1 fw-semibold fs-6">
-                                Manage your contact list
-                                @if($contacts->total() > 0)
-                                    • {{ number_format($contacts->total()) }} total contacts
-                                @endif
-                            </span>
-                        </h3>
-                        <div class="card-toolbar d-flex flex-wrap gap-2">
-                            <a href="{{ route('contacts.create') }}" class="btn btn-sm btn-primary">
-                                <i class="ki-outline ki-plus-square fs-2 me-2"></i>Add Contact
-                            </a>
-                            <a href="{{ route('contacts.import') }}" class="btn btn-sm btn-light-primary">
-                                <i class="ki-outline ki-cloud-add fs-2 me-2"></i>Import
-                            </a>
-                            <a href="{{ route('contacts.export') }}" class="btn btn-sm btn-light-primary">
-                                <i class="ki-outline ki-exit-down fs-2 me-2"></i>Export
-                            </a>
+                
+                <!-- Welcome Banner Hero Card -->
+                <div class="card mb-5 mb-xl-8 border-0 shadow-lg overflow-hidden" style="background: linear-gradient(135deg, #090d16 0%, #0f172a 50%, #1e293b 100%);">
+                    <div class="card-body p-6 sm:p-8 text-white relative">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-6">
+                            <div class="d-flex align-items-center gap-4">
+                                <div class="symbol symbol-60px symbol-lg-75px symbol-circle border border-2 border-cyan-400/40 p-1 shadow-inner" style="background: rgba(14, 165, 233, 0.15);">
+                                    <div class="symbol-label font-extrabold text-cyan-400 fs-1 rounded-circle" style="background: #0ea5e9; color: #ffffff;">
+                                        <i class="ki-outline ki-profile-user fs-2x text-white"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <h1 class="text-white font-extrabold fs-2x mb-0">Audience Contacts Directory</h1>
+                                        <span class="badge badge-light-primary fs-8 font-bold px-2.5 py-1">Audience Manager</span>
+                                    </div>
+                                    <div class="d-flex flex-wrap align-items-center gap-4 text-gray-400 fs-7 mt-2">
+                                        <span class="d-flex align-items-center">
+                                            <i class="ki-outline ki-people fs-5 me-1 text-primary"></i>
+                                            Total Contacts: <strong class="text-white ms-1 me-2">{{ number_format($contacts->total()) }}</strong>
+                                        </span>
+                                        <span>•</span>
+                                        <span class="d-flex align-items-center">
+                                            <i class="ki-outline ki-category fs-5 me-1 text-success"></i>
+                                            Groups: <strong class="text-white ms-1">{{ $groups->count() }} Saved Segments</strong>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="{{ route('contacts.create') }}" class="btn btn-primary btn-sm px-4 shadow-sm">
+                                    <i class="ki-outline ki-plus me-1 fs-5"></i> Add Contact
+                                </a>
+                                <a href="{{ route('contacts.import') }}" class="btn btn-light-primary btn-sm px-4">
+                                    <i class="ki-outline ki-cloud-add me-1 fs-5"></i> Import CSV
+                                </a>
+                                <a href="{{ route('contacts.export') }}" class="btn btn-outline btn-outline-secondary text-gray-300 btn-sm px-4">
+                                    <i class="ki-outline ki-exit-down me-1 fs-5"></i> Export
+                                </a>
+                            </div>
                         </div>
                     </div>
-                    <div class="card-body">
+                </div>
+
+                <!-- Contacts Container Card -->
+                <div class="card border-0 shadow-sm overflow-hidden mb-5 mb-xl-8" style="border-top: 4px solid #0284c7 !important; border-radius: 1.25rem;">
+                    <div class="card-header pt-6 pb-2 border-0">
+                        <h3 class="card-title flex-column">
+                            <span class="card-label font-bold text-gray-900 fs-3">Contact Database</span>
+                            <span class="text-gray-400 mt-1 fs-7">Search, filter, and dispatch SMS to target customer groups</span>
+                        </h3>
+                    </div>
+                    <div class="card-body pt-4">
                         @if(session('success'))
-                            <div class="alert alert-success">{{ session('success') }}</div>
+                            <div class="alert alert-success d-flex align-items-center p-4 mb-5 rounded-3 shadow-xs">
+                                <i class="ki-outline ki-check-circle fs-2x text-success me-3"></i>
+                                <span class="font-bold text-gray-800 fs-6">{{ session('success') }}</span>
+                            </div>
                         @endif
                         
                         @if(session('error'))
-                            <div class="alert alert-danger">{{ session('error') }}</div>
-                        @endif
-                        
-                        @if(session('errors') && is_array(session('errors')) && count(session('errors')) > 0)
-                            <div class="alert alert-danger">
-                                <p><strong>The following errors occurred:</strong></p>
-                                <ul>
-                                    @foreach(session('errors') as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-                        
-                        @if(session('import_errors') && is_array(session('import_errors')) && count(session('import_errors')) > 0)
-                            <div class="alert alert-warning">
-                                <div class="d-flex align-items-center mb-3">
-                                    <i class="ki-outline ki-information-5 fs-2 text-warning me-2"></i>
-                                    <h5 class="mb-0 text-warning">Import Error Details</h5>
-                                </div>
-                                <p><strong>The following contacts could not be imported:</strong></p>
-                                
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-bordered">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>Row #</th>
-                                                <th>First Name</th>
-                                                <th>Last Name</th>
-                                                <th>Phone Number</th>
-                                                <th>Email</th>
-                                                <th>Error</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach(session('import_errors') as $error)
-                                                <tr>
-                                                    <td><span class="badge badge-light">{{ $error['row_number'] }}</span></td>
-                                                    <td>{{ $error['contact_data']['first_name'] }}</td>
-                                                    <td>{{ $error['contact_data']['last_name'] }}</td>
-                                                    <td>{{ $error['contact_data']['phone_number'] }}</td>
-                                                    <td>{{ $error['contact_data']['email'] }}</td>
-                                                    <td>
-                                                        <small class="text-danger">
-                                                            <strong>{{ $error['error_type'] ?? 'Error' }}:</strong>
-                                                            {{ $error['error_message'] }}
-                                                        </small>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                                
-                                <div class="mt-3">
-                                    <small class="text-muted">
-                                        <i class="ki-outline ki-information fs-6 me-1"></i>
-                                        Please review the error details above and fix the data in your import file before trying again.
-                                    </small>
-                                </div>
+                            <div class="alert alert-danger d-flex align-items-center p-4 mb-5 rounded-3 shadow-xs">
+                                <i class="ki-outline ki-cross-circle fs-2x text-danger me-3"></i>
+                                <span class="font-bold text-gray-800 fs-6">{{ session('error') }}</span>
                             </div>
                         @endif
 
-                        <!-- Search and Filter Section -->
-                        <div class="row g-4 mb-6">
-                            <!-- Search Section -->
+                        <!-- Search & Filter Controls Row -->
+                        <div class="row g-4 mb-6 align-items-center">
+                            <!-- Search -->
                             <div class="col-lg-6 col-md-8">
                                 <div class="d-flex align-items-center position-relative search-container">
-                                    <i class="ki-outline ki-magnifier fs-1 position-absolute ms-4 text-gray-500"></i>
+                                    <i class="ki-outline ki-magnifier fs-2 position-absolute ms-4 text-gray-400"></i>
                                     <input type="text" 
                                            data-kt-contacts-table-filter="search" 
-                                           class="form-control form-control-solid ps-15 pe-12" 
-                                           placeholder="Search contacts by name, phone, email..." 
+                                           class="form-control form-control-solid ps-12 pe-12 rounded-3" 
+                                           placeholder="Search contacts by name, phone, email, company..." 
                                            id="contactSearch" />
-                                    <button type="button" class="search-clear-btn" id="clearSearchBtn">
+                                    <button type="button" class="search-clear-btn me-2" id="clearSearchBtn">
                                         <i class="ki-outline ki-cross fs-5"></i>
                                     </button>
                                 </div>
                             </div>
                             
-                            <!-- Filter and Actions Section -->
+                            <!-- Group Filter & Export Toggle -->
                             <div class="col-lg-6 col-md-4">
                                 <div class="d-flex align-items-center justify-content-end gap-3">
-                                    <select class="form-select form-select-solid" 
+                                    <select class="form-select form-select-solid rounded-3" 
                                             data-control="select2" 
                                             data-placeholder="Filter by group" 
                                             id="groupFilter" 
                                             style="min-width: 180px;">
-                                        <option value="all">All Groups</option>
+                                        <option value="all">All Contact Groups</option>
                                         @foreach($groups as $group)
                                             <option value="{{ $group->id }}">{{ $group->name }}</option>
                                         @endforeach
                                     </select>
                                     
                                     <button type="button" 
-                                            class="btn btn-light-primary flex-shrink-0" 
+                                            class="btn btn-light-primary font-bold flex-shrink-0 rounded-3 shadow-xs" 
                                             id="exportContactsBtn">
-                                        <i class="ki-outline ki-setting-3 fs-2 me-2"></i>Export Options
+                                        <i class="ki-outline ki-setting-3 fs-3 me-1"></i> Export Options
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Export Options Panel -->
                         <div id="exportOptions" class="mb-6" style="display: none;">
-                            <div class="card border border-gray-300 shadow-sm">
-                                <div class="card-header bg-light-primary">
+                            <div class="card border border-gray-200 shadow-sm rounded-3">
+                                <div class="card-header bg-light-soft pt-4 pb-3">
                                     <div class="card-title">
-                                        <i class="ki-outline ki-exit-down fs-2 text-primary me-2"></i>
-                                        <span class="fw-bold text-primary">Export Contacts</span>
+                                        <i class="ki-outline ki-exit-down fs-3 text-primary me-2"></i>
+                                        <span class="font-bold text-gray-900 fs-5">Export Contacts Configuration</span>
                                     </div>
                                 </div>
-                                <div class="card-body">
+                                <div class="card-body pt-4">
                                     <form action="{{ route('contacts.export') }}" method="GET">
-                                        <div class="row g-4">
-                                            <!-- Export Type Selection -->
+                                        <div class="row g-4 align-items-end">
                                             <div class="col-lg-4 col-md-6">
-                                                <h6 class="fw-bold text-gray-800 mb-3">
-                                                    <i class="ki-outline ki-check-square fs-3 me-2"></i>Export Type
-                                                </h6>
-                                                <div class="form-check mb-3">
+                                                <label class="form-label font-bold text-gray-800 fs-7 mb-3">Export Selection Scope</label>
+                                                <div class="form-check mb-2">
                                                     <input class="form-check-input" type="radio" name="export_type" id="exportAll" value="all" checked>
-                                                    <label class="form-check-label fw-semibold" for="exportAll">
-                                                        <i class="ki-outline ki-people fs-4 me-1 text-primary"></i>
-                                                        Export all contacts
+                                                    <label class="form-check-label font-bold text-gray-800 fs-7" for="exportAll">
+                                                        Export all contacts in database
                                                     </label>
                                                 </div>
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="radio" name="export_type" id="exportSelected" value="selected">
-                                                    <label class="form-check-label fw-semibold" for="exportSelected">
-                                                        <i class="ki-outline ki-click fs-4 me-1 text-warning"></i>
-                                                        Export selected contacts
+                                                    <label class="form-check-label font-bold text-gray-800 fs-7" for="exportSelected">
+                                                        Export selected contacts only
                                                     </label>
                                                 </div>
                                             </div>
                                             
-                                            <!-- Group Filter -->
                                             <div class="col-lg-4 col-md-6">
-                                                <h6 class="fw-bold text-gray-800 mb-3">
-                                                    <i class="ki-outline ki-filter fs-3 me-2"></i>Group Filter
-                                                </h6>
+                                                <label for="exportGroupFilter" class="form-label font-bold text-gray-800 fs-7">Group Segment Filter</label>
                                                 <select class="form-select form-select-solid" name="group_id" id="exportGroupFilter">
                                                     <option value="">All groups</option>
                                                     @foreach($groups as $group)
                                                         <option value="{{ $group->id }}">{{ $group->name }}</option>
                                                     @endforeach
                                                 </select>
-                                                <div class="form-text text-muted mt-2">
-                                                    <i class="ki-outline ki-information-5 fs-6 me-1"></i>
-                                                    Optional: Filter by specific group
-                                                </div>
                                             </div>
                                             
-                                            <!-- Action Button -->
                                             <div class="col-lg-4 col-md-12">
-                                                <h6 class="fw-bold text-gray-800 mb-3">
-                                                    <i class="ki-outline ki-rocket fs-3 me-2"></i>Action
-                                                </h6>
-                                                <button type="submit" class="btn btn-primary w-100">
-                                                    <i class="ki-outline ki-exit-down fs-2 me-2"></i>
-                                                    Export Contacts Now
+                                                <button type="submit" class="btn btn-primary font-bold w-100 py-3 shadow-xs">
+                                                    <i class="ki-outline ki-exit-down fs-4 me-2"></i>Download Export File
                                                 </button>
-                                                <div class="form-text text-muted mt-2 text-center">
-                                                    <i class="ki-outline ki-file fs-6 me-1"></i>
-                                                    Downloads as Excel file
-                                                </div>
                                             </div>
                                         </div>
                                         <input type="hidden" name="selected_contacts" id="selectedContactIds" value="">
@@ -211,15 +164,14 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Contacts Table Container -->
                         <div class="position-relative">
-                            <!-- Loading indicator -->
                             <div id="contactsLoading" class="d-none">
                                 <div class="spinner-border text-primary" role="status">
                                     <span class="visually-hidden">Loading contacts...</span>
                                 </div>
-                                <div class="ms-3 fw-semibold text-gray-600">Searching contacts...</div>
+                                <div class="ms-3 font-semibold text-gray-600">Searching contacts...</div>
                             </div>
                             
                             <div id="contactsTableContainer">
@@ -228,59 +180,15 @@
                         </div>
                     </div>
                 </div>
+
             </div>
-            <!--end::Content container-->
         </div>
-        <!--end::Content-->
     </div>
-    <!--end::Content wrapper-->
 </div>
 @endsection
 
 @push('styles')
 <style>
-    /* Responsive improvements */
-    @media (max-width: 768px) {
-        .card-toolbar {
-            flex-direction: column;
-            gap: 0.5rem !important;
-        }
-        
-        .card-toolbar .btn {
-            width: 100%;
-            justify-content: center;
-        }
-        
-        #exportContactsBtn {
-            white-space: nowrap;
-        }
-    }
-    
-    @media (max-width: 576px) {
-        .row.g-4.mb-6 {
-            flex-direction: column;
-        }
-        
-        .row.g-4.mb-6 .col-lg-6 {
-            width: 100%;
-        }
-        
-        .d-flex.align-items-center.justify-content-end {
-            justify-content: stretch !important;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        
-        #groupFilter {
-            min-width: 100% !important;
-        }
-        
-        #exportContactsBtn {
-            width: 100%;
-        }
-    }
-    
-    /* Search input enhancements */
     .search-container {
         position: relative;
     }
@@ -310,49 +218,8 @@
         opacity: 1;
     }
     
-    /* Export options animation */
-    #exportOptions {
-        transition: all 0.3s ease-in-out;
-    }
-    
-    /* Button improvements */
-    .btn.flex-shrink-0 {
-        white-space: nowrap;
-    }
-    
-    /* Action buttons responsive */
-    @media (max-width: 576px) {
-        .table td:last-child .d-flex {
-            flex-direction: column;
-            gap: 0.25rem;
-        }
-        
-        .table td:last-child .btn {
-            width: 100%;
-            justify-content: center;
-        }
-    }
-    
-    /* Empty state improvements */
-    .symbol-circle .symbol-label {
-        border-radius: 50%;
-    }
-    
-    /* Badge improvements */
-    .badge.fs-7 {
-        font-size: 0.75rem !important;
-        padding: 0.35rem 0.65rem;
-    }
-    
-    /* Table row hover effects */
-    .table tbody tr:hover {
-        background-color: #f8f9fa;
-        transition: background-color 0.2s ease;
-    }
-    
-    /* Loading state improvements */
     #contactsLoading {
-        background: rgba(255, 255, 255, 0.8);
+        background: rgba(255, 255, 255, 0.85);
         position: absolute;
         top: 0;
         left: 0;
@@ -362,6 +229,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        border-radius: 0.75rem;
     }
 </style>
 @endpush
@@ -375,32 +243,20 @@
         const contactsTableContainer = document.getElementById('contactsTableContainer');
         const loadingIndicator = document.getElementById('contactsLoading');
         
-        // Real-time search function
         function performSearch() {
             const searchTerm = searchInput.value.trim();
             const selectedGroup = groupFilter.value;
             
-            console.log('Performing search with:', { searchTerm, selectedGroup });
-            
-            // Show loading indicator
             loadingIndicator.classList.remove('d-none');
             contactsTableContainer.style.opacity = '0.6';
             contactsTableContainer.style.pointerEvents = 'none';
             
-            // Build URL with parameters
             const url = new URL('{{ route("contacts.search") }}', window.location.origin);
-            
-            // Always add search parameter, even if empty (to ensure backend processes the request correctly)
             url.searchParams.append('q', searchTerm);
-            
-            // Add group parameter if a specific group is selected
             if (selectedGroup && selectedGroup !== 'all') {
                 url.searchParams.append('group', selectedGroup);
             }
             
-            console.log('Making request to:', url.toString());
-            
-            // Always make AJAX request to ensure proper filtering
             fetch(url, {
                 method: 'GET',
                 headers: {
@@ -409,9 +265,7 @@
                 },
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+                if (!response.ok) throw new Error('Network response was not ok');
                 return response.text();
             })
             .then(html => {
@@ -420,11 +274,9 @@
                 contactsTableContainer.style.opacity = '1';
                 contactsTableContainer.style.pointerEvents = 'auto';
                 
-                // Reinitialize event listeners for the new content
                 initializeTableEvents();
                 initializeTooltips();
                 
-                // Update URL without page reload (for better UX)
                 const newUrl = new URL(window.location);
                 if (searchTerm) {
                     newUrl.searchParams.set('search', searchTerm);
@@ -444,7 +296,6 @@
                 contactsTableContainer.style.opacity = '1';
                 contactsTableContainer.style.pointerEvents = 'auto';
                 
-                // Show error message
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'alert alert-danger';
                 errorDiv.innerHTML = '<i class="ki-outline ki-information-5 fs-3 me-2"></i>Failed to load contacts. Please try again.';
@@ -453,29 +304,21 @@
             });
         }
         
-        // Search input with debouncing
         searchInput.addEventListener('input', function() {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(performSearch, 300); // 300ms delay
+            searchTimeout = setTimeout(performSearch, 300);
         });
         
-        // Group filter change - Handle both regular select and Select2
         function initializeGroupFilter() {
             if (!groupFilter) return;
-            
-            // For regular select element
             groupFilter.addEventListener('change', function() {
                 performSearch();
             });
             
-            // For Select2 - check if it's initialized and add jQuery event listener
             if (groupFilter.hasAttribute('data-control') && groupFilter.getAttribute('data-control') === 'select2') {
-                // Function to attach Select2 event listener
                 const attachSelect2Listener = () => {
                     if (typeof $ !== 'undefined' && $(groupFilter).hasClass('select2-hidden-accessible')) {
-                        // Remove any existing event listeners to prevent duplicates
                         $(groupFilter).off('change.contactsFilter');
-                        // Add new event listener with namespace
                         $(groupFilter).on('change.contactsFilter', function() {
                             performSearch();
                         });
@@ -483,23 +326,16 @@
                     }
                     return false;
                 };
-                
-                // Try to attach immediately
                 if (!attachSelect2Listener()) {
-                    // If not ready, try again after Select2 initialization
                     setTimeout(attachSelect2Listener, 100);
                     setTimeout(attachSelect2Listener, 500);
-                    setTimeout(attachSelect2Listener, 1000);
                 }
             }
         }
         
-        // Initialize group filter
         initializeGroupFilter();
         
-        // Initialize table events (for both initial load and after AJAX updates)
         function initializeTableEvents() {
-            // Select all checkbox functionality
             const selectAllCheckbox = document.getElementById('selectAllContacts');
             const contactCheckboxes = document.querySelectorAll('.contact-checkbox');
             
@@ -515,8 +351,6 @@
             contactCheckboxes.forEach(checkbox => {
                 checkbox.addEventListener('change', function() {
                     updateSelectedContactsInput();
-                    
-                    // Update select all checkbox state
                     if (selectAllCheckbox) {
                         const allChecked = Array.from(contactCheckboxes).every(cb => cb.checked);
                         const someChecked = Array.from(contactCheckboxes).some(cb => cb.checked);
@@ -527,7 +361,6 @@
             });
         }
         
-        // Update hidden input with selected contact IDs
         function updateSelectedContactsInput() {
             const contactCheckboxes = document.querySelectorAll('.contact-checkbox');
             const selectedIds = Array.from(contactCheckboxes)
@@ -539,7 +372,6 @@
                 selectedContactIdsInput.value = selectedIds.join(',');
             }
             
-            // Auto-select "Export selected" when contacts are checked
             const exportSelected = document.getElementById('exportSelected');
             const exportAll = document.getElementById('exportAll');
             if (selectedIds.length > 0 && exportSelected) {
@@ -549,7 +381,6 @@
             }
         }
         
-        // Toggle export options panel with smooth animation
         const exportBtn = document.getElementById('exportContactsBtn');
         const exportOptions = document.getElementById('exportOptions');
         
@@ -560,19 +391,16 @@
                     exportOptions.style.opacity = '0';
                     exportOptions.style.transform = 'translateY(-10px)';
                     
-                    // Smooth fade in animation
                     requestAnimationFrame(() => {
                         exportOptions.style.transition = 'all 0.3s ease-in-out';
                         exportOptions.style.opacity = '1';
                         exportOptions.style.transform = 'translateY(0)';
                     });
                     
-                    // Update button text and icon
-                    exportBtn.innerHTML = '<i class="ki-outline ki-cross fs-2 me-2"></i>Close Options';
+                    exportBtn.innerHTML = '<i class="ki-outline ki-cross fs-3 me-1"></i> Close Options';
                     exportBtn.classList.remove('btn-light-primary');
                     exportBtn.classList.add('btn-light-danger');
                 } else {
-                    // Smooth fade out animation
                     exportOptions.style.transition = 'all 0.3s ease-in-out';
                     exportOptions.style.opacity = '0';
                     exportOptions.style.transform = 'translateY(-10px)';
@@ -581,21 +409,16 @@
                         exportOptions.style.display = 'none';
                     }, 300);
                     
-                    // Reset button text and icon
-                    exportBtn.innerHTML = '<i class="ki-outline ki-setting-3 fs-2 me-2"></i>Export Options';
+                    exportBtn.innerHTML = '<i class="ki-outline ki-setting-3 fs-3 me-1"></i> Export Options';
                     exportBtn.classList.remove('btn-light-danger');
                     exportBtn.classList.add('btn-light-primary');
                 }
             });
         }
         
-        // Initialize table events on page load
         initializeTableEvents();
         
-        // Enhanced clear search functionality
         const clearSearchBtn = document.getElementById('clearSearchBtn');
-        
-        // Show/hide clear button based on input content
         function toggleClearButton() {
             if (searchInput.value.trim()) {
                 clearSearchBtn.classList.add('show');
@@ -604,7 +427,6 @@
             }
         }
         
-        // Search input event listeners
         searchInput.addEventListener('input', function() {
             toggleClearButton();
             clearTimeout(searchTimeout);
@@ -618,28 +440,20 @@
             performSearch();
         });
         
-        // Initialize clear button state
         toggleClearButton();
         
-        // Global function to clear all filters (accessible from empty state)
         window.clearFilters = function() {
             searchInput.value = '';
-            
-            // Clear group filter - handle both regular select and Select2
             if (groupFilter) {
                 groupFilter.value = 'all';
-                
-                // If it's a Select2 element, update it properly
                 if (typeof $ !== 'undefined' && $(groupFilter).hasClass('select2-hidden-accessible')) {
                     $(groupFilter).val('all').trigger('change');
                 }
             }
-            
             toggleClearButton();
             performSearch();
         };
         
-        // Initialize tooltips for dynamically loaded content
         function initializeTooltips() {
             const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -647,7 +461,6 @@
             });
         }
         
-        // Initialize tooltips on page load
         initializeTooltips();
     });
 </script>

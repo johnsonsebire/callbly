@@ -1,107 +1,139 @@
 @extends('layouts.master')
 
+@section('title', 'Purchase SMS Credits')
+
 @section('content')
 <div class="app-main flex-column flex-row-fluid">
-    <!--begin::Content wrapper-->
     <div class="d-flex flex-column flex-column-fluid">
-        <!--begin::Content-->
         <div id="kt_app_content" class="app-content flex-column-fluid">
-            <!--begin::Content container-->
             <div id="kt_app_content_container" class="app-container container-fluid">
-                <!-- Header Section -->
-                <div class="card mb-5 mb-xl-8">
-                    <div class="card-body pt-9 pb-0">
-                        <div class="d-flex flex-wrap flex-sm-nowrap">
-                            <div class="me-7 mb-4">
-                                <div class="symbol symbol-100px symbol-lg-160px symbol-fixed position-relative">
-                                    <div class="symbol-label bg-light-primary text-primary fs-2 fw-bold">
-                                        <i class="ki-outline ki-message-text-2 fs-1"></i>
+                
+                <!-- Welcome Banner Hero Card -->
+                <div class="card mb-5 mb-xl-8 border-0 shadow-lg overflow-hidden" style="background: linear-gradient(135deg, #090d16 0%, #0f172a 50%, #1e293b 100%);">
+                    <div class="card-body p-6 sm:p-8 text-white relative">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-6">
+                            <div class="d-flex align-items-center gap-4">
+                                <div class="symbol symbol-60px symbol-lg-75px symbol-circle border border-2 border-cyan-400/40 p-1 shadow-inner" style="background: rgba(14, 165, 233, 0.15);">
+                                    <div class="symbol-label font-extrabold text-cyan-400 fs-1 rounded-circle" style="background: #0ea5e9; color: #ffffff;">
+                                        <i class="ki-outline ki-plus-square fs-2x text-white"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <h1 class="text-white font-extrabold fs-2x mb-0">Purchase SMS Credits</h1>
+                                        <span class="badge badge-light-primary fs-8 font-bold px-2.5 py-1">Top-Up Engine</span>
+                                    </div>
+                                    <div class="d-flex flex-wrap align-items-center gap-4 text-gray-400 fs-7 mt-2">
+                                        <span class="d-flex align-items-center">
+                                            <i class="ki-outline ki-wallet fs-5 me-1 text-primary"></i>
+                                            Balance: <strong class="text-white ms-1 me-2">{{ number_format(auth()->user()->sms_credits) }} credits</strong>
+                                        </span>
+                                        <span>•</span>
+                                        <span class="d-flex align-items-center">
+                                            <i class="ki-outline ki-tag fs-5 me-1 text-success"></i>
+                                            Rate: <strong class="text-white ms-1 me-2">{{ auth()->user()->currency->symbol }}{{ number_format(auth()->user()->getSmsRate(), 3) }}/SMS</strong>
+                                        </span>
+                                        <span>•</span>
+                                        <span class="d-flex align-items-center">
+                                            <i class="ki-outline ki-badge fs-5 me-1 text-info"></i>
+                                            Tier: <strong class="text-white ms-1">{{ auth()->user()->billingTier->name }}</strong>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-start flex-wrap mb-2">
-                                    <div class="d-flex flex-column">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <h2 class="text-gray-900 fs-2 fw-bold me-1">SMS Credits</h2>
-                                        </div>
-                                        <div class="d-flex flex-wrap fw-semibold fs-6 mb-4 pe-2">
-                                            <span class="d-flex align-items-center text-muted me-5 mb-2">
-                                                <i class="ki-outline ki-wallet fs-4 me-1"></i>
-                                                Current Balance: <span class="fw-bold text-primary ms-1">{{ auth()->user()->sms_credits }} credits</span>
-                                            </span>
-                                            <span class="d-flex align-items-center text-muted mb-2">
-                                                <i class="ki-outline ki-tag fs-4 me-1"></i>
-                                                Tier: <span class="fw-bold text-primary ms-1">{{ auth()->user()->billingTier->name }}</span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex my-4">
-                                        <a href="{{ route('sms.billing-tier') }}" class="btn btn-sm btn-light-primary">
-                                            <i class="ki-outline ki-dollar fs-3"></i>
-                                            View Billing Tiers
-                                        </a>
-                                    </div>
-                                </div>
+                            
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="{{ route('wallet.purchase-sms') }}" class="btn btn-primary btn-sm px-4 shadow-sm">
+                                    <i class="ki-outline ki-wallet me-1 fs-5"></i> Buy with Wallet Balance
+                                </a>
+                                <a href="{{ route('sms.billing-tier') }}" class="btn btn-outline btn-outline-secondary text-gray-300 btn-sm px-4">
+                                    <i class="ki-outline ki-tag me-1 fs-5"></i> View Billing Tiers
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 @if(session('success'))
-                    <div class="alert alert-success mb-5">
-                        {{ session('success') }}
+                    <div class="alert alert-success d-flex align-items-center p-4 mb-5 rounded-3 shadow-xs">
+                        <i class="ki-outline ki-check-circle fs-2x text-success me-3"></i>
+                        <span class="font-bold text-gray-800 fs-6">{{ session('success') }}</span>
                     </div>
                 @endif
-
                 @if(session('error'))
-                    <div class="alert alert-danger mb-5">
-                        {{ session('error') }}
+                    <div class="alert alert-danger d-flex align-items-center p-4 mb-5 rounded-3 shadow-xs">
+                        <i class="ki-outline ki-cross-circle fs-2x text-danger me-3"></i>
+                        <span class="font-bold text-gray-800 fs-6">{{ session('error') }}</span>
                     </div>
                 @endif
 
-                <div class="alert alert-primary d-flex align-items-center p-5 mb-5">
-                    <i class="ki-outline ki-information-5 fs-2tx text-primary me-4"></i>
-                    <div class="d-flex flex-column">
-                        <h4 class="mb-1 text-primary">Current Billing Tier: {{ auth()->user()->billingTier->name }}</h4>
-                        <span>SMS Rate: <strong>{{ auth()->user()->currency->symbol }}{{ number_format(auth()->user()->getSmsRate(), 3) }}</strong> per SMS in {{ auth()->user()->currency->code }}</span>
-                        <span class="mt-2">You can purchase credits in two ways:</span>
-                        <ul class="mb-0">
-                            <li>Direct payment via Paystack using the packages below</li>
-                            <li>Using your wallet balance - <a href="{{ route('wallet.purchase-sms') }}" class="fw-bold">Click here to buy with wallet</a></li>
-                        </ul>
-                        <span class="mt-2">Purchase more credits at once to qualify for better pricing tiers. <a href="{{ route('sms.billing-tier') }}" class="fw-bold">View all tiers</a></span>
+                <!-- Payment Methods Info Callout -->
+                <div class="card border-0 shadow-sm mb-6 rounded-3 bg-light-primary border-start border-4 border-primary">
+                    <div class="card-body p-5 d-flex align-items-start gap-4">
+                        <i class="ki-outline ki-information-5 fs-2hx text-primary mt-1"></i>
+                        <div class="flex-grow-1">
+                            <h4 class="text-gray-900 font-bold fs-6 mb-1">Flexible Purchase Methods</h4>
+                            <p class="text-gray-700 fs-7 mb-2">Refill your SMS credits instantly via direct online checkout or deduction from your Prepaid Wallet.</p>
+                            <div class="d-flex flex-wrap gap-3">
+                                <a href="{{ route('wallet.purchase-sms') }}" class="btn btn-sm btn-primary font-bold shadow-xs px-3">
+                                    <i class="ki-outline ki-wallet me-1 fs-6"></i> Deduct from Wallet Balance
+                                </a>
+                                <a href="{{ route('sms.billing-tier') }}" class="btn btn-sm btn-light-primary font-bold px-3">
+                                    View Tier Rate Discounts &rarr;
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Credit Packages -->
-                <div class="row g-5 g-xl-10 mb-5 mb-xl-10">
+                @push('styles')
+                <style>
+                    .pkg-card {
+                        background: #ffffff;
+                        border-radius: 1.25rem !important;
+                        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+                        position: relative;
+                        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04) !important;
+                        border: 1px solid rgba(0, 0, 0, 0.04) !important;
+                    }
+                    
+                    [data-bs-theme="dark"] .pkg-card {
+                        background: #1e1e2d !important;
+                        border-color: rgba(255, 255, 255, 0.06) !important;
+                        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25) !important;
+                    }
+                    
+                    .pkg-card:hover {
+                        transform: translateY(-4px) !important;
+                        box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.08) !important;
+                    }
+                </style>
+                @endpush
+
+                <!-- Packages Row -->
+                <div class="row g-5 g-xl-6 mb-6">
                     <!-- Basic Package -->
                     <div class="col-md-4">
-                        <div class="card card-flush h-md-100">
-                            <div class="card-header ribbon ribbon-top">
-                                <div class="ribbon-label bg-primary">
-                                    Popular
+                        <div class="card pkg-card h-100 overflow-hidden" style="border-top: 4px solid #0284c7 !important;">
+                            <div class="card-body p-6 text-center d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center justify-content-between mb-4">
+                                        <span class="text-gray-500 font-bold fs-8 uppercase tracking-wider">Starter Package</span>
+                                        <span class="badge badge-light-primary font-bold fs-8 px-2.5 py-1 rounded-pill">Popular</span>
+                                    </div>
+                                    <h3 class="fs-3hx font-extrabold text-gray-900 mb-2">{{ auth()->user()->formatAmount(50) }}</h3>
+                                    <div class="bg-light-soft rounded-3 p-3 mb-4">
+                                        <span class="fs-2 font-extrabold text-primary d-block">{{ number_format(floor(50 / auth()->user()->getSmsRate())) }}</span>
+                                        <span class="text-gray-500 font-semibold fs-8 uppercase tracking-wider">SMS Credits</span>
+                                    </div>
                                 </div>
-                                <h3 class="card-title">
-                                    <span class="card-label fw-bold text-dark">Basic</span>
-                                </h3>
-                            </div>
-                            <div class="card-body text-center pt-10">
-                                <div class="mb-5">
-                                    <span class="text-dark fw-bold fs-2hx">{{ auth()->user()->formatAmount(50) }}</span>
-                                </div>
-                                <div class="fs-6 text-muted mb-5">This package gives you approximately 
-                                    <span class="text-dark fw-bold">{{ floor(50 / auth()->user()->getSmsRate()) }}</span> 
-                                    SMS credits at your current rate.
-                                </div>
-                                <div class="d-flex justify-content-center">
+                                <div>
                                     <form action="{{ route('payment.initiate') }}" method="POST">
                                         @csrf
                                         <input type="hidden" name="amount" value="50">
                                         <input type="hidden" name="product_type" value="sms_credits">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="ki-outline ki-credit-cart fs-2 me-2"></i>Buy Now
+                                        <button type="submit" class="btn btn-primary font-bold w-100 py-3 shadow-sm">
+                                            <i class="ki-outline ki-credit-cart fs-4 me-2"></i>Buy Starter Package
                                         </button>
                                     </form>
                                 </div>
@@ -111,30 +143,26 @@
 
                     <!-- Standard Package -->
                     <div class="col-md-4">
-                        <div class="card card-flush border border-2 border-primary h-md-100">
-                            <div class="card-header ribbon ribbon-top">
-                                <div class="ribbon-label bg-success">
-                                    Best Value
+                        <div class="card pkg-card h-100 overflow-hidden" style="border-top: 4px solid #10b981 !important;">
+                            <div class="card-body p-6 text-center d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center justify-content-between mb-4">
+                                        <span class="text-gray-500 font-bold fs-8 uppercase tracking-wider">Growth Package</span>
+                                        <span class="badge badge-light-success font-bold fs-8 px-2.5 py-1 rounded-pill">Best Value</span>
+                                    </div>
+                                    <h3 class="fs-3hx font-extrabold text-gray-900 mb-2">{{ auth()->user()->formatAmount(100) }}</h3>
+                                    <div class="bg-light-soft rounded-3 p-3 mb-4">
+                                        <span class="fs-2 font-extrabold text-success d-block">{{ number_format(floor(100 / auth()->user()->getSmsRate())) }}</span>
+                                        <span class="text-gray-500 font-semibold fs-8 uppercase tracking-wider">SMS Credits</span>
+                                    </div>
                                 </div>
-                                <h3 class="card-title">
-                                    <span class="card-label fw-bold text-dark">Standard</span>
-                                </h3>
-                            </div>
-                            <div class="card-body text-center pt-10">
-                                <div class="mb-5">
-                                    <span class="text-primary fw-bold fs-2hx">{{ auth()->user()->formatAmount(100) }}</span>
-                                </div>
-                                <div class="fs-6 text-muted mb-5">This package gives you approximately 
-                                    <span class="text-dark fw-bold">{{ floor(100 / auth()->user()->getSmsRate()) }}</span> 
-                                    SMS credits at your current rate.
-                                </div>
-                                <div class="d-flex justify-content-center">
+                                <div>
                                     <form action="{{ route('payment.initiate') }}" method="POST">
                                         @csrf
                                         <input type="hidden" name="amount" value="100">
                                         <input type="hidden" name="product_type" value="sms_credits">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="ki-outline ki-credit-cart fs-2 me-2"></i>Buy Now
+                                        <button type="submit" class="btn btn-success font-bold text-white w-100 py-3 shadow-sm">
+                                            <i class="ki-outline ki-credit-cart fs-4 me-2"></i>Buy Growth Package
                                         </button>
                                     </form>
                                 </div>
@@ -144,31 +172,26 @@
 
                     <!-- Premium Package -->
                     <div class="col-md-4">
-                        <div class="card card-flush h-md-100">
-                            <div class="card-header">
-                                <h3 class="card-title">
-                                    <span class="card-label fw-bold text-dark">Premium</span>
-                                </h3>
-                            </div>
-                            <div class="card-body text-center pt-10">
-                                <div class="mb-5">
-                                    <span class="text-dark fw-bold fs-2hx">{{ auth()->user()->formatAmount(250) }}</span>
+                        <div class="card pkg-card h-100 overflow-hidden" style="border-top: 4px solid #8b5cf6 !important;">
+                            <div class="card-body p-6 text-center d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center justify-content-between mb-4">
+                                        <span class="text-gray-500 font-bold fs-8 uppercase tracking-wider">Volume Package</span>
+                                        <span class="badge badge-light-info font-bold fs-8 px-2.5 py-1 rounded-pill">Tier Upgrade</span>
+                                    </div>
+                                    <h3 class="fs-3hx font-extrabold text-gray-900 mb-2">{{ auth()->user()->formatAmount(250) }}</h3>
+                                    <div class="bg-light-soft rounded-3 p-3 mb-4">
+                                        <span class="fs-2 font-extrabold text-info d-block">{{ number_format(floor(250 / auth()->user()->getSmsRate())) }}</span>
+                                        <span class="text-gray-500 font-semibold fs-8 uppercase tracking-wider">SMS Credits</span>
+                                    </div>
                                 </div>
-                                <div class="fs-6 text-muted mb-5">This package gives you approximately 
-                                    <span class="text-dark fw-bold">{{ floor(250 / auth()->user()->getSmsRate()) }}</span> 
-                                    SMS credits at your current rate.
-                                </div>
-                                <div class="badge badge-light-success fs-7 fw-semibold mb-5">
-                                    <i class="ki-outline ki-arrow-up fs-7 me-1"></i>
-                                    May qualify for better billing tier!
-                                </div>
-                                <div class="d-flex justify-content-center">
+                                <div>
                                     <form action="{{ route('payment.initiate') }}" method="POST">
                                         @csrf
                                         <input type="hidden" name="amount" value="250">
                                         <input type="hidden" name="product_type" value="sms_credits">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="ki-outline ki-credit-cart fs-2 me-2"></i>Buy Now
+                                        <button type="submit" class="btn btn-info font-bold text-white w-100 py-3 shadow-sm">
+                                            <i class="ki-outline ki-credit-cart fs-4 me-2"></i>Buy Volume Package
                                         </button>
                                     </form>
                                 </div>
@@ -177,143 +200,120 @@
                     </div>
                 </div>
 
-                <!-- Custom Amount -->
-                <div class="card card-flush h-lg-100 mb-5 mb-xl-10">
-                    <div class="card-header pt-5">
-                        <h3 class="card-title align-items-start flex-column">
-                            <span class="card-label fw-bold text-dark">Custom Amount</span>
-                            <span class="text-gray-400 mt-1 fw-semibold fs-6">Purchase a specific amount of SMS credits</span>
+                <!-- Custom Amount Section -->
+                <div class="card border-0 shadow-sm overflow-hidden mb-6" style="border-top: 4px solid #0284c7 !important; border-radius: 1.25rem;">
+                    <div class="card-header pt-6 pb-2 border-0">
+                        <h3 class="card-title flex-column">
+                            <span class="card-label font-bold text-gray-900 fs-4">Custom Amount Top-Up</span>
+                            <span class="text-gray-400 mt-1 fs-7">Enter a custom refill value to calculate exact credits</span>
                         </h3>
                     </div>
-                    <div class="card-body pt-6">
+                    <div class="card-body pt-4">
                         <form action="{{ route('payment.initiate') }}" method="POST">
                             @csrf
                             <input type="hidden" name="product_type" value="sms_credits">
                             
-                            <div class="row mb-6">
-                                <label class="col-lg-3 col-form-label fw-semibold fs-6">Enter amount in {{ auth()->user()->currency->code }}</label>
+                            <div class="row align-items-center mb-6">
+                                <label for="custom_amount" class="col-lg-3 col-form-label font-bold text-gray-800 fs-6">Amount in {{ auth()->user()->currency->code }}</label>
                                 <div class="col-lg-9">
                                     <div class="input-group input-group-solid">
-                                        <span class="input-group-text">{{ auth()->user()->currency->symbol }}</span>
-                                        <input type="text" name="amount" id="custom_amount" class="form-control form-control-solid" 
+                                        <span class="input-group-text font-bold text-gray-700">{{ auth()->user()->currency->symbol }}</span>
+                                        <input type="text" name="amount" id="custom_amount" class="form-control form-control-solid font-bold fs-5" 
                                             placeholder="0.00" required>
-                                        <span class="input-group-text">{{ auth()->user()->currency->code }}</span>
+                                        <span class="input-group-text font-bold text-gray-700">{{ auth()->user()->currency->code }}</span>
                                     </div>
-                                    <div class="form-text" id="estimated-credits">Enter an amount to see estimated credits</div>
+                                    <div class="form-text font-semibold text-primary mt-2" id="estimated-credits">Enter an amount to see estimated credits</div>
                                 </div>
                             </div>
                             
                             <div class="d-flex justify-content-end">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="ki-outline ki-credit-cart fs-3 me-2"></i>Proceed to Payment
+                                <button type="submit" class="btn btn-primary font-bold px-6 py-3 shadow-sm">
+                                    <i class="ki-outline ki-credit-cart fs-3 me-2"></i>Proceed to Checkout
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
 
-                <!-- Payment Information -->
-                <div class="card card-flush shadow-sm h-lg-100 mb-5 mb-xl-10">
-                    <div class="card-header pt-5">
-                        <h3 class="card-title align-items-start flex-column">
-                            <span class="card-label fw-bold text-dark">Payment Information</span>
-                            <span class="text-gray-400 mt-1 fw-semibold fs-6">Important details about your purchase</span>
-                        </h3>
-                    </div>
-                    <div class="card-body pt-6">
-                        <div class="row g-5">
-                            <div class="col-md-6">
-                                <div class="bg-light-primary rounded p-6 mb-5">
-                                    <div class="d-flex align-items-center mb-4">
-                                        <div class="symbol symbol-45px me-5">
-                                            <span class="symbol-label bg-primary">
-                                                <i class="ki-outline ki-shield-tick fs-2 text-white"></i>
-                                            </span>
-                                        </div>
-                                        <div class="d-flex flex-column">
-                                            <h4 class="mb-1 text-dark">Secure Transactions</h4>
-                                            <span class="text-muted fw-semibold">Payments securely processed via Paystack</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="bg-light-success rounded p-6">
-                                    <div class="d-flex align-items-center">
-                                        <div class="symbol symbol-45px me-5">
-                                            <span class="symbol-label bg-success">
-                                                <i class="ki-outline ki-timer fs-2 text-white"></i>
-                                            </span>
-                                        </div>
-                                        <div class="d-flex flex-column">
-                                            <h4 class="mb-1 text-dark">Instant Credit</h4>
-                                            <span class="text-muted fw-semibold">Credits added to your account immediately</span>
-                                        </div>
-                                    </div>
-                                </div>
+                <!-- Payment Trust Features Grid -->
+                <div class="row g-4 mb-6">
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="bg-white p-5 rounded-3 border border-gray-200 shadow-xs h-100 d-flex align-items-center gap-4">
+                            <div class="symbol symbol-45px rounded-2xl bg-light-primary d-flex align-items-center justify-content-center">
+                                <i class="ki-outline ki-shield-tick text-primary fs-2x"></i>
                             </div>
-                            <div class="col-md-6">
-                                <div class="bg-light-info rounded p-6 mb-5">
-                                    <div class="d-flex align-items-center mb-4">
-                                        <div class="symbol symbol-45px me-5">
-                                            <span class="symbol-label bg-info">
-                                                <i class="ki-outline ki-discount fs-2 text-white"></i>
-                                            </span>
-                                        </div>
-                                        <div class="d-flex flex-column">
-                                            <h4 class="mb-1 text-dark">Volume Discounts</h4>
-                                            <span class="text-muted fw-semibold">Larger purchases qualify for better rates</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="bg-light-warning rounded p-6">
-                                    <div class="d-flex align-items-center">
-                                        <div class="symbol symbol-45px me-5">
-                                            <span class="symbol-label bg-warning">
-                                                <i class="ki-outline ki-calendar-tick fs-2 text-white"></i>
-                                            </span>
-                                        </div>
-                                        <div class="d-flex flex-column">
-                                            <h4 class="mb-1 text-dark">No Expiration</h4>
-                                            <span class="text-muted fw-semibold">Your SMS credits never expire</span>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div>
+                                <h4 class="text-gray-900 font-bold fs-6 mb-0.5">Secure Checkout</h4>
+                                <span class="text-gray-500 fs-8 font-medium">Processed via Paystack encryption</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="bg-white p-5 rounded-3 border border-gray-200 shadow-xs h-100 d-flex align-items-center gap-4">
+                            <div class="symbol symbol-45px rounded-2xl bg-light-success d-flex align-items-center justify-content-center">
+                                <i class="ki-outline ki-timer text-success fs-2x"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-gray-900 font-bold fs-6 mb-0.5">Instant Refill</h4>
+                                <span class="text-gray-500 fs-8 font-medium">Credits added to account live</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="bg-white p-5 rounded-3 border border-gray-200 shadow-xs h-100 d-flex align-items-center gap-4">
+                            <div class="symbol symbol-45px rounded-2xl bg-light-info d-flex align-items-center justify-content-center">
+                                <i class="ki-outline ki-discount text-info fs-2x"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-gray-900 font-bold fs-6 mb-0.5">Volume Tiers</h4>
+                                <span class="text-gray-500 fs-8 font-medium">Higher top-ups qualify for lower rates</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="bg-white p-5 rounded-3 border border-gray-200 shadow-xs h-100 d-flex align-items-center gap-4">
+                            <div class="symbol symbol-45px rounded-2xl bg-light-warning d-flex align-items-center justify-content-center">
+                                <i class="ki-outline ki-calendar-tick text-warning fs-2x"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-gray-900 font-bold fs-6 mb-0.5">No Expiration</h4>
+                                <span class="text-gray-500 fs-8 font-medium">SMS credits never expire</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="d-flex flex-stack flex-wrap pt-10">
-                    <div class="fs-6 fw-semibold text-gray-700">Need assistance? <a href="#" class="link-primary fw-bold">Contact our support team</a></div>
-                </div>
             </div>
-            <!--end::Content container-->
         </div>
-        <!--end::Content-->
     </div>
-    <!--end::Content wrapper-->
 </div>
+@endsection
 
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const customAmountInput = document.getElementById('custom_amount');
         const estimatedCreditsText = document.getElementById('estimated-credits');
         const smsRate = {{ auth()->user()->getSmsRate() }};
         
-        customAmountInput.addEventListener('input', function(e) {
-            const amount = parseFloat(e.target.value) || 0;
-            const estimatedCredits = Math.floor(amount / smsRate);
-            
-            if (amount > 0) {
-                estimatedCreditsText.textContent = `This will give you approximately ${estimatedCredits} SMS credits at your current rate.`;
-                if (amount >= 250) {
-                    estimatedCreditsText.innerHTML += ' <span class="text-success"><i class="ki-outline ki-arrow-up"></i> This purchase may qualify you for a better rate!</span>';
+        if (customAmountInput) {
+            customAmountInput.addEventListener('input', function(e) {
+                const amount = parseFloat(e.target.value) || 0;
+                const estimatedCredits = Math.floor(amount / smsRate);
+                
+                if (amount > 0) {
+                    estimatedCreditsText.textContent = `This will give you approximately ${estimatedCredits.toLocaleString()} SMS credits at your current rate.`;
+                    if (amount >= 250) {
+                        estimatedCreditsText.innerHTML += ' <span class="text-success font-bold"><i class="ki-outline ki-arrow-up"></i> Purchase qualifies for volume rate tier!</span>';
+                    }
+                } else {
+                    estimatedCreditsText.textContent = 'Enter an amount to see estimated credits';
                 }
-            } else {
-                estimatedCreditsText.textContent = 'Enter an amount to see estimated credits';
-            }
-        });
+            });
+        }
     });
 </script>
-@endsection
+@endpush

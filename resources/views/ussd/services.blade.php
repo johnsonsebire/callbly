@@ -1,85 +1,77 @@
 @extends('layouts.master')
 
+@section('title', 'USSD Shortcode Services')
+
 @section('content')
 <div class="app-main flex-column flex-row-fluid">
-    <!--begin::Content wrapper-->
     <div class="d-flex flex-column flex-column-fluid">
-        <!--begin::Content-->
         <div id="kt_app_content" class="app-content flex-column-fluid">
-            <!--begin::Content container-->
             <div id="kt_app_content_container" class="app-container container-fluid">
-                <!-- Header Section -->
-                <div class="card mb-5 mb-xl-8">
-                    <div class="card-body pt-9 pb-0">
-                        <div class="d-flex flex-wrap flex-sm-nowrap">
-                            <div class="me-7 mb-4">
-                                <div class="symbol symbol-100px symbol-lg-160px symbol-fixed position-relative">
-                                    <div class="symbol-label bg-light-primary text-primary fs-2 fw-bold">
-                                        <i class="ki-outline ki-call fs-1"></i>
+                
+                <!-- Welcome Banner Hero Card -->
+                <div class="card mb-5 mb-xl-8 border-0 shadow-lg overflow-hidden" style="background: linear-gradient(135deg, #090d16 0%, #0f172a 50%, #1e293b 100%);">
+                    <div class="card-body p-6 sm:p-8 text-white relative">
+                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-6">
+                            <div class="d-flex align-items-center gap-4">
+                                <div class="symbol symbol-60px symbol-lg-75px symbol-circle border border-2 border-cyan-400/40 p-1 shadow-inner" style="background: rgba(14, 165, 233, 0.15);">
+                                    <div class="symbol-label font-extrabold text-cyan-400 fs-1 rounded-circle" style="background: #0ea5e9; color: #ffffff;">
+                                        <i class="ki-outline ki-phone fs-2x text-white"></i>
                                     </div>
+                                </div>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <h1 class="text-white font-extrabold fs-2x mb-0">USSD Shortcode Services</h1>
+                                        <span class="badge badge-light-primary fs-8 font-bold px-2.5 py-1">Interactive Gateways</span>
+                                    </div>
+                                    <p class="text-gray-400 fs-7 mb-0">Manage registered mobile shortcodes, interactive menu handlers, and live gateway statuses.</p>
                                 </div>
                             </div>
-                            <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-start flex-wrap mb-2">
-                                    <div class="d-flex flex-column">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <h2 class="text-gray-900 fs-2 fw-bold me-1">USSD Services</h2>
-                                        </div>
-                                        <div class="d-flex flex-wrap fw-semibold fs-6 mb-4 pe-2">
-                                            <span class="d-flex align-items-center text-muted me-5 mb-2">
-                                                <i class="ki-outline ki-calendar fs-4 me-1"></i>
-                                                {{ now()->format('F d, Y') }}
-                                            </span>
-                                            <span class="d-flex align-items-center text-muted mb-2">
-                                                <i class="ki-outline ki-compass fs-4 me-1"></i>
-                                                Manage your USSD services
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex my-4">
-                                        <a href="{{ route('ussd.analytics') }}" class="btn btn-sm btn-light-primary me-2">
-                                            <i class="ki-outline ki-chart fs-3"></i>
-                                            View Analytics
-                                        </a>
-                                        <a href="{{ route('ussd.create') }}" class="btn btn-sm btn-primary">
-                                            <i class="ki-outline ki-plus-square fs-3"></i>
-                                            Create New Service
-                                        </a>
-                                    </div>
-                                </div>
+                            
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="{{ route('ussd.create') }}" class="btn btn-primary btn-sm px-4 shadow-sm">
+                                    <i class="ki-outline ki-plus me-1 fs-5"></i> Create Service
+                                </a>
+                                <a href="{{ route('ussd.analytics') }}" class="btn btn-light-primary btn-sm px-4">
+                                    <i class="ki-outline ki-chart-line-up me-1 fs-5"></i> View Analytics
+                                </a>
+                                <a href="{{ route('ussd.dashboard') }}" class="btn btn-outline btn-outline-secondary text-gray-300 btn-sm px-4">
+                                    <i class="ki-outline ki-element-11 me-1 fs-5"></i> USSD Console
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Services List -->
-                <div class="card card-flush h-lg-100">
-                    <div class="card-header pt-5">
-                        <h3 class="card-title align-items-start flex-column">
-                            <span class="card-label fw-bold text-dark">Your USSD Services</span>
-                            <span class="text-gray-400 mt-1 fw-semibold fs-6">List of all your registered USSD services</span>
+                <!-- Main Services Card -->
+                <div class="card border-0 shadow-sm overflow-hidden mb-5 mb-xl-8" style="border-top: 4px solid #0284c7 !important; border-radius: 1.25rem;">
+                    <div class="card-header pt-6 pb-2 border-0">
+                        <h3 class="card-title flex-column">
+                            <span class="card-label font-bold text-gray-900 fs-3">Registered USSD Shortcodes</span>
+                            <span class="text-gray-400 mt-1 fs-7">Active mobile shortcodes connected to your gateway handlers</span>
                         </h3>
                     </div>
-                    <div class="card-body pt-6">
+                    <div class="card-body pt-4">
                         @if($services->isEmpty())
-                            <div class="text-center py-10">
-                                <div class="d-flex flex-column align-items-center">
-                                    <i class="ki-outline ki-call fs-3x text-gray-300 mb-5"></i>
-                                    <span class="text-gray-600 fs-5 fw-semibold">You haven't created any USSD services yet</span>
-                                    <span class="text-gray-400 fs-7 mb-5">Start by creating your first USSD service</span>
-                                    <a href="{{ route('ussd.create') }}" class="btn btn-primary">Create Your First Service</a>
+                            <div class="text-center py-12">
+                                <div class="symbol symbol-70px symbol-circle bg-light-primary mb-4 p-3">
+                                    <i class="ki-outline ki-phone fs-3hx text-primary"></i>
                                 </div>
+                                <h3 class="fs-2 font-extrabold text-gray-900 mb-2">No Services Configured</h3>
+                                <p class="text-gray-400 fs-6 max-w-500px mx-auto mb-6">Build interactive mobile shortcode menus to allow customers to check balances, pay bills, or access portal services.</p>
+                                <a href="{{ route('ussd.create') }}" class="btn btn-primary font-bold px-6 shadow-sm">
+                                    <i class="ki-outline ki-plus fs-4 me-2"></i>Create Your First Service
+                                </a>
                             </div>
                         @else
                             <div class="table-responsive">
-                                <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4">
+                                <table class="table table-row-dashed table-row-gray-200 align-middle gs-0 gy-4">
                                     <thead>
-                                        <tr class="fw-bold text-muted">
-                                            <th class="min-w-150px">Service Name</th>
-                                            <th class="min-w-120px">Shortcode</th>
-                                            <th class="min-w-100px">Status</th>
-                                            <th class="min-w-120px">Created Date</th>
-                                            <th class="min-w-100px text-end">Actions</th>
+                                        <tr class="fw-bold text-gray-400 fs-7 uppercase">
+                                            <th class="min-w-180px">Service Name</th>
+                                            <th class="min-w-140px">Shortcode Header</th>
+                                            <th class="min-w-110px">Gateway Status</th>
+                                            <th class="min-w-130px">Created Date</th>
+                                            <th class="min-w-120px text-end">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -87,55 +79,81 @@
                                             <tr>
                                                 <td>
                                                     <div class="d-flex align-items-center">
-                                                        <div class="symbol symbol-45px me-3">
-                                                            <span class="symbol-label bg-light-primary">
-                                                                <i class="ki-outline ki-call fs-2 text-primary"></i>
+                                                        <div class="symbol symbol-40px me-3">
+                                                            <span class="symbol-label bg-light-primary text-primary rounded-circle">
+                                                                <i class="ki-outline ki-phone fs-3"></i>
                                                             </span>
                                                         </div>
-                                                        <div class="d-flex justify-content-start flex-column">
-                                                            <span class="text-dark fw-bold text-hover-primary fs-6">{{ $service->name }}</span>
-                                                        </div>
+                                                        <span class="font-bold text-gray-900 fs-6">{{ $service->name }}</span>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <span class="text-dark fw-semibold d-block fs-6">{{ $service->shortcode }}</span>
+                                                    <span class="font-mono text-gray-800 font-bold fs-7 px-2.5 py-1 bg-light-soft rounded-2">
+                                                        {{ $service->shortcode }}
+                                                    </span>
                                                 </td>
                                                 <td>
-                                                    <span class="badge badge-light-{{ $service->status === 'active' ? 'success' : 'warning' }} fs-7 fw-bold">
+                                                    @php
+                                                        $badgeClass = match(strtolower($service->status)) {
+                                                            'active', 'approved' => 'badge-light-success',
+                                                            'pending' => 'badge-light-warning',
+                                                            default => 'badge-light-danger'
+                                                        };
+                                                    @endphp
+                                                    <span class="badge {{ $badgeClass }} font-bold fs-8 px-2.5 py-1 rounded-pill">
                                                         {{ ucfirst($service->status) }}
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <span class="text-muted fw-semibold d-block fs-7">{{ $service->created_at->format('M d, Y') }}</span>
+                                                    <span class="text-gray-800 font-semibold fs-7">{{ $service->created_at->format('M d, Y') }}</span>
                                                 </td>
                                                 <td class="text-end">
-                                                    <a href="{{ route('ussd.edit', $service->id) }}" class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" data-bs-toggle="tooltip" title="Edit">
-                                                        <i class="ki-outline ki-pencil fs-2"></i>
-                                                    </a>
-                                                    <form action="{{ route('ussd.destroy', $service->id) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm" data-bs-toggle="tooltip" title="Delete" onclick="return confirm('Are you sure you want to delete this service?')">
-                                                            <i class="ki-outline ki-trash fs-2"></i>
-                                                        </button>
-                                                    </form>
+                                                    <div class="d-flex justify-content-end align-items-center gap-1">
+                                                        <a href="{{ route('ussd.edit', $service->id) }}" 
+                                                           class="btn btn-sm btn-icon btn-light-primary rounded-circle" 
+                                                           data-bs-toggle="tooltip" 
+                                                           data-bs-placement="top" 
+                                                           title="Edit Service">
+                                                            <i class="ki-outline ki-pencil fs-4"></i>
+                                                        </a>
+                                                        <form action="{{ route('ussd.destroy', $service->id) }}" method="POST" class="d-inline m-0" onsubmit="return confirm('Are you sure you want to delete this service?');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" 
+                                                                    class="btn btn-sm btn-icon btn-light-danger rounded-circle" 
+                                                                    data-bs-toggle="tooltip" 
+                                                                    data-bs-placement="top" 
+                                                                    title="Delete Service">
+                                                                <i class="ki-outline ki-trash fs-4"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="d-flex justify-content-end mt-6">
+                            <div class="d-flex justify-content-center mt-6">
                                 {{ $services->links() }}
                             </div>
                         @endif
                     </div>
                 </div>
+
             </div>
-            <!--end::Content container-->
         </div>
-        <!--end::Content-->
     </div>
-    <!--end::Content wrapper-->
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+@endpush

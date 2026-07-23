@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Log;
 class PaystackService
 {
     protected Client $client;
-    protected string $secretKey;
-    protected string $publicKey;
+    protected ?string $secretKey;
+    protected ?string $publicKey;
     protected string $baseUrl;
 
     /**
@@ -18,9 +18,9 @@ class PaystackService
      */
     public function __construct()
     {
-        $this->secretKey = config('services.paystack.secret_key');
-        $this->publicKey = config('services.paystack.public_key');
-        $this->baseUrl = 'https://api.paystack.co';
+        $this->secretKey = config('services.paystack.secret_key') ?? '';
+        $this->publicKey = config('services.paystack.public_key') ?? '';
+        $this->baseUrl = config('services.paystack.base_url', 'https://api.paystack.co') ?? 'https://api.paystack.co';
         
         $this->client = new Client([
             'base_uri' => $this->baseUrl,

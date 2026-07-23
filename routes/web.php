@@ -206,7 +206,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // USSD Routes
-    Route::middleware(['verified', 'coming.soon:ussd'])->prefix('ussd')->name('ussd.')->group(function () {
+    Route::middleware(['verified'])->prefix('ussd')->name('ussd.')->group(function () {
         Route::get('/', [UssdController::class, 'dashboard'])->name('dashboard');
         Route::get('/services', [UssdController::class, 'services'])->name('services');
         Route::get('/create', [UssdController::class, 'create'])->name('create');
@@ -218,7 +218,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Virtual Numbers Routes
-    Route::middleware(['verified', 'coming.soon:virtual-numbers'])->prefix('virtual-numbers')->name('virtual-numbers.')->group(function () {
+    Route::middleware(['verified'])->prefix('virtual-numbers')->name('virtual-numbers.')->group(function () {
         Route::get('/', [VirtualNumberController::class, 'index'])->name('index');
         Route::get('/browse', [VirtualNumberController::class, 'browse'])->name('browse');
         Route::get('/my-numbers', [VirtualNumberController::class, 'myNumbers'])->name('my-numbers');
@@ -228,7 +228,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Contact Center Routes
-    Route::middleware(['auth', 'verified', 'coming.soon:contact-center'])->prefix('contact-center')->name('contact-center.')->group(function () {
+    Route::middleware(['auth', 'verified'])->prefix('contact-center')->name('contact-center.')->group(function () {
         Route::get('/', [ContactCenterController::class, 'dashboard'])->name('dashboard');
         Route::post('/call', [ContactCenterController::class, 'initiateCall'])->name('initiate-call');
         Route::get('/calls/{id}/recording', [ContactCenterController::class, 'getCallRecording'])->name('call.recording');

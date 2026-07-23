@@ -1147,7 +1147,7 @@
                 </svg>
             </div>
         </div>
-        <p class="demo-caption">Watch how Meridian Health cut their call abandonment rate by 62% in 3 weeks</p>
+        <p class="demo-caption">Watch how healthcare providers cut their call abandonment rate by 62% in 3 weeks</p>
     </section>
     -->
 
@@ -1155,20 +1155,20 @@
     <section class="proof">
         <div class="proof-inner">
             <div class="proof-logos">
-                <span class="proof-logo">Meridian Health</span>
-                <span class="proof-logo">Nordex Financial</span>
-                <span class="proof-logo">Relay Logistics</span>
-                <span class="proof-logo">Canopy Insurance</span>
-                <span class="proof-logo">Arcline Retail</span>
-                <span class="proof-logo">Vertex SaaS</span>
+                <span class="proof-logo">Healthcare</span>
+                <span class="proof-logo">Finance</span>
+                <span class="proof-logo">Logistics</span>
+                <span class="proof-logo">Education</span>
+                <span class="proof-logo">Retail</span>
+                <span class="proof-logo">Technology & SaaS</span>
             </div>
             <div class="proof-testimonial">
-                <p class="proof-quote">"We migrated 400 agents from legacy PBX to Callbly in a weekend. Monday morning, the team didn't even notice the switch: they just noticed calls were clearer."</p>
+                <p class="proof-quote">"Callbly enables us to seamlessly communicate with students on all occasions. From urgent updates to campus announcements, our messages deliver instantly with complete reliability."</p>
                 <div class="proof-author">
-                    <div class="proof-avatar">RL</div>
+                    <div class="proof-avatar">CP</div>
                     <div class="proof-author-info">
-                        <div class="proof-author-name">Rachel Liu</div>
-                        <div class="proof-author-role">VP Operations, Relay Logistics</div>
+                        <div class="proof-author-name">Charles Agyemang Prempeh</div>
+                        <div class="proof-author-role">PNMTC, Dormaa-Ahenkro</div>
                     </div>
                 </div>
             </div>
