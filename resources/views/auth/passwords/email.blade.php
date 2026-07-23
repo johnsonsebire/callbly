@@ -1,30 +1,31 @@
 @extends('layouts.auth')
 
+@section('title', 'Forgot Password')
+
 @section('content')
-<div class="text-center mb-10">
-    <h1 class="text-dark fw-bolder mb-3">Forgot Password</h1>
-    <div class="text-gray-500 fw-semibold fs-6">Enter your email to reset your password</div>
+<div class="text-center mb-8">
+    <h1 class="text-dark dark-text-white fw-bolder fs-2x mb-2">Forgot Password?</h1>
+    <div class="text-gray-500 fw-medium fs-6">Enter your registered email address to receive a password reset link</div>
 </div>
 
 @if (session('status'))
-<div class="alert alert-success d-flex align-items-center p-5 mb-10">
-    <i class="ki-outline ki-shield-tick fs-2hx text-success me-4"></i>
+<div class="alert alert-success d-flex align-items-center p-4 mb-6 rounded-3">
+    <i class="ki-outline ki-shield-tick fs-2x text-success me-3"></i>
     <div class="d-flex flex-column">
-        <h4 class="mb-1 text-success">Success</h4>
-        <span>{{ session('status') }}</span>
+        <h5 class="mb-1 text-success fw-bold">Success</h5>
+        <div class="fs-7 text-gray-700 dark-text-gray-300">{{ session('status') }}</div>
     </div>
-    <button type="button" class="position-absolute position-sm-relative m-2 m-sm-0 top-0 end-0 btn btn-icon ms-sm-auto" data-bs-dismiss="alert">
-        <i class="ki-outline ki-cross fs-2 text-success"></i>
-    </button>
 </div>
 @endif
 
-<form method="POST" action="{{ route('password.email') }}">
+<form method="POST" action="{{ route('password.email') }}" class="form w-100">
     @csrf
 
-    <div class="mb-10">
-        <label for="email" class="form-label fw-bold">{{ __('Email Address') }}</label>
-        <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
+    <div class="mb-6">
+        <label for="email" class="form-label fw-bold text-gray-800 dark-text-gray-200 fs-7">
+            {{ __('Email Address') }} <span class="text-danger">*</span>
+        </label>
+        <input id="email" type="email" class="form-control form-control-solid @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" placeholder="name@company.com" required autocomplete="email" autofocus>
         @error('email')
             <div class="invalid-feedback">
                 {{ $message }}
@@ -32,14 +33,16 @@
         @enderror
     </div>
 
-    <div class="d-grid mb-10">
-        <button type="submit" class="btn btn-primary">
-            {{ __('Send Password Reset Link') }}
+    <div class="d-grid mb-6">
+        <button type="submit" class="btn btn-primary py-3">
+            <span class="indicator-label fs-6">{{ __('Send Reset Link') }}</span>
         </button>
     </div>
 
     <div class="text-center">
-        <a href="{{ route('login') }}" class="link-primary fs-6 fw-bold">{{ __('Back to login') }}</a>
+        <a href="{{ route('login') }}" class="link-primary fs-7 fw-bold flex-center">
+            <i class="ki-outline ki-arrow-left me-1 fs-5"></i> Back to Sign In
+        </a>
     </div>
 </form>
 @endsection

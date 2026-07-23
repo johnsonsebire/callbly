@@ -1,85 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- skill:chrome -->
-<style>
-/* Credit line — bottom-right */
-.design-ui-credit {
-  position: fixed;
-  bottom: 12px;
-  right: 12px;
-  font: 11px/1 system-ui, sans-serif;
-  color: rgba(128,128,128,0.5);
-  pointer-events: none;
-  z-index: 2147483647;
-  transition: opacity 0.4s ease;
-  user-select: none;
-  letter-spacing: 0.02em;
-}
 
-/* Hide chrome on touch devices */
-@media (hover: none) {
-  .design-ui-credit { display: none; }
-}
-
-/* Print fixes */
-@media print {
-  * {
-    transition: none !important;
-    animation: none !important;
-    box-shadow: none !important;
-  }
-  body {
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
-  }
-  .design-ui-credit { display: none !important; }
-}
-
-</style>
-<script>
-(function () {
-    // Design-ui pages are single compositions, so the whole body is editable.
-    function markEditable() {
-        document.body.classList.add('artifact-editable');
-    }
-
-    // Credit badge with idle-fade. Hover devices only.
-    function initChromeUI() {
-        if (!matchMedia('(hover: hover)').matches) return;
-
-        var credit = document.createElement('div');
-        credit.className = 'design-ui-credit';
-        credit.setAttribute('aria-hidden', 'true');
-        credit.innerHTML = '\u{1F49C} by ClickUp Brain';
-        document.body.appendChild(credit);
-
-        var timer = null;
-        var fade = function (out) { credit.style.opacity = out ? '0' : ''; };
-        fade(true);
-        var show = function () {
-            fade(false);
-            clearTimeout(timer);
-            timer = setTimeout(function () { fade(true); }, 3000);
-        };
-        document.addEventListener('mousemove', show);
-        show();
-    }
-
-    function init() {
-        markEditable();
-        initChromeUI();
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-})();
-
-</script>
-<!-- /skill:chrome -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Callbly — Cloud Telephony Platform</title>
@@ -126,6 +48,13 @@
 
         article p { text-wrap: pretty; }
         h1, h2, h3 { text-wrap: balance; }
+
+        /* Smooth scroll */
+        html { scroll-behavior: smooth; }
+
+        section[id] {
+            scroll-margin-top: 68px;
+        }
 
         /* Nav */
         .nav {
@@ -875,21 +804,141 @@
                 font-size: 1.15rem;
             }
         }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 90px 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .cta-card {
+            position: relative;
+            background: radial-gradient(circle at 50% 0%, oklch(22% 0.03 250) 0%, oklch(14% 0.015 250) 100%);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            padding: 72px 48px;
+            text-align: center;
+            overflow: hidden;
+            box-shadow: 0 24px 64px -16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .cta-glow-bg {
+            position: absolute;
+            top: -150px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--glow-primary) 0%, transparent 65%);
+            pointer-events: none;
+            opacity: 0.85;
+        }
+        .cta-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 100px;
+            background: oklch(78% 0.19 250 / 0.1);
+            border: 1px solid oklch(78% 0.19 250 / 0.3);
+            color: var(--neon-primary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+        .cta-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--neon-primary);
+            box-shadow: 0 0 8px var(--neon-primary);
+            animation: pulse 2s infinite;
+        }
+        .cta-title {
+            font-size: clamp(2rem, 4vw, 3.25rem);
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+            color: var(--text-primary);
+            max-width: 820px;
+            margin: 0 auto 20px;
+        }
+        .cta-highlight {
+            background: linear-gradient(135deg, var(--neon-primary) 0%, oklch(85% 0.15 220) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .cta-subtitle {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 640px;
+            margin: 0 auto 40px;
+            line-height: 1.65;
+            font-weight: 350;
+        }
+        .cta-actions {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 36px;
+        }
+        .cta-features-list {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 32px;
+            flex-wrap: wrap;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        .cta-feature-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .cta-check-icon {
+            width: 18px;
+            height: 18px;
+            color: var(--neon-primary);
+        }
+        @media (max-width: 768px) {
+            .cta-card {
+                padding: 48px 24px;
+                border-radius: 20px;
+            }
+            .cta-features-list {
+                gap: 16px;
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
     <!-- Navigation -->
     <nav class="nav">
         <div class="nav-brand">
-            <img src="{{ asset('assets/images/callbly-logo.png') }}" alt="Callbly Logo" style="height: 40px; width: auto; object-fit: contain;">
+            <a href="/" style="display:flex; align-items:center;">
+                <img src="{{ asset('assets/media/logos/callbly-white.png') }}" alt="Callbly Logo" style="height: 40px; width: auto; object-fit: contain;">
+            </a>
         </div>
         <ul class="nav-links">
             <li><a href="#features">Features</a></li>
             <li><a href="#demo">Demo</a></li>
             <li><a href="#pricing">Pricing</a></li>
-            <li><a href="{{ route('api.docs') }}">API Docs</a></li>
+            <li><a href="{{ route('api.docs') }}">Developers</a></li>
         </ul>
-        <a href="{{ route('register') }}" class="nav-cta" style="text-decoration:none; display:inline-block; text-align:center;">Start Free Trial</a>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <a href="{{ route('login') }}" class="btn-secondary" style="text-decoration:none; display:inline-flex; align-items:center; gap: 8px; padding: 10px 20px; font-size: 0.875rem; border-radius: 8px;">
+                <svg style="width: 16px; height: 16px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+                Sign In
+            </a>
+            <a href="{{ route('register') }}" class="nav-cta" style="text-decoration:none; display:inline-block; text-align:center;">Start Free Trial</a>
+        </div>
     </nav>
 
     <!-- Hero -->
@@ -1086,6 +1135,41 @@
         </table>
     </section>
 
+    <!-- Call To Action Section -->
+    <section class="cta-section" id="get-started">
+        <div class="cta-card">
+            <div class="cta-glow-bg"></div>
+            <div class="cta-badge">
+                <span class="cta-badge-dot"></span>
+                Start Sending Today
+            </div>
+            <h2 class="cta-title">
+                Ready to Transform Your <span class="cta-highlight">Business Communication?</span>
+            </h2>
+            <p class="cta-subtitle">
+                Join thousands of businesses using Callbly's cloud telephony solutions to enhance customer interactions and drive growth.
+            </p>
+            <div class="cta-actions">
+                <a href="{{ route('register') }}" class="btn-primary" style="text-decoration:none; display:inline-block; text-align:center;">Get Started Free</a>
+                <a href="{{ route('api.docs') }}" class="btn-secondary" style="text-decoration:none; display:inline-block; text-align:center;">Explore API Docs &rarr;</a>
+            </div>
+            <div class="cta-features-list">
+                <span class="cta-feature-item">
+                    <svg class="cta-check-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                    No credit card required
+                </span>
+                <span class="cta-feature-item">
+                    <svg class="cta-check-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                    Instant API access
+                </span>
+                <span class="cta-feature-item">
+                    <svg class="cta-check-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                    99.99% SLA Uptime
+                </span>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-brand">© 2026 Callbly</div>
@@ -1096,5 +1180,18 @@
             <li><a href="{{ route('api.docs') }}">API Docs</a></li>
         </ul>
     </footer>
+    <script>
+        // Smooth scroll — uses scrollIntoView so scroll-margin-top handles the nav offset precisely
+        document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
+            anchor.addEventListener('click', function (e) {
+                var targetId = this.getAttribute('href').slice(1);
+                var target = document.getElementById(targetId);
+                if (!target) return;
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                history.pushState(null, '', '#' + targetId);
+            });
+        });
+    </script>
 </body>
 </html>

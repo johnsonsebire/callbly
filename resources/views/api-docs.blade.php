@@ -1,275 +1,512 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Callbly API Documentation</title>
+    <title>Callbly API Documentation — Cloud Telephony & SMS API</title>
+    <meta name="description" content="Official REST API documentation for Callbly Cloud Telephony Platform. Integrate SMS, bulk messaging, and wallet management into your apps.">
     
-    <!-- Fonts -->
+    <!-- Fonts: Outfit for brand matching & JetBrains Mono for code -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Prism Syntax Highlighter -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+
+    <!-- Theme Initializer Script (Prevents FOUC) -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('callbly_theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+            } else {
+                document.documentElement.classList.add('light');
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
     
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', '"Liberation Mono"', '"Courier New"', 'monospace'],
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
                     },
                     colors: {
-                        primary: '#10B981', // Emerald 500
-                        primaryHover: '#059669',
-                        dark: '#111827',
-                        terminal: '#0D1117'
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                            glow: 'oklch(78% 0.19 250)',
+                        },
+                        darkSurface: {
+                            0: 'oklch(12% 0.012 250)',
+                            1: 'oklch(16% 0.012 250)',
+                            2: 'oklch(20% 0.012 250)',
+                            3: 'oklch(25% 0.012 250)',
+                        }
                     }
                 }
             }
         }
     </script>
+    
+    <!-- Prism Syntax Highlighter -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    
     <style>
-        body { background-color: #F9FAFB; color: #374151; }
-        .sidebar { height: 100vh; position: sticky; top: 0; }
-        .endpoint-method { 
-            display: inline-block; 
-            padding: 2px 8px; 
-            border-radius: 4px; 
-            font-size: 0.75rem; 
-            font-weight: 600; 
-            margin-right: 8px;
+        :root {
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-sidebar: #ffffff;
+            --border-color: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --text-subtle: #64748b;
+            --brand-primary: #0284c7;
+            --brand-primary-hover: #0369a1;
+            --brand-glow: rgba(2, 132, 199, 0.15);
+            --code-bg: #0f172a;
+            --nav-bg: rgba(255, 255, 255, 0.85);
         }
-        .method-post { background-color: #D1FAE5; color: #065F46; }
-        .method-get { background-color: #DBEAFE; color: #1E40AF; }
-        
-        pre[class*="language-"] {
-            border-radius: 0.5rem;
-            margin-top: 1rem;
-            margin-bottom: 1.5rem;
+
+        html.dark {
+            --bg-main: oklch(12% 0.012 250);
+            --bg-card: oklch(16% 0.014 250);
+            --bg-sidebar: oklch(14% 0.014 250);
+            --border-color: oklch(25% 0.018 250);
+            --text-main: oklch(94% 0.008 250);
+            --text-muted: oklch(72% 0.01 250);
+            --text-subtle: oklch(55% 0.008 250);
+            --brand-primary: oklch(78% 0.19 250);
+            --brand-primary-hover: oklch(85% 0.19 250);
+            --brand-glow: oklch(78% 0.19 250 / 0.25);
+            --code-bg: oklch(9% 0.014 250);
+            --nav-bg: oklch(12% 0.012 250 / 0.85);
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Glassmorphic Navigation */
+        .glass-header {
+            background: var(--nav-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Endpoint Methods */
+        .endpoint-method {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .method-post {
+            background-color: rgba(16, 185, 129, 0.12);
+            color: #059669;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        html.dark .method-post {
+            background-color: rgba(16, 185, 129, 0.2);
+            color: #34d399;
         }
         
-        /* Tabs styles */
+        .method-get {
+            background-color: rgba(14, 165, 233, 0.12);
+            color: #0284c7;
+            border: 1px solid rgba(14, 165, 233, 0.3);
+        }
+        html.dark .method-get {
+            background-color: rgba(56, 189, 248, 0.2);
+            color: #38bdf8;
+        }
+
+        /* Code Container & Tabs */
+        .code-container {
+            background-color: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
         .tab-btn {
-            padding: 8px 16px;
-            font-size: 0.875rem;
+            padding: 10px 16px;
+            font-size: 0.85rem;
             font-weight: 500;
-            color: #9CA3AF;
+            color: #94a3b8;
             border-bottom: 2px solid transparent;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
-        .tab-btn:hover { color: #D1D5DB; }
+        .tab-btn:hover {
+            color: #e2e8f0;
+        }
         .tab-btn.active {
-            color: #10B981;
-            border-bottom-color: #10B981;
+            color: var(--brand-primary);
+            border-bottom-color: var(--brand-primary);
+            font-weight: 600;
         }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
         /* Terminal Window */
         .terminal-output {
-            background-color: #0D1117;
-            color: #58A6FF;
-            font-family: inherit;
-            padding: 1rem;
-            border-radius: 0.375rem;
-            min-height: 120px;
+            background-color: #090d16;
+            color: #38bdf8;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            min-height: 140px;
             white-space: pre-wrap;
             overflow-x: auto;
-            border: 1px solid #30363D;
+            border: 1px solid #1e293b;
+            font-size: 0.85rem;
+            line-height: 1.5;
         }
-        
+
         /* Form Inputs */
         .live-input {
             width: 100%;
-            background-color: #1F2937;
-            border: 1px solid #374151;
-            color: #F3F4F6;
-            padding: 0.5rem;
-            border-radius: 0.375rem;
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.625rem 0.875rem;
+            border-radius: 0.5rem;
             font-size: 0.875rem;
+            transition: all 0.2s ease;
         }
         .live-input:focus {
             outline: none;
-            border-color: #10B981;
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 3px var(--brand-glow);
         }
         .live-label {
             display: block;
             font-size: 0.75rem;
-            color: #9CA3AF;
-            margin-bottom: 0.25rem;
-            font-weight: 500;
+            color: var(--text-subtle);
+            margin-bottom: 0.35rem;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.5);
+        }
+
+        /* Cards and sections */
+        .doc-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Smooth Anchor Scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+        section[id] {
+            scroll-margin-top: 90px;
+        }
     </style>
 </head>
-<body class="antialiased">
+<body class="antialiased selection:bg-brand-500 selection:text-white">
 
-<div class="flex flex-col md:flex-row">
-    
-    <!-- Sidebar -->
-    <aside class="w-full md:w-64 bg-white border-r border-gray-200 sidebar overflow-y-auto hidden md:block">
-        <div class="p-6">
-            <a href="/" class="text-2xl font-bold text-gray-900 tracking-tight flex items-center">
-                <svg class="w-7 h-7 text-primary mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-2h2v2zm0-4H9V7h2v5zm4 4h-2v-2h2v2zm0-4h-2V7h2v5z"/></svg>
-                Callbly
-            </a>
-            <p class="text-sm text-gray-500 mt-1">API Documentation</p>
-        </div>
+<!-- Top Navigation Header -->
+<header class="sticky top-0 z-50 glass-header transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
-        <nav class="px-4 pb-6">
-            <div class="mb-6">
-                <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Getting Started</h3>
-                <div class="mt-2 space-y-1">
-                    <a href="#introduction" class="block px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-primary">Introduction</a>
-                    <a href="#authentication" class="block px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-primary">Authentication</a>
-                </div>
-            </div>
+        <div class="flex items-center space-x-4">
+            <!-- Mobile Menu Toggle Button -->
+            <button id="mobile-menu-btn" onclick="toggleMobileSidebar()" class="md:hidden p-2 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+
+            <!-- Callbly Brand Logo -->
+            <a href="/" class="flex items-center space-x-3 group">
+                <img src="{{ asset('assets/media/logos/callbly logo.png') }}" alt="Callbly Logo" class="h-9 w-auto object-contain transition-transform group-hover:scale-105 dark:hidden">
+                <img src="{{ asset('assets/media/logos/callbly-white.png') }}" alt="Callbly Logo" class="h-9 w-auto object-contain transition-transform group-hover:scale-105 hidden dark:block">
+                <span class="hidden sm:inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900/60 dark:text-brand-300 border border-brand-200 dark:border-brand-700/50">
+                    API Reference v1
+                </span>
+            </a>
+        </div>
+
+        <!-- Navigation Links & Theme Switcher -->
+        <div class="flex items-center space-x-3 sm:space-x-5">
+            <a href="/" class="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors hidden sm:inline-flex items-center">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Main Site
+            </a>
+
+            <a href="/login" class="text-sm font-medium px-3.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors hidden sm:inline-block">
+                Dashboard
+            </a>
+
+            <!-- Theme Toggle Button -->
+            <button id="theme-toggle-btn" onclick="toggleDarkMode()" aria-label="Toggle dark mode" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-all shadow-sm">
+                <!-- Sun Icon (for Dark Mode) -->
+                <svg id="sun-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+                <!-- Moon Icon (for Light Mode) -->
+                <svg id="moon-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+</header>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex">
+    
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 pt-20 pb-10 sidebar overflow-y-auto transform -translate-x-full md:translate-x-0 md:static md:z-auto transition-transform duration-300 ease-in-out md:block flex-shrink-0">
+        <div class="px-6 pb-6">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3">
+                Documentation
+            </h2>
             
-            <div class="mb-6">
-                <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">SMS API</h3>
-                <div class="mt-2 space-y-1">
-                    <a href="#send-single" class="block px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-primary">Send Single SMS</a>
-                    <a href="#send-bulk" class="block px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-primary">Send Bulk SMS</a>
+            <nav class="space-y-6">
+                <div>
+                    <div class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Getting Started</div>
+                    <div class="space-y-1">
+                        <a href="#introduction" class="nav-link block px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 rounded-lg hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-slate-800 dark:hover:text-brand-400 transition-colors">
+                            Introduction
+                        </a>
+                        <a href="#authentication" class="nav-link block px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 rounded-lg hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-slate-800 dark:hover:text-brand-400 transition-colors">
+                            Authentication
+                        </a>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="mb-6">
-                <h3 class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Wallet API</h3>
-                <div class="mt-2 space-y-1">
-                    <a href="#check-balance" class="block px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-50 hover:text-primary">Check Balance</a>
+
+                <div>
+                    <div class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">SMS API</div>
+                    <div class="space-y-1">
+                        <a href="#send-bulk" class="nav-link flex items-center justify-between px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 rounded-lg hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-slate-800 dark:hover:text-brand-400 transition-colors">
+                            <span>Send Bulk SMS</span>
+                            <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.5 rounded">POST</span>
+                        </a>
+                        <a href="#send-single" class="nav-link flex items-center justify-between px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 rounded-lg hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-slate-800 dark:hover:text-brand-400 transition-colors">
+                            <span>Send Single SMS</span>
+                            <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.5 rounded">POST</span>
+                        </a>
+                    </div>
                 </div>
-            </div>
-        </nav>
+
+                <div>
+                    <div class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Wallet API</div>
+                    <div class="space-y-1">
+                        <a href="#check-balance" class="nav-link flex items-center justify-between px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 rounded-lg hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-slate-800 dark:hover:text-brand-400 transition-colors">
+                            <span>Check Balance</span>
+                            <span class="text-[10px] font-bold text-brand-600 dark:text-brand-400 bg-brand-100 dark:bg-brand-950 px-1.5 py-0.5 rounded">GET</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </div>
     </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 max-w-4xl px-4 py-10 mx-auto md:px-8 lg:px-12">
-        
-        <!-- Mobile Header -->
-        <div class="md:hidden flex items-center mb-8 border-b pb-4">
-            <a href="/" class="text-xl font-bold text-gray-900">Callbly API Docs</a>
-        </div>
+    <!-- Overlay for mobile sidebar -->
+    <div id="sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-30 hidden md:hidden"></div>
 
-        <div id="introduction" class="mb-10">
-            <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight mb-4">Callbly API Reference</h1>
-            <p class="text-lg text-gray-600 leading-relaxed mb-6">
-                Welcome to the Callbly API! You can use our REST API to programmatically send SMS messages, check your wallet balance, and manage your account.
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-4xl py-10 px-4 sm:px-6 lg:px-10">
+        
+        <!-- Section: Introduction -->
+        <section id="introduction" class="mb-14">
+            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950/80 border border-brand-200 dark:border-brand-800 text-brand-600 dark:text-brand-400 text-xs font-medium mb-4">
+                <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+                <span>REST API Platform</span>
+            </div>
+            
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4">
+                Callbly API Reference
+            </h1>
+            <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
+                Welcome to the Callbly REST API! Integrate SMS dispatching, broadcast messaging, and real-time wallet verification seamlessly into your web or mobile applications.
             </p>
             
-            <!-- Global API Token configuration for live runner -->
-            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mt-8 mb-6">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0 mt-1">
-                        <svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <!-- Global API Token Playground Card -->
+            <div class="doc-card p-6 border-l-4 border-l-brand-500 shadow-sm">
+                <div class="flex items-start space-x-4">
+                    <div class="p-2 bg-brand-100 dark:bg-brand-900/50 text-brand-600 dark:text-brand-400 rounded-lg flex-shrink-0">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                         </svg>
                     </div>
-                    <div class="ml-4 w-full">
-                        <h3 class="text-lg font-medium text-gray-900">Interactive Playground</h3>
-                        <p class="text-sm text-gray-500 mb-4">Set your API Token here to test the endpoints directly from this page.</p>
+                    <div class="w-full">
+                        <h3 class="text-lg font-bold">Interactive Playground</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                            Enter your API token here to test live requests directly from the documentation.
+                        </p>
                         
                         <div>
-                            <label for="global_api_token" class="block text-sm font-medium text-gray-700 mb-1">Your Bearer Token</label>
-                            <input type="password" id="global_api_token" placeholder="Paste your API token here..." class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm px-4 py-2 border">
-                            <p class="mt-1 text-xs text-gray-500">This token is stored temporarily in your browser's memory and is used when you click "Run Live".</p>
+                            <label for="global_api_token" class="live-label">Your Bearer Token</label>
+                            <div class="relative">
+                                <input type="password" id="global_api_token" placeholder="Paste your API token here..." class="live-input pr-10">
+                                <button type="button" onclick="toggleTokenVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                                    <svg id="eye-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                                Tokens are kept in session memory only and are never saved or sent to external servers.
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <hr class="border-gray-200 mb-12">
+        <hr class="border-slate-200 dark:border-slate-800 my-10">
 
-        <div id="authentication" class="mb-16">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Authentication</h2>
-            <p class="text-md text-gray-600 leading-relaxed mb-4">
-                The Callbly API uses Bearer Tokens to authenticate requests. You can generate and view your API tokens in your Callbly Dashboard under Settings.
+        <!-- Section: Authentication -->
+        <section id="authentication" class="mb-16">
+            <h2 class="text-2xl font-bold tracking-tight mb-4">Authentication</h2>
+            <p class="text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                The Callbly API uses Bearer Tokens to authenticate requests. Manage your tokens inside your Callbly account dashboard under <strong>API Settings</strong>.
             </p>
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-md">
+            
+            <div class="bg-amber-50 dark:bg-amber-950/40 border-l-4 border-amber-500 p-4 mb-6 rounded-r-lg">
                 <div class="flex">
                     <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <svg class="h-5 w-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
                         </svg>
                     </div>
                     <div class="ml-3">
-                        <p class="text-sm text-yellow-700">
-                            Your API tokens carry many privileges, so be sure to keep them secure! Do not share your secret API tokens in publicly accessible areas such as GitHub or client-side code.
+                        <p class="text-sm text-amber-800 dark:text-amber-300">
+                            <strong>Security Warning:</strong> Keep your tokens secure! Never publish secret tokens to public repositories or client-side JavaScript.
                         </p>
                     </div>
                 </div>
             </div>
-            <p class="text-md text-gray-600 leading-relaxed mb-4">
-                All API requests must be made over HTTPS. Calls made over plain HTTP will fail. You must include your token in the <code class="bg-gray-100 text-red-500 px-1 py-0.5 rounded text-sm font-mono">Authorization</code> header.
-            </p>
-<pre><code class="language-http">Authorization: Bearer YOUR_API_TOKEN</code></pre>
-        </div>
 
-        <hr class="border-gray-200 mb-12">
+            <p class="text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                Always send requests over HTTPS. Include your API token in the <code class="bg-slate-100 dark:bg-slate-800 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded text-xs font-mono">Authorization</code> header.
+            </p>
+            
+            <div class="code-container p-4 font-mono text-sm text-slate-200 relative group">
+                <button onclick="copySnippet(this)" class="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1 rounded border border-slate-700 flex items-center">
+                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    Copy
+                </button>
+<pre class="!m-0"><code class="language-http">Authorization: Bearer YOUR_API_TOKEN</code></pre>
+            </div>
+        </section>
+
+        <hr class="border-slate-200 dark:border-slate-800 my-10">
 
         <!-- Endpoint: Send Bulk SMS -->
-        <div id="send-bulk" class="mb-16">
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">Send Bulk SMS</h2>
-            <div class="flex items-center mb-6">
+        <section id="send-bulk" class="mb-16">
+            <h2 class="text-2xl font-bold tracking-tight mb-2">Send Bulk SMS</h2>
+            <div class="flex items-center space-x-3 mb-6">
                 <span class="endpoint-method method-post">POST</span>
-                <code class="text-gray-700 text-sm bg-gray-100 px-2 py-1 rounded border border-gray-200">/api/v1/sms/send-bulk</code>
+                <code class="text-sm font-mono bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-md border border-slate-200 dark:border-slate-700">/api/v1/sms/send-bulk</code>
             </div>
             
-            <p class="text-md text-gray-600 mb-6">
-                Send an identical SMS message to multiple recipients in a single API request. This is the recommended approach for broadcasting messages.
+            <p class="text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
+                Dispatch identical SMS messages to multiple recipients in a single HTTP request. Recommended for broadcast campaigns.
             </p>
 
-            <h4 class="font-semibold text-gray-900 mb-2">Request Body (JSON)</h4>
-            <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-md overflow-hidden mb-6">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parameter</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200 text-sm">
-                    <tr>
-                        <td class="px-4 py-3 font-mono text-gray-900">recipients</td>
-                        <td class="px-4 py-3 text-gray-500">Array</td>
-                        <td class="px-4 py-3 text-gray-600"><strong>Required.</strong> An array of phone numbers (strings).</td>
-                    </tr>
-                    <tr>
-                        <td class="px-4 py-3 font-mono text-gray-900">message</td>
-                        <td class="px-4 py-3 text-gray-500">String</td>
-                        <td class="px-4 py-3 text-gray-600"><strong>Required.</strong> The body of the SMS message.</td>
-                    </tr>
-                    <tr>
-                        <td class="px-4 py-3 font-mono text-gray-900">sender_name</td>
-                        <td class="px-4 py-3 text-gray-500">String</td>
-                        <td class="px-4 py-3 text-gray-600"><strong>Required.</strong> Approved sender ID (max 11 characters).</td>
-                    </tr>
-                </tbody>
-            </table>
+            <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-3">Request Parameters (JSON Body)</h4>
+            
+            <div class="overflow-x-auto mb-6">
+                <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+                    <thead class="bg-slate-50 dark:bg-slate-900/50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Parameter</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Type</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-800 text-sm">
+                        <tr>
+                            <td class="px-4 py-3 font-mono font-medium text-brand-600 dark:text-brand-400">recipients</td>
+                            <td class="px-4 py-3 text-slate-500 font-mono text-xs">Array&lt;String&gt;</td>
+                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300"><strong class="text-rose-500">Required.</strong> List of recipient phone numbers (e.g., <code class="font-mono text-xs">+233201234567</code>).</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 font-mono font-medium text-brand-600 dark:text-brand-400">message</td>
+                            <td class="px-4 py-3 text-slate-500 font-mono text-xs">String</td>
+                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300"><strong class="text-rose-500">Required.</strong> SMS body content.</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 font-mono font-medium text-brand-600 dark:text-brand-400">sender_name</td>
+                            <td class="px-4 py-3 text-slate-500 font-mono text-xs">String</td>
+                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300"><strong class="text-rose-500">Required.</strong> Approved alphanumeric Sender ID (max 11 characters).</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-            <div class="bg-dark rounded-lg overflow-hidden shadow-lg mt-8">
-                <div class="flex border-b border-gray-700 bg-gray-900 px-2 pt-2">
-                    <button class="tab-btn" onclick="switchTab(this, 'bulk-php')">PHP</button>
-                    <button class="tab-btn" onclick="switchTab(this, 'bulk-node')">Node.js</button>
-                    <button class="tab-btn" onclick="switchTab(this, 'bulk-python')">Python</button>
-                    <button class="tab-btn" onclick="switchTab(this, 'bulk-curl')">cURL</button>
-                    <div class="flex-1"></div>
-                    <button class="tab-btn active text-primary flex items-center" onclick="switchTab(this, 'bulk-live')">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <!-- Code Examples Box -->
+            <div class="code-container overflow-hidden">
+                <div class="flex items-center justify-between border-b border-slate-800 bg-slate-950 px-3 pt-2">
+                    <div class="flex space-x-1">
+                        <button class="tab-btn" onclick="switchTab(this, 'bulk-php')">PHP</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'bulk-node')">Node.js</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'bulk-python')">Python</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'bulk-curl')">cURL</button>
+                    </div>
+                    <button class="tab-btn active text-brand-400 flex items-center" onclick="switchTab(this, 'bulk-live')">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Try it Live
                     </button>
                 </div>
                 
-                <div class="p-4 bg-dark text-sm">
-                    <div id="bulk-php" class="tab-content">
+                <div class="p-4 text-sm relative">
+                    <div id="bulk-php" class="tab-content relative group">
+                        <button onclick="copySnippet(this)" class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1 rounded border border-slate-700">Copy</button>
 <pre class="!m-0"><code class="language-php">&lt;?php
 $response = Http::withToken('YOUR_API_TOKEN')
     ->acceptJson()
@@ -283,7 +520,9 @@ if ($response->successful()) {
     echo "Message sent successfully!";
 }</code></pre>
                     </div>
-                    <div id="bulk-node" class="tab-content">
+
+                    <div id="bulk-node" class="tab-content relative group">
+                        <button onclick="copySnippet(this)" class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1 rounded border border-slate-700">Copy</button>
 <pre class="!m-0"><code class="language-javascript">const axios = require('axios');
 
 axios.post('https://callbly.com/api/v1/sms/send-bulk', {
@@ -300,7 +539,9 @@ axios.post('https://callbly.com/api/v1/sms/send-bulk', {
 .then(response => console.log(response.data))
 .catch(error => console.error(error));</code></pre>
                     </div>
-                    <div id="bulk-python" class="tab-content">
+
+                    <div id="bulk-python" class="tab-content relative group">
+                        <button onclick="copySnippet(this)" class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1 rounded border border-slate-700">Copy</button>
 <pre class="!m-0"><code class="language-python">import requests
 
 url = "https://callbly.com/api/v1/sms/send-bulk"
@@ -317,7 +558,9 @@ headers = {
 response = requests.post(url, json=payload, headers=headers)
 print(response.json())</code></pre>
                     </div>
-                    <div id="bulk-curl" class="tab-content">
+
+                    <div id="bulk-curl" class="tab-content relative group">
+                        <button onclick="copySnippet(this)" class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1 rounded border border-slate-700">Copy</button>
 <pre class="!m-0"><code class="language-bash">curl -X POST "https://callbly.com/api/v1/sms/send-bulk" \
      -H "Authorization: Bearer YOUR_API_TOKEN" \
      -H "Content-Type: application/json" \
@@ -329,93 +572,96 @@ print(response.json())</code></pre>
          }'</code></pre>
                     </div>
                     
-                    <!-- Live Runner Tab -->
+                    <!-- Live Interactive Playground -->
                     <div id="bulk-live" class="tab-content active">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Input Form -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div class="space-y-4">
                                 <div>
-                                    <label class="live-label">recipients (comma separated)</label>
+                                    <label class="live-label">Recipients (comma separated)</label>
                                     <input type="text" id="bulk_recipients" class="live-input" placeholder="+233201234567, +233241234567" value="+233201234567">
                                 </div>
                                 <div>
-                                    <label class="live-label">message</label>
+                                    <label class="live-label">Message</label>
                                     <textarea id="bulk_message" class="live-input" rows="3" placeholder="Write your message here...">Hello from Callbly Live Playground!</textarea>
                                 </div>
                                 <div>
-                                    <label class="live-label">sender_name</label>
+                                    <label class="live-label">Sender Name</label>
                                     <input type="text" id="bulk_sender" class="live-input" placeholder="Callbly" value="Callbly">
                                 </div>
-                                <button onclick="runLiveBulk()" class="w-full bg-primary hover:bg-primaryHover text-white font-medium py-2 px-4 rounded-md transition-colors flex justify-center items-center">
-                                    Send Request
+                                <button onclick="runLiveBulk()" class="w-full bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-400 text-white font-semibold py-2.5 px-4 rounded-lg transition-all shadow-md flex justify-center items-center">
+                                    Execute Request
                                 </button>
                             </div>
-                            <!-- Terminal Output -->
                             <div>
-                                <label class="live-label text-gray-400">Terminal Output</label>
-                                <div id="bulk_terminal" class="terminal-output font-mono text-sm">> Ready. Awaiting request...</div>
+                                <label class="live-label">Response Terminal</label>
+                                <div id="bulk_terminal" class="terminal-output">> Ready. Awaiting request execution...</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <hr class="border-gray-200 mb-12">
+        <hr class="border-slate-200 dark:border-slate-800 my-10">
 
         <!-- Endpoint: Send Single SMS -->
-        <div id="send-single" class="mb-16">
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">Send Single SMS</h2>
-            <div class="flex items-center mb-6">
+        <section id="send-single" class="mb-16">
+            <h2 class="text-2xl font-bold tracking-tight mb-2">Send Single SMS</h2>
+            <div class="flex items-center space-x-3 mb-6">
                 <span class="endpoint-method method-post">POST</span>
-                <code class="text-gray-700 text-sm bg-gray-100 px-2 py-1 rounded border border-gray-200">/api/v1/sms/send</code>
+                <code class="text-sm font-mono bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-md border border-slate-200 dark:border-slate-700">/api/v1/sms/send</code>
             </div>
             
-            <p class="text-md text-gray-600 mb-6">
-                Send a single SMS message to one specific recipient.
+            <p class="text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
+                Send an SMS message to a single recipient number.
             </p>
 
-            <h4 class="font-semibold text-gray-900 mb-2">Request Body (JSON)</h4>
-            <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-md overflow-hidden mb-6">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parameter</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200 text-sm">
-                    <tr>
-                        <td class="px-4 py-3 font-mono text-gray-900">recipient</td>
-                        <td class="px-4 py-3 text-gray-500">String</td>
-                        <td class="px-4 py-3 text-gray-600"><strong>Required.</strong> A single phone number.</td>
-                    </tr>
-                    <tr>
-                        <td class="px-4 py-3 font-mono text-gray-900">message</td>
-                        <td class="px-4 py-3 text-gray-500">String</td>
-                        <td class="px-4 py-3 text-gray-600"><strong>Required.</strong> The body of the SMS message.</td>
-                    </tr>
-                    <tr>
-                        <td class="px-4 py-3 font-mono text-gray-900">sender_name</td>
-                        <td class="px-4 py-3 text-gray-500">String</td>
-                        <td class="px-4 py-3 text-gray-600"><strong>Required.</strong> Approved sender ID (max 11 characters).</td>
-                    </tr>
-                </tbody>
-            </table>
+            <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-3">Request Parameters (JSON Body)</h4>
+            
+            <div class="overflow-x-auto mb-6">
+                <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+                    <thead class="bg-slate-50 dark:bg-slate-900/50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Parameter</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Type</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-slate-900 divide-y divide-slate-200 dark:divide-slate-800 text-sm">
+                        <tr>
+                            <td class="px-4 py-3 font-mono font-medium text-brand-600 dark:text-brand-400">recipient</td>
+                            <td class="px-4 py-3 text-slate-500 font-mono text-xs">String</td>
+                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300"><strong class="text-rose-500">Required.</strong> A single valid phone number.</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 font-mono font-medium text-brand-600 dark:text-brand-400">message</td>
+                            <td class="px-4 py-3 text-slate-500 font-mono text-xs">String</td>
+                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300"><strong class="text-rose-500">Required.</strong> SMS text message content.</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 font-mono font-medium text-brand-600 dark:text-brand-400">sender_name</td>
+                            <td class="px-4 py-3 text-slate-500 font-mono text-xs">String</td>
+                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300"><strong class="text-rose-500">Required.</strong> Sender ID (max 11 characters).</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-            <div class="bg-dark rounded-lg overflow-hidden shadow-lg mt-8">
-                <div class="flex border-b border-gray-700 bg-gray-900 px-2 pt-2">
-                    <button class="tab-btn" onclick="switchTab(this, 'single-php')">PHP</button>
-                    <button class="tab-btn" onclick="switchTab(this, 'single-curl')">cURL</button>
-                    <div class="flex-1"></div>
-                    <button class="tab-btn active text-primary flex items-center" onclick="switchTab(this, 'single-live')">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div class="code-container overflow-hidden">
+                <div class="flex items-center justify-between border-b border-slate-800 bg-slate-950 px-3 pt-2">
+                    <div class="flex space-x-1">
+                        <button class="tab-btn" onclick="switchTab(this, 'single-php')">PHP</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'single-curl')">cURL</button>
+                    </div>
+                    <button class="tab-btn active text-brand-400 flex items-center" onclick="switchTab(this, 'single-live')">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Try it Live
                     </button>
                 </div>
                 
-                <div class="p-4 bg-dark text-sm">
-                    <div id="single-php" class="tab-content">
+                <div class="p-4 text-sm relative">
+                    <div id="single-php" class="tab-content relative group">
+                        <button onclick="copySnippet(this)" class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1 rounded border border-slate-700">Copy</button>
 <pre class="!m-0"><code class="language-php">&lt;?php
 $response = Http::withToken('YOUR_API_TOKEN')
     ->post('https://callbly.com/api/v1/sms/send', [
@@ -424,7 +670,9 @@ $response = Http::withToken('YOUR_API_TOKEN')
         'sender_name' => 'MyBrand',
     ]);</code></pre>
                     </div>
-                    <div id="single-curl" class="tab-content">
+
+                    <div id="single-curl" class="tab-content relative group">
+                        <button onclick="copySnippet(this)" class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1 rounded border border-slate-700">Copy</button>
 <pre class="!m-0"><code class="language-bash">curl -X POST "https://callbly.com/api/v1/sms/send" \
      -H "Authorization: Bearer YOUR_API_TOKEN" \
      -H "Content-Type: application/json" \
@@ -435,67 +683,66 @@ $response = Http::withToken('YOUR_API_TOKEN')
          }'</code></pre>
                     </div>
                     
-                    <!-- Live Runner Tab -->
                     <div id="single-live" class="tab-content active">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Input Form -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div class="space-y-4">
                                 <div>
-                                    <label class="live-label">recipient</label>
+                                    <label class="live-label">Recipient Phone Number</label>
                                     <input type="text" id="single_recipient" class="live-input" placeholder="+233201234567" value="+233201234567">
                                 </div>
                                 <div>
-                                    <label class="live-label">message</label>
-                                    <textarea id="single_message" class="live-input" rows="3" placeholder="Write your message here...">Hello single recipient!</textarea>
+                                    <label class="live-label">Message</label>
+                                    <textarea id="single_message" class="live-input" rows="3" placeholder="Write message...">Hello single recipient!</textarea>
                                 </div>
                                 <div>
-                                    <label class="live-label">sender_name</label>
+                                    <label class="live-label">Sender Name</label>
                                     <input type="text" id="single_sender" class="live-input" placeholder="Callbly" value="Callbly">
                                 </div>
-                                <button onclick="runLiveSingle()" class="w-full bg-primary hover:bg-primaryHover text-white font-medium py-2 px-4 rounded-md transition-colors flex justify-center items-center">
-                                    Send Request
+                                <button onclick="runLiveSingle()" class="w-full bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-400 text-white font-semibold py-2.5 px-4 rounded-lg transition-all shadow-md flex justify-center items-center">
+                                    Execute Request
                                 </button>
                             </div>
-                            <!-- Terminal Output -->
                             <div>
-                                <label class="live-label text-gray-400">Terminal Output</label>
-                                <div id="single_terminal" class="terminal-output font-mono text-sm">> Ready. Awaiting request...</div>
+                                <label class="live-label">Response Terminal</label>
+                                <div id="single_terminal" class="terminal-output">> Ready. Awaiting request execution...</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <hr class="border-gray-200 mb-12">
+        <hr class="border-slate-200 dark:border-slate-800 my-10">
 
-        <!-- Endpoint: Check Balance -->
-        <div id="check-balance" class="mb-16">
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">Check Wallet Balance</h2>
-            <div class="flex items-center mb-6">
+        <!-- Endpoint: Check Wallet Balance -->
+        <section id="check-balance" class="mb-16">
+            <h2 class="text-2xl font-bold tracking-tight mb-2">Check Wallet Balance</h2>
+            <div class="flex items-center space-x-3 mb-6">
                 <span class="endpoint-method method-get">GET</span>
-                <code class="text-gray-700 text-sm bg-gray-100 px-2 py-1 rounded border border-gray-200">/api/v1/wallet/balance</code>
+                <code class="text-sm font-mono bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-md border border-slate-200 dark:border-slate-700">/api/v1/wallet/balance</code>
             </div>
             
-            <p class="text-md text-gray-600 mb-6">
-                Retrieve your current wallet balance to ensure you have enough credits before sending messages.
+            <p class="text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
+                Retrieve your remaining account credits and wallet balance.
             </p>
 
-            <div class="bg-dark rounded-lg overflow-hidden shadow-lg mt-8">
-                <div class="flex border-b border-gray-700 bg-gray-900 px-2 pt-2">
-                    <button class="tab-btn" onclick="switchTab(this, 'balance-php')">PHP</button>
-                    <button class="tab-btn" onclick="switchTab(this, 'balance-node')">Node.js</button>
-                    <button class="tab-btn" onclick="switchTab(this, 'balance-python')">Python</button>
-                    <button class="tab-btn" onclick="switchTab(this, 'balance-curl')">cURL</button>
-                    <div class="flex-1"></div>
-                    <button class="tab-btn active text-primary flex items-center" onclick="switchTab(this, 'balance-live')">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div class="code-container overflow-hidden mb-8">
+                <div class="flex items-center justify-between border-b border-slate-800 bg-slate-950 px-3 pt-2">
+                    <div class="flex space-x-1">
+                        <button class="tab-btn" onclick="switchTab(this, 'balance-php')">PHP</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'balance-node')">Node.js</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'balance-python')">Python</button>
+                        <button class="tab-btn" onclick="switchTab(this, 'balance-curl')">cURL</button>
+                    </div>
+                    <button class="tab-btn active text-brand-400 flex items-center" onclick="switchTab(this, 'balance-live')">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Try it Live
                     </button>
                 </div>
                 
-                <div class="p-4 bg-dark text-sm">
-                    <div id="balance-php" class="tab-content">
+                <div class="p-4 text-sm relative">
+                    <div id="balance-php" class="tab-content relative group">
+                        <button onclick="copySnippet(this)" class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1 rounded border border-slate-700">Copy</button>
 <pre class="!m-0"><code class="language-php">&lt;?php
 $response = Http::withToken('YOUR_API_TOKEN')
     ->acceptJson()
@@ -506,7 +753,9 @@ if ($response->successful()) {
     echo "Current Balance: ₵" . $balance;
 }</code></pre>
                     </div>
-                    <div id="balance-node" class="tab-content">
+
+                    <div id="balance-node" class="tab-content relative group">
+                        <button onclick="copySnippet(this)" class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1 rounded border border-slate-700">Copy</button>
 <pre class="!m-0"><code class="language-javascript">const axios = require('axios');
 
 axios.get('https://callbly.com/api/v1/wallet/balance', {
@@ -518,7 +767,9 @@ axios.get('https://callbly.com/api/v1/wallet/balance', {
 .then(response => console.log(response.data.data.balance))
 .catch(error => console.error(error));</code></pre>
                     </div>
-                    <div id="balance-python" class="tab-content">
+
+                    <div id="balance-python" class="tab-content relative group">
+                        <button onclick="copySnippet(this)" class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1 rounded border border-slate-700">Copy</button>
 <pre class="!m-0"><code class="language-python">import requests
 
 url = "https://callbly.com/api/v1/wallet/balance"
@@ -530,36 +781,35 @@ headers = {
 response = requests.get(url, headers=headers)
 print(response.json()['data']['balance'])</code></pre>
                     </div>
-                    <div id="balance-curl" class="tab-content">
+
+                    <div id="balance-curl" class="tab-content relative group">
+                        <button onclick="copySnippet(this)" class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-2.5 py-1 rounded border border-slate-700">Copy</button>
 <pre class="!m-0"><code class="language-bash">curl -X GET "https://callbly.com/api/v1/wallet/balance" \
      -H "Authorization: Bearer YOUR_API_TOKEN" \
      -H "Accept: application/json"</code></pre>
                     </div>
                     
-                    <!-- Live Runner Tab -->
                     <div id="balance-live" class="tab-content active">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Instruction -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div class="space-y-4 flex flex-col justify-center">
-                                <p class="text-gray-400 leading-relaxed">
-                                    Click the button below to fetch the wallet balance for the API token you entered at the top of the page.
+                                <p class="text-slate-400 text-sm leading-relaxed">
+                                    Fetches the current wallet balance associated with the Bearer token configured in the interactive playground.
                                 </p>
-                                <button onclick="runLiveBalance()" class="w-full bg-primary hover:bg-primaryHover text-white font-medium py-2 px-4 rounded-md transition-colors flex justify-center items-center">
-                                    Check My Balance
+                                <button onclick="runLiveBalance()" class="w-full bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-400 text-white font-semibold py-2.5 px-4 rounded-lg transition-all shadow-md flex justify-center items-center">
+                                    Check Wallet Balance
                                 </button>
                             </div>
-                            <!-- Terminal Output -->
                             <div>
-                                <label class="live-label text-gray-400">Terminal Output</label>
-                                <div id="balance_terminal" class="terminal-output font-mono text-sm">> Ready. Awaiting request...</div>
+                                <label class="live-label">Response Terminal</label>
+                                <div id="balance_terminal" class="terminal-output">> Ready. Awaiting request execution...</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <h4 class="font-semibold text-gray-900 mt-8 mb-2">Example Response</h4>
-            <div class="bg-gray-50 border border-gray-200 rounded-md p-4 overflow-x-auto">
+            <h4 class="font-bold text-slate-800 dark:text-slate-200 mb-3">Example JSON Response</h4>
+            <div class="code-container p-4 overflow-x-auto font-mono text-sm">
 <pre class="!m-0"><code class="language-json">{
   "success": true,
   "data": {
@@ -569,12 +819,26 @@ print(response.json()['data']['balance'])</code></pre>
   }
 }</code></pre>
             </div>
-        </div>
+        </section>
         
     </main>
 </div>
 
-<!-- Prism.js for Syntax Highlighting -->
+<!-- Footer -->
+<footer class="border-t border-slate-200 dark:border-slate-800 mt-20 py-8 text-center text-xs text-slate-500 dark:text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+            &copy; {{ date('Y') }} Callbly Telephony Platform. All rights reserved.
+        </div>
+        <div class="flex space-x-4">
+            <a href="/" class="hover:underline">Home</a>
+            <a href="/login" class="hover:underline">Dashboard</a>
+            <a href="#introduction" class="hover:underline">API Docs</a>
+        </div>
+    </div>
+</footer>
+
+<!-- Prism.js Syntax Highlighting -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup-templating.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
@@ -583,31 +847,89 @@ print(response.json()['data']['balance'])</code></pre>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
 
 <script>
-    // Simple tab switching logic
-    function switchTab(btn, targetId) {
-        // Find parent container
-        const container = btn.closest('.bg-dark');
+    // Theme Management Switcher
+    function updateThemeUI() {
+        const isDark = document.documentElement.classList.contains('dark');
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
         
-        // Remove active class from all buttons and contents in this block
+        if (isDark) {
+            sunIcon.classList.remove('hidden');
+            moonIcon.classList.add('hidden');
+        } else {
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+        }
+    }
+
+    function toggleDarkMode() {
+        if (document.documentElement.classList.contains('dark')) {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+            localStorage.setItem('callbly_theme', 'light');
+        } else {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+            localStorage.setItem('callbly_theme', 'dark');
+        }
+        updateThemeUI();
+    }
+
+    // Toggle Password Visibility for Token Input
+    function toggleTokenVisibility() {
+        const tokenInput = document.getElementById('global_api_token');
+        if (tokenInput.type === 'password') {
+            tokenInput.type = 'text';
+        } else {
+            tokenInput.type = 'password';
+        }
+    }
+
+    // Mobile Sidebar Drawer Toggle
+    function toggleMobileSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+    }
+
+    // Copy Code Snippet
+    function copySnippet(btn) {
+        const pre = btn.parentElement.querySelector('pre');
+        if (!pre) return;
+        
+        const text = pre.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            const originalText = btn.innerText;
+            btn.innerText = 'Copied!';
+            btn.classList.add('text-emerald-400', 'border-emerald-500');
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.remove('text-emerald-400', 'border-emerald-500');
+            }, 2000);
+        });
+    }
+
+    // Code Block Tab Switcher
+    function switchTab(btn, targetId) {
+        const container = btn.closest('.code-container');
         container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         container.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         
-        // Add active class to clicked button and target content
         btn.classList.add('active');
         document.getElementById(targetId).classList.add('active');
     }
 
-    // Helper: print to terminal
+    // Terminal Logger
     function writeToTerminal(terminalId, text, isError = false) {
         const terminal = document.getElementById(terminalId);
         if (isError) {
-            terminal.innerHTML = `<span style="color: #FF7B72;">${text}</span>`;
+            terminal.innerHTML = `<span style="color: #f87171;">${text}</span>`;
         } else {
             terminal.innerHTML = text;
         }
     }
 
-    // Helper: get API token
     function getApiToken() {
         const token = document.getElementById('global_api_token').value.trim();
         if (!token) {
@@ -617,7 +939,7 @@ print(response.json()['data']['balance'])</code></pre>
         return token;
     }
 
-    // Live Request: Send Bulk
+    // Live Request: Send Bulk SMS
     async function runLiveBulk() {
         const token = getApiToken();
         if (!token) return;
@@ -628,8 +950,6 @@ print(response.json()['data']['balance'])</code></pre>
         const recipientsInput = document.getElementById('bulk_recipients').value;
         const message = document.getElementById('bulk_message').value;
         const sender = document.getElementById('bulk_sender').value;
-        
-        // Parse recipients into array
         const recipients = recipientsInput.split(',').map(s => s.trim()).filter(s => s !== '');
 
         try {
@@ -651,16 +971,16 @@ print(response.json()['data']['balance'])</code></pre>
             const formatted = JSON.stringify(data, null, 2);
             
             if (res.ok) {
-                writeToTerminal(terminalId, `<span style="color: #7EE787;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
+                writeToTerminal(terminalId, `<span style="color: #4ade80;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
             } else {
-                writeToTerminal(terminalId, `<span style="color: #FF7B72;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
+                writeToTerminal(terminalId, `<span style="color: #f87171;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
             }
         } catch (err) {
             writeToTerminal(terminalId, '> Error connecting to the API:\n' + err.message, true);
         }
     }
 
-    // Live Request: Send Single
+    // Live Request: Send Single SMS
     async function runLiveSingle() {
         const token = getApiToken();
         if (!token) return;
@@ -691,16 +1011,16 @@ print(response.json()['data']['balance'])</code></pre>
             const formatted = JSON.stringify(data, null, 2);
             
             if (res.ok) {
-                writeToTerminal(terminalId, `<span style="color: #7EE787;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
+                writeToTerminal(terminalId, `<span style="color: #4ade80;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
             } else {
-                writeToTerminal(terminalId, `<span style="color: #FF7B72;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
+                writeToTerminal(terminalId, `<span style="color: #f87171;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
             }
         } catch (err) {
             writeToTerminal(terminalId, '> Error connecting to the API:\n' + err.message, true);
         }
     }
 
-    // Live Request: Balance
+    // Live Request: Wallet Balance
     async function runLiveBalance() {
         const token = getApiToken();
         if (!token) return;
@@ -721,14 +1041,19 @@ print(response.json()['data']['balance'])</code></pre>
             const formatted = JSON.stringify(data, null, 2);
             
             if (res.ok) {
-                writeToTerminal(terminalId, `<span style="color: #7EE787;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
+                writeToTerminal(terminalId, `<span style="color: #4ade80;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
             } else {
-                writeToTerminal(terminalId, `<span style="color: #FF7B72;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
+                writeToTerminal(terminalId, `<span style="color: #f87171;">> Status: ${res.status} ${res.statusText}</span>\n\n${formatted}`);
             }
         } catch (err) {
             writeToTerminal(terminalId, '> Error connecting to the API:\n' + err.message, true);
         }
     }
+
+    // On Load Initializations
+    document.addEventListener('DOMContentLoaded', () => {
+        updateThemeUI();
+    });
 </script>
 
 </body>
