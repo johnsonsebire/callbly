@@ -93,22 +93,81 @@ use Illuminate\Support\Str;
             background-color: rgba(2, 132, 199, 0.15) !important;
             color: #0284c7 !important;
         }
-        .form-control:focus {
+        /* Forms Overrides */
+        .form-control, .form-select {
+            border-radius: 0.6rem !important;
+            background-color: #f5f8fa !important;
+            border-color: #f5f8fa !important;
+            color: #5E6278 !important;
+            font-weight: 500 !important;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: #eef3f7 !important;
             border-color: #0284c7 !important;
             box-shadow: 0 0 0 0.25rem rgba(2, 132, 199, 0.15) !important;
+            color: #5E6278 !important;
         }
-        .form-control {
-            border-radius: 0.6rem !important;
+        [data-bs-theme="dark"] .form-control, [data-bs-theme="dark"] .form-select {
+            background-color: #1e1e2d !important;
+            border-color: #1e1e2d !important;
+            color: #92929f !important;
         }
+        [data-bs-theme="dark"] .form-control:focus, [data-bs-theme="dark"] .form-select:focus {
+            background-color: #1b1b29 !important;
+            border-color: #0284c7 !important;
+            color: #92929f !important;
+        }
+
+        /* Card Overrides */
         .card {
-            border-radius: 0.85rem !important;
-            border: 1px solid rgba(0, 0, 0, 0.08) !important;
-            box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.05) !important;
+            border-radius: 1.25rem !important;
+            border: 0 !important;
+            box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.04) !important;
         }
         [data-bs-theme="dark"] .card {
-            border-color: oklch(25% 0.018 250) !important;
             background-color: oklch(16% 0.014 250) !important;
+            border: 0 !important;
+            box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.15) !important;
         }
+        .card .card-header {
+            border-bottom: 0 !important;
+            padding-top: 1.5rem !important;
+            padding-bottom: 0.5rem !important;
+        }
+        
+        /* Table Overrides for SaaS look */
+        .table:not(.table-bordered) thead tr {
+            background-color: #f5f8fa !important;
+        }
+        .table:not(.table-bordered) thead th {
+            border-bottom: 0 !important;
+            color: #A1A5B7 !important;
+            font-size: 0.85rem !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.03em !important;
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+        }
+        .table:not(.table-bordered) thead th:first-child {
+            border-top-left-radius: 0.6rem !important;
+            border-bottom-left-radius: 0.6rem !important;
+            padding-left: 1rem !important;
+        }
+        .table:not(.table-bordered) thead th:last-child {
+            border-top-right-radius: 0.6rem !important;
+            border-bottom-right-radius: 0.6rem !important;
+            padding-right: 1rem !important;
+        }
+        [data-bs-theme="dark"] .table:not(.table-bordered) thead tr {
+            background-color: #1e1e2d !important;
+        }
+        
+        /* Badge Overrides for soft look */
+        .badge.badge-success { background-color: rgba(80, 205, 137, 0.15) !important; color: #50cd89 !important; }
+        .badge.badge-danger { background-color: rgba(241, 65, 108, 0.15) !important; color: #f1416c !important; }
+        .badge.badge-warning { background-color: rgba(255, 199, 0, 0.15) !important; color: #ffc700 !important; }
+        .badge.badge-info { background-color: rgba(114, 57, 234, 0.15) !important; color: #7239ea !important; }
+        .badge.badge-primary { background-color: rgba(2, 132, 199, 0.15) !important; color: #0284c7 !important; }
         .menu-item .menu-link.here, .menu-item .menu-link.active {
             background-color: rgba(56, 189, 248, 0.15) !important;
             color: #38bdf8 !important;
