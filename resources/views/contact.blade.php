@@ -82,7 +82,7 @@
     <!-- Hero Header -->
     <div class="text-center max-w-3xl mx-auto space-y-4">
         <div class="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-sky-950/80 border border-sky-800 text-sky-400 text-xs font-semibold uppercase tracking-wider">
-            <span>24/7 Developer Support</span>
+            <span>Round the Clock Support</span>
         </div>
         <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
             How can we help your business?
