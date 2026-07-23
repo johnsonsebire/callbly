@@ -38,6 +38,7 @@ Route::view('/developers/api', 'api-docs')->name('api.docs');
 Route::view('/privacy', 'privacy')->name('privacy');
 Route::view('/terms', 'terms')->name('terms');
 Route::view('/status', 'status')->name('status');
+Route::view('/contact', 'contact')->name('contact');
 
 // Team Invitation Public Routes (must be before auth middleware)
 Route::prefix('team-invitations')->name('team-invitations.')->group(function() {

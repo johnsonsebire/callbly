@@ -835,6 +835,7 @@ print(response.json()['data']['balance'])</code></pre>
             <a href="{{ route('privacy') }}" class="hover:underline">Privacy</a>
             <a href="{{ route('terms') }}" class="hover:underline">Terms</a>
             <a href="{{ route('status') }}" class="hover:underline">Status</a>
+            <a href="{{ route('contact') }}" class="hover:underline">Support</a>
             <a href="#introduction" class="hover:underline">API Docs</a>
         </div>
     </div>

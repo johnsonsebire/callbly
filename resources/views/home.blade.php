@@ -1177,6 +1177,7 @@
             <li><a href="{{ route('privacy') }}">Privacy</a></li>
             <li><a href="{{ route('terms') }}">Terms</a></li>
             <li><a href="{{ route('status') }}">Status</a></li>
+            <li><a href="{{ route('contact') }}">Support</a></li>
             <li><a href="{{ route('api.docs') }}">API Docs</a></li>
         </ul>
     </footer>
