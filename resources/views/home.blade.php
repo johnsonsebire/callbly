@@ -1016,13 +1016,23 @@
             <li><a href="{{ route('api.docs') }}">Developers</a></li>
         </ul>
         <div style="display: flex; align-items: center; gap: 12px;">
-            <a href="{{ route('login') }}" class="btn-secondary nav-btn-signin" style="text-decoration:none; display:inline-flex; align-items:center; gap: 8px; padding: 10px 20px; font-size: 0.875rem; border-radius: 8px;">
-                <svg style="width: 16px; height: 16px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                </svg>
-                Sign In
-            </a>
-            <a href="{{ route('register') }}" class="nav-cta nav-btn-signup" style="text-decoration:none; display:inline-block; text-align:center;">Start Free Trial</a>
+            @auth
+                <a href="{{ route('profile.show') }}" class="btn-secondary nav-btn-signin" style="text-decoration:none; display:inline-flex; align-items:center; gap: 8px; padding: 10px 20px; font-size: 0.875rem; border-radius: 8px;">
+                    <svg style="width: 16px; height: 16px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Profile
+                </a>
+                <a href="{{ route('dashboard') }}" class="nav-cta nav-btn-signup" style="text-decoration:none; display:inline-block; text-align:center;">Dashboard</a>
+            @else
+                <a href="{{ route('login') }}" class="btn-secondary nav-btn-signin" style="text-decoration:none; display:inline-flex; align-items:center; gap: 8px; padding: 10px 20px; font-size: 0.875rem; border-radius: 8px;">
+                    <svg style="width: 16px; height: 16px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    Sign In
+                </a>
+                <a href="{{ route('register') }}" class="nav-cta nav-btn-signup" style="text-decoration:none; display:inline-block; text-align:center;">Start Free Trial</a>
+            @endauth
             
             <!-- Mobile Menu Toggle -->
             <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Toggle mobile menu">
@@ -1045,13 +1055,23 @@
                 <li><a href="{{ route('api.docs') }}" class="mobile-link">Developers</a></li>
             </ul>
             <div class="mobile-nav-actions">
-                <a href="{{ route('login') }}" class="btn-secondary mobile-link" style="width:100%; text-decoration:none; display:flex; justify-content:center; align-items:center; gap: 8px; padding: 12px 20px; font-size: 1rem; border-radius: 8px; margin-bottom:12px;">
-                    <svg style="width: 18px; height: 18px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                    </svg>
-                    Sign In
-                </a>
-                <a href="{{ route('register') }}" class="nav-cta mobile-link" style="width:100%; text-decoration:none; display:block; text-align:center; padding: 12px 20px; font-size: 1rem;">Start Free Trial</a>
+                @auth
+                    <a href="{{ route('profile.show') }}" class="btn-secondary mobile-link" style="width:100%; text-decoration:none; display:flex; justify-content:center; align-items:center; gap: 8px; padding: 12px 20px; font-size: 1rem; border-radius: 8px; margin-bottom:12px;">
+                        <svg style="width: 18px; height: 18px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        Profile
+                    </a>
+                    <a href="{{ route('dashboard') }}" class="nav-cta mobile-link" style="width:100%; text-decoration:none; display:block; text-align:center; padding: 12px 20px; font-size: 1rem; border-radius: 8px;">Dashboard</a>
+                @else
+                    <a href="{{ route('login') }}" class="btn-secondary mobile-link" style="width:100%; text-decoration:none; display:flex; justify-content:center; align-items:center; gap: 8px; padding: 12px 20px; font-size: 1rem; border-radius: 8px; margin-bottom:12px;">
+                        <svg style="width: 18px; height: 18px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                        </svg>
+                        Sign In
+                    </a>
+                    <a href="{{ route('register') }}" class="nav-cta mobile-link" style="width:100%; text-decoration:none; display:block; text-align:center; padding: 12px 20px; font-size: 1rem; border-radius: 8px;">Start Free Trial</a>
+                @endauth
             </div>
         </div>
     </div>
