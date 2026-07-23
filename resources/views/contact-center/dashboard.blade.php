@@ -13,16 +13,16 @@
                     <!--begin::Col-->
                     <div class="col-xl-4">
                         <!--begin::Card widget-->
-                        <div class="card card-flush h-md-100">
+                        <div class="card shadow-sm rounded-xl border-0 h-md-100">
                             <!--begin::Header-->
                             <div class="card-header pt-5">
                                 <!--begin::Title-->
                                 <div class="card-title d-flex flex-column">
                                     <!--begin::Amount-->
-                                    <span class="fs-2hx fw-bold text-dark me-2 lh-1">{{ $todayCalls }}</span>
+                                    <span class="fs-2hx fw-bold text-primary me-2 lh-1">{{ $todayCalls }}</span>
                                     <!--end::Amount-->
                                     <!--begin::Subtitle-->
-                                    <span class="text-gray-400 pt-1 fw-semibold fs-6">Today's Calls</span>
+                                    <span class="text-gray-500 pt-1 fw-bold fs-7 text-uppercase tracking-wider">Today's Calls</span>
                                     <!--end::Subtitle-->
                                 </div>
                                 <!--end::Title-->
@@ -36,10 +36,10 @@
                                 <!--begin::Users group-->
                                 <div class="symbol-group symbol-hover flex-nowrap">
                                     <span class="symbol symbol-35px symbol-circle">
-                                        <span class="symbol-label bg-success text-inverse-warning fw-bold">{{ $successRate }}%</span>
+                                        <span class="symbol-label bg-light-success text-success fw-bold">{{ $successRate }}%</span>
                                     </span>
                                     <span class="symbol symbol-35px symbol-circle">
-                                        <span class="symbol-label bg-danger text-inverse-danger fw-bold">{{ $failureRate }}%</span>
+                                        <span class="symbol-label bg-light-danger text-danger fw-bold">{{ $failureRate }}%</span>
                                     </span>
                                 </div>
                                 <!--end::Users group-->
@@ -52,16 +52,16 @@
                     <!--begin::Col-->
                     <div class="col-xl-4">
                         <!--begin::Card widget-->
-                        <div class="card card-flush h-md-100">
+                        <div class="card shadow-sm rounded-xl border-0 h-md-100">
                             <!--begin::Header-->
                             <div class="card-header pt-5">
                                 <!--begin::Title-->
                                 <div class="card-title d-flex flex-column">
                                     <!--begin::Amount-->
-                                    <span class="fs-2hx fw-bold text-dark me-2 lh-1">{{ $totalCredits }}</span>
+                                    <span class="fs-2hx fw-bold text-primary me-2 lh-1">{{ $totalCredits }}</span>
                                     <!--end::Amount-->
                                     <!--begin::Subtitle-->
-                                    <span class="text-gray-400 pt-1 fw-semibold fs-6">Available Credits</span>
+                                    <span class="text-gray-500 pt-1 fw-bold fs-7 text-uppercase tracking-wider">Available Credits</span>
                                     <!--end::Subtitle-->
                                 </div>
                                 <!--end::Title-->
@@ -86,16 +86,16 @@
                     <!--begin::Col-->
                     <div class="col-xl-4">
                         <!--begin::Card widget-->
-                        <div class="card card-flush h-md-100">
+                        <div class="card shadow-sm rounded-xl border-0 h-md-100">
                             <!--begin::Header-->
                             <div class="card-header pt-5">
                                 <!--begin::Title-->
                                 <div class="card-title d-flex flex-column">
                                     <!--begin::Amount-->
-                                    <span class="fs-2hx fw-bold text-dark me-2 lh-1">{{ $totalMinutes }}</span>
+                                    <span class="fs-2hx fw-bold text-primary me-2 lh-1">{{ $totalMinutes }}</span>
                                     <!--end::Amount-->
                                     <!--begin::Subtitle-->
-                                    <span class="text-gray-400 pt-1 fw-semibold fs-6">Total Minutes Used</span>
+                                    <span class="text-gray-500 pt-1 fw-bold fs-7 text-uppercase tracking-wider">Total Minutes Used</span>
                                     <!--end::Subtitle-->
                                 </div>
                                 <!--end::Title-->
@@ -149,7 +149,7 @@
                 <!--end::Row-->
 
                 <!--begin::Recent Calls-->
-                <div class="card mb-5 mb-xl-8">
+                <div class="card shadow-sm rounded-xl border-0 mb-5 mb-xl-8">
                     <!--begin::Card header-->
                     <div class="card-header border-0 pt-6">
                         <!--begin::Card title-->
@@ -167,7 +167,7 @@
                             <!--begin::Toolbar-->
                             <div class="d-flex justify-content-end" data-kt-call-table-toolbar="base">
                                 <!--begin::Add Call-->
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_add_call">
+                                <button type="button" class="btn btn-primary rounded-pill fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#kt_modal_add_call">
                                     <i class="ki-outline ki-plus fs-2"></i>New Call
                                 </button>
                                 <!--end::Add Call-->
@@ -182,7 +182,7 @@
                         <!--begin::Table-->
                         <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_calls_table">
                             <thead>
-                                <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
+                                <tr class="text-start text-gray-500 fw-bold fs-7 text-uppercase gs-0 bg-light">
                                     <th class="min-w-125px">Caller</th>
                                     <th class="min-w-125px">Receiver</th>
                                     <th class="min-w-125px">Duration</th>
@@ -199,11 +199,11 @@
                                     <td>{{ $call->duration }} seconds</td>
                                     <td>
                                         @if($call->status === 'completed')
-                                        <span class="badge badge-success">Completed</span>
+                                        <span class="badge badge-light-success fw-bold px-3 py-2">Completed</span>
                                         @elseif($call->status === 'failed')
-                                        <span class="badge badge-danger">Failed</span>
+                                        <span class="badge badge-light-danger fw-bold px-3 py-2">Failed</span>
                                         @else
-                                        <span class="badge badge-primary">{{ ucfirst($call->status) }}</span>
+                                        <span class="badge badge-light-primary fw-bold px-3 py-2">{{ ucfirst($call->status) }}</span>
                                         @endif
                                     </td>
                                     <td>{{ $call->created_at->diffForHumans() }}</td>
@@ -251,7 +251,7 @@
     <!--begin::Modal dialog-->
     <div class="modal-dialog modal-dialog-centered mw-650px">
         <!--begin::Modal content-->
-        <div class="modal-content">
+        <div class="modal-content shadow-sm rounded-xl border-0">
             <!--begin::Modal header-->
             <div class="modal-header" id="kt_modal_add_call_header">
                 <!--begin::Modal title-->
@@ -266,14 +266,14 @@
             <!--end::Modal header-->
             <!--begin::Modal body-->
             <div class="modal-body scroll-y mx-5 mx-xl-15 my-7 text-center">
-                <div class="mb-4">
-                    <span class="d-inline-flex align-items-center justify-content-center bg-light-primary rounded-circle" style="width:80px; height:80px;">
-                        <i class="ki-outline ki-call fs-1 text-primary"></i>
+                <div class="mb-6">
+                    <span class="d-inline-flex align-items-center justify-content-center bg-light-primary rounded-circle" style="width:100px; height:100px;">
+                        <i class="ki-outline ki-call fs-5x text-primary"></i>
                     </span>
                 </div>
                 <h3 class="fw-bold mb-3">Web Calling Coming Soon</h3>
                 <p class="text-muted mb-4">We're working on enabling web-based calling. If you require calling services for your business, please contact our team at <a href="mailto:support@callbly.com">support@callbly.com</a> and we'll be happy to assist you.</p>
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-light rounded-pill fw-bold px-6" data-bs-dismiss="modal">Close</button>
             </div>
             <!--end::Modal body-->
         </div>
@@ -334,7 +334,8 @@
                 data: {
                     datasets: [{
                         data: [percentage, 100 - percentage],
-                        backgroundColor: ['#009EF7', '#E4E6EF']
+                        backgroundColor: ['#0284c7', '#E4E6EF'],
+                        borderWidth: 0
                     }]
                 },
                 options: {

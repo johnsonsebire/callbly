@@ -200,7 +200,6 @@ use Illuminate\Support\Str;
                                                     </div>
                                                 </td>
                                             </tr>
-                                            @empty
                                             @endforelse
                                         </tbody>
                                     </table>
@@ -261,9 +260,9 @@ use Illuminate\Support\Str;
 <div class="modal fade" id="supportModal" tabindex="-1" aria-labelledby="supportModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-slate-950 text-white">
-                <h5 class="modal-title font-bold text-white" id="supportModalLabel">Contact Technical Support</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header border-bottom-0 pb-0 pt-6 px-6">
+                <h5 class="modal-title fs-3 font-bold text-gray-900" id="supportModalLabel">Contact Technical Support</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="{{ route('support.send') }}" method="POST" id="supportForm">
                 @csrf

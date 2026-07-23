@@ -10,7 +10,7 @@
             <!--begin::Content container-->
             <div id="kt_app_content_container" class="app-container container-fluid">
                 <!-- Compose SMS Card -->
-                <div class="card mb-5 mb-xl-8">
+                <div class="card shadow-sm rounded-xl border-0 mb-5 mb-xl-8">
                     <div class="card-header pt-5">
                         <h3 class="card-title align-items-start flex-column">
                             <span class="card-label fw-bold text-dark">Compose New SMS</span>
@@ -25,9 +25,9 @@
                                     @if(session('error'))
                                         <div class="alert alert-danger">{{ session('error') }}</div>
                                     @endif
-                                    <div class="mb-3">
-                                        <label for="sender_name" class="form-label">Sender ID</label>
-                                        <select name="sender_name" id="sender_name" class="form-select @error('sender_name') is-invalid @enderror" required>
+                                    <div class="mb-5">
+                                        <label for="sender_name" class="form-label fw-bold">Sender ID</label>
+                                        <select name="sender_name" id="sender_name" class="form-select form-select-solid @error('sender_name') is-invalid @enderror" required>
                                             <option value="">Select a sender ID</option>
                                             @foreach($senderNames as $senderName)
                                                 <option value="{{ $senderName->name }}" {{ old('sender_name') == $senderName->name ? 'selected' : '' }}>
@@ -43,18 +43,20 @@
                                         @endif
                                     </div>
 
-                                    <div class="mb-3">
-                                        <label for="campaign_name" class="form-label">Campaign Name (Optional)</label>
-                                        <input type="text" name="campaign_name" id="campaign_name" class="form-control @error('campaign_name') is-invalid @enderror" value="{{ old('campaign_name') }}" placeholder="Campaign name for tracking">
+                                    <div class="mb-5">
+                                        <label for="campaign_name" class="form-label fw-bold">Campaign Name (Optional)</label>
+                                        <input type="text" name="campaign_name" id="campaign_name" class="form-control form-control-solid @error('campaign_name') is-invalid @enderror" value="{{ old('campaign_name') }}" placeholder="Campaign name for tracking">
                                         @error('campaign_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
 
-                                    <div class="mb-4">
+                                    <div class="mb-6">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <label for="message" class="form-label mb-0">Message</label>
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#templateModal">Use Template</button>
+                                            <label for="message" class="form-label fw-bold mb-0">Message</label>
+                                            <button type="button" class="btn btn-sm btn-light-primary rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#templateModal">
+                                                <i class="ki-outline ki-document text-primary"></i> Use Template
+                                            </button>
                                         </div>
-                                        <textarea name="message" id="message" rows="6" class="form-control @error('message') is-invalid @enderror" required>{{ request('template_content') ?: old('message') }}</textarea>
+                                        <textarea name="message" id="message" rows="6" class="form-control form-control-solid @error('message') is-invalid @enderror" required>{{ request('template_content') ?: old('message') }}</textarea>
                                         <div class="d-flex justify-content-between mt-1">
                                             <small id="characterCount" class="text-muted">0 characters</small>
                                             <small id="messageCount" class="text-muted">0 page(s)</small>
@@ -66,14 +68,14 @@
                                     <input type="hidden" name="recipients_type" id="recipients_type" value="single">
 
                                     <!-- Recipients Card -->
-                                    <div class="card card-flush mb-5">
+                                    <div class="card shadow-sm rounded-xl border-0 mb-5">
                                         <div class="card-header pt-5">
                                             <h3 class="card-title align-items-start flex-column">
                                                 <span class="card-label fw-bold text-dark">Recipients</span>
                                             </h3>
                                         </div>
                                         <div class="card-body">
-                                            <ul class="nav nav-tabs mb-3" id="recipientsTab" role="tablist">
+                                            <ul class="nav nav-line-tabs nav-line-tabs-2x nav-stretch mb-6 fs-6 fw-bold" id="recipientsTab" role="tablist">
                                                 <li class="nav-item" role="presentation">
                                                     <button class="nav-link active" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual" type="button" role="tab" aria-controls="manual" aria-selected="true" data-recipient-type="multiple">Enter Numbers</button>
                                                 </li>
@@ -93,8 +95,8 @@
                                             <div class="tab-content" id="recipientsTabContent">
                                                 <div class="tab-pane fade show active" id="manual" role="tabpanel" aria-labelledby="manual-tab">
                                                     <div class="mb-3">
-                                                        <label for="recipients" class="form-label">Enter Phone Numbers</label>
-                                                        <textarea name="recipients" id="recipients" rows="4" class="form-control @error('recipients') is-invalid @enderror" placeholder="Enter one phone number per line or separated by commas">{{ old('recipients') }}</textarea>
+                                                        <label for="recipients" class="form-label fw-bold">Enter Phone Numbers</label>
+                                                        <textarea name="recipients" id="recipients" rows="4" class="form-control form-control-solid @error('recipients') is-invalid @enderror" placeholder="Enter one phone number per line or separated by commas">{{ old('recipients') }}</textarea>
                                                         <div class="form-text text-muted">
                                                             <small id="recipientCount">0 recipient(s)</small>
                                                         </div>
@@ -151,7 +153,7 @@
                                                 </div>
                                                 <div class="tab-pane fade" id="groups" role="tabpanel" aria-labelledby="groups-tab">
                                                     <div class="mb-3">
-                                                        <label class="form-label">Select Contact Groups</label>
+                                                        <label class="form-label fw-bold">Select Contact Groups</label>
                                                         
                                                         @php 
                                                             // Get both personal and team-shared contact groups
@@ -206,8 +208,8 @@
                                                 </div>
                                                 <div class="tab-pane fade" id="file-upload" role="tabpanel" aria-labelledby="file-tab">
                                                     <div class="mb-3">
-                                                        <label for="recipients_file" class="form-label">Upload Recipients File</label>
-                                                        <input type="file" name="recipients_file" id="recipients_file" class="form-control @error('recipients_file') is-invalid @enderror">
+                                                        <label for="recipients_file" class="form-label fw-bold">Upload Recipients File</label>
+                                                        <input type="file" name="recipients_file" id="recipients_file" class="form-control form-control-solid @error('recipients_file') is-invalid @enderror">
                                                         <div class="form-text text-muted">
                                                             Upload a CSV or TXT file with one phone number per line.
                                                         </div>
@@ -225,19 +227,20 @@
                                             <label class="form-check-label" for="scheduleSwitch">Schedule for later</label>
                                         </div>
                                         <div id="scheduleContainer" class="mt-3" style="display: none;">
-                                            <label for="scheduled_at" class="form-label">Schedule Date & Time</label>
-                                            <input type="datetime-local" name="scheduled_at" id="scheduled_at" class="form-control @error('scheduled_at') is-invalid @enderror" value="{{ old('scheduled_at') }}">
+                                            <label for="scheduled_at" class="form-label fw-bold">Schedule Date & Time</label>
+                                            <input type="datetime-local" name="scheduled_at" id="scheduled_at" class="form-control form-control-solid @error('scheduled_at') is-invalid @enderror" value="{{ old('scheduled_at') }}">
                                             @error('scheduled_at')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         </div>
                                     </div>
 
-                                    <div class="d-grid gap-2 mb-5">
-                                        <button type="submit" class="btn btn-primary btn-lg" id="sendButton" {{ $senderNames->isEmpty() ? 'disabled' : '' }}>
+                                    <div class="d-grid gap-2 mb-5 mt-8">
+                                        <button type="submit" class="btn btn-primary btn-lg w-100 fs-4 fw-bold rounded-pill shadow-sm" id="sendButton" {{ $senderNames->isEmpty() ? 'disabled' : '' }}>
                                             <i class="ki-outline ki-paper-plane fs-2 me-2" id="sendButtonIcon"></i>
                                             <span id="sendButtonText">Send Message</span>
                                         </button>
                                     </div>
                                     
+                                    @if(!auth()->user()->isCustomer())
                                     <!-- Background Processing Info -->
                                     <div class="alert alert-info d-flex align-items-center" role="alert">
                                         <i class="ki-outline ki-information-5 fs-2tx text-info me-3"></i>
@@ -246,6 +249,7 @@
                                             <p class="mb-0">Your SMS campaigns are processed in the background for better performance. You'll be redirected to the campaign details page where you can track progress in real-time. You'll also receive an email notification when the campaign completes.</p>
                                         </div>
                                     </div>
+                                    @endif
                                 </form>
 
                                 <!-- Template Modal -->
@@ -279,19 +283,20 @@
                             </div>
                             
                             <div class="col-lg-4">
+                                <div class="position-sticky top-0" style="padding-top: 20px;">
                                 <!-- Message Summary Card -->
-                                <div class="card card-bordered mb-5">
-                                    <div class="card-header bg-primary">
+                                <div class="card shadow-sm rounded-xl border-0 mb-5">
+                                    <div class="card-header border-0 pt-5">
                                         <h3 class="card-title align-items-start flex-column">
-                                            <span class="card-label fw-bold text-white">Message Summary</span>
+                                            <span class="card-label fw-bold text-dark">Message Summary</span>
                                         </h3>
                                     </div>
-                                    <div class="card-body pt-5">
-                                        <div class="d-flex justify-content-between mb-3">
-                                            <div><strong>Credits Required:</strong></div>
-                                            <div id="creditsNeeded" class="badge bg-primary">0</div>
+                                    <div class="card-body pt-2">
+                                        <div class="d-flex flex-column align-items-center mb-6 py-4 bg-light rounded-xl">
+                                            <span class="fs-7 fw-bold text-gray-500 text-uppercase tracking-wider">Credits Required</span>
+                                            <span id="creditsNeeded" class="fs-2hx fw-bold text-primary mt-1">0</span>
                                         </div>
-                                        <div class="d-flex justify-content-between mb-3">
+                                        <div class="d-flex justify-content-between mb-3 border-bottom pb-3">
                                             <div><strong>Recipients:</strong></div>
                                             <div id="recipientsCount" class="badge bg-secondary">0</div>
                                         </div>
@@ -306,11 +311,11 @@
                                 </div>
 
                                 <!-- Tips Card -->
-                                <div class="card card-bordered mb-5">
-                                    <div class="card-header">
+                                <div class="card shadow-sm rounded-xl border border-warning border-dashed mb-5 bg-light-warning">
+                                    <div class="card-header border-0">
                                         <h3 class="card-title align-items-start flex-column">
                                             <span class="card-label fw-bold text-dark">Tips</span>
-                                            <span class="text-gray-400 mt-1 fw-semibold fs-6">For better messaging</span>
+                                            <span class="text-gray-600 mt-1 fw-semibold fs-6">For better messaging</span>
                                         </h3>
                                         <div class="card-toolbar">
                                             <i class="ki-outline ki-lightbulb fs-2 text-warning"></i>
@@ -327,11 +332,11 @@
                                 </div>
                                 
                                 <!-- Template Variables Card -->
-                                <div class="card card-bordered">
-                                    <div class="card-header">
+                                <div class="card shadow-sm rounded-xl border border-info border-dashed bg-light-info">
+                                    <div class="card-header border-0">
                                         <h3 class="card-title align-items-start flex-column">
                                             <span class="card-label fw-bold text-dark">Template Variables</span>
-                                            <span class="text-gray-400 mt-1 fw-semibold fs-6">Click to add to your message</span>
+                                            <span class="text-gray-600 mt-1 fw-semibold fs-6">Click to add to your message</span>
                                         </h3>
                                         <div class="card-toolbar">
                                             <i class="ki-outline ki-code fs-2 text-primary"></i>
@@ -367,6 +372,7 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
                             </div>
                         </div>
                     </div>

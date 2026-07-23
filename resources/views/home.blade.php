@@ -728,6 +728,76 @@
         .hero-actions { animation-delay: 300ms; }
         .hero-stats { animation-delay: 450ms; }
 
+        /* Mobile Menu */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 8px;
+            z-index: 101;
+            position: relative;
+        }
+
+        .mobile-menu-toggle svg {
+            width: 28px;
+            height: 28px;
+            transition: transform 300ms var(--ease-out-expo);
+        }
+
+        .mobile-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: oklch(12% 0.012 250 / 0.95);
+            backdrop-filter: blur(24px);
+            z-index: 99;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 24px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 300ms var(--ease-out-expo);
+        }
+
+        .mobile-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .mobile-overlay-content {
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 400ms var(--ease-out-expo);
+        }
+
+        .mobile-overlay.active .mobile-overlay-content {
+            transform: translateY(0);
+            opacity: 1;
+            transition-delay: 100ms;
+        }
+
+        .mobile-nav-links {
+            list-style: none;
+            text-align: center;
+            margin-bottom: 48px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .mobile-nav-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+        
         /* Responsive */
         @media (max-width: 1024px) {
             .features-grid {
@@ -754,15 +824,30 @@
 
         @media (max-width: 768px) {
             .nav {
-                padding: 16px 24px;
+                padding: 16px 20px;
             }
 
-            .nav-links {
-                display: none;
+            .nav-links, .nav-btn-signin, .nav-btn-signup {
+                display: none !important;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
             }
 
             .hero {
-                padding: 120px 24px 80px;
+                padding: 110px 20px 80px;
+            }
+
+            .hero h1 {
+                font-size: clamp(2.2rem, 8vw, 2.8rem);
+                line-height: 1.15;
+                margin-bottom: 20px;
+            }
+
+            .hero-sub {
+                font-size: 1.05rem;
+                margin-bottom: 32px;
             }
 
             .hero-actions {
@@ -926,20 +1011,50 @@
         </div>
         <ul class="nav-links">
             <li><a href="#features">Features</a></li>
-            <li><a href="#demo">Demo</a></li>
+            <!-- <li><a href="#demo">Demo</a></li> -->
             <li><a href="#pricing">Pricing</a></li>
             <li><a href="{{ route('api.docs') }}">Developers</a></li>
         </ul>
         <div style="display: flex; align-items: center; gap: 12px;">
-            <a href="{{ route('login') }}" class="btn-secondary" style="text-decoration:none; display:inline-flex; align-items:center; gap: 8px; padding: 10px 20px; font-size: 0.875rem; border-radius: 8px;">
+            <a href="{{ route('login') }}" class="btn-secondary nav-btn-signin" style="text-decoration:none; display:inline-flex; align-items:center; gap: 8px; padding: 10px 20px; font-size: 0.875rem; border-radius: 8px;">
                 <svg style="width: 16px; height: 16px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                 </svg>
                 Sign In
             </a>
-            <a href="{{ route('register') }}" class="nav-cta" style="text-decoration:none; display:inline-block; text-align:center;">Start Free Trial</a>
+            <a href="{{ route('register') }}" class="nav-cta nav-btn-signup" style="text-decoration:none; display:inline-block; text-align:center;">Start Free Trial</a>
+            
+            <!-- Mobile Menu Toggle -->
+            <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Toggle mobile menu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
         </div>
     </nav>
+
+    <!-- Mobile Overlay Menu -->
+    <div class="mobile-overlay" id="mobile-overlay">
+        <div class="mobile-overlay-content">
+            <ul class="mobile-nav-links">
+                <li><a href="#features" class="mobile-link">Features</a></li>
+                <!-- <li><a href="#demo" class="mobile-link">Demo</a></li> -->
+                <li><a href="#pricing" class="mobile-link">Pricing</a></li>
+                <li><a href="{{ route('api.docs') }}" class="mobile-link">Developers</a></li>
+            </ul>
+            <div class="mobile-nav-actions">
+                <a href="{{ route('login') }}" class="btn-secondary mobile-link" style="width:100%; text-decoration:none; display:flex; justify-content:center; align-items:center; gap: 8px; padding: 12px 20px; font-size: 1rem; border-radius: 8px; margin-bottom:12px;">
+                    <svg style="width: 18px; height: 18px; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    Sign In
+                </a>
+                <a href="{{ route('register') }}" class="nav-cta mobile-link" style="width:100%; text-decoration:none; display:block; text-align:center; padding: 12px 20px; font-size: 1rem;">Start Free Trial</a>
+            </div>
+        </div>
+    </div>
 
     <!-- Hero -->
     <section class="hero">
@@ -1017,6 +1132,7 @@
     </section>
 
     <!-- Video Demo -->
+    <!--
     <section class="demo" id="demo">
         <div class="demo-header">
             <div class="section-label">See it in action</div>
@@ -1033,6 +1149,7 @@
         </div>
         <p class="demo-caption">Watch how Meridian Health cut their call abandonment rate by 62% in 3 weeks</p>
     </section>
+    -->
 
     <!-- Social Proof -->
     <section class="proof">
@@ -1191,6 +1308,36 @@
                 e.preventDefault();
                 target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 history.pushState(null, '', '#' + targetId);
+            });
+        });
+
+        // Mobile Menu Toggle
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuBtn = document.getElementById('mobile-menu-btn');
+            const mobileOverlay = document.getElementById('mobile-overlay');
+            const mobileLinks = document.querySelectorAll('.mobile-link');
+
+            function toggleMenu() {
+                const isOpen = mobileOverlay.classList.contains('active');
+                if (isOpen) {
+                    mobileOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                } else {
+                    mobileOverlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+
+            if (menuBtn && mobileOverlay) {
+                menuBtn.addEventListener('click', toggleMenu);
+            }
+
+            mobileLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (mobileOverlay.classList.contains('active')) {
+                        toggleMenu();
+                    }
+                });
             });
         });
     </script>

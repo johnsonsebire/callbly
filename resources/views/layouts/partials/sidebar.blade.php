@@ -6,7 +6,7 @@
     <!--begin::Logo-->
     <div class="app-sidebar-logo d-none d-lg-flex flex-center pt-8 mb-2" id="kt_app_sidebar_logo">
         <a href="{{ route('dashboard') }}" class="d-flex flex-column align-items-center group">
-            <img alt="Callbly Logo" src="{{ asset('assets/media/logos/callbly-white.png') }}" class="h-36px object-contain" />
+            <img alt="Callbly Logo" src="{{ asset('assets/media/logos/callbly-favicon.png') }}" class="object-contain" style="height: 28px; width: auto;" />
             <span class="badge badge-sm mt-2 text-cyan font-mono" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 0.65rem; border: 1px solid rgba(56, 189, 248, 0.3);">
                 Console
             </span>
@@ -18,10 +18,7 @@
     <div class="app-sidebar-menu d-flex flex-center overflow-hidden flex-column-fluid">
         <!--begin::Menu wrapper-->
         <div id="kt_app_sidebar_menu_wrapper"
-            class="app-sidebar-wrapper d-flex hover-scroll-overlay-y scroll-ps mx-2 my-5" data-kt-scroll="true"
-            data-kt-scroll-activate="true" data-kt-scroll-height="auto"
-            data-kt-scroll-dependencies="#kt_app_sidebar_logo, #kt_app_sidebar_footer"
-            data-kt-scroll-wrappers="#kt_app_sidebar_menu, #kt_app_sidebar" data-kt-scroll-offset="5px">
+            class="app-sidebar-wrapper d-flex mx-2 my-5">
             
             <!--begin::Menu-->
             <div class="menu menu-column menu-rounded my-auto" id="#kt_app_sidebar_menu" data-kt-menu="true"
@@ -84,7 +81,7 @@
             <img src="{{ auth()->user()->avatar_url ?? asset('assets/media/avatars/blank.png') }}" alt="user" />
         </div>
         <!--begin::User account menu-->
-        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-color fw-semibold py-4 fs-6 w-275px shadow-xl"
+        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded fw-semibold py-4 fs-6 w-275px shadow-xl"
             data-kt-menu="true" style="background-color: #111827; border: 1px solid rgba(255,255,255,0.1);">
             <div class="menu-item px-3">
                 <div class="menu-content d-flex align-items-center px-3">
@@ -110,15 +107,15 @@
                     </div>
                 </div>
             </div>
-            <div class="separator my-2 border-slate-800"></div>
+            <div class="separator my-2" style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);"></div>
             <div class="menu-item px-5">
-                <a href="{{ url('profile') }}" class="menu-link px-5 text-gray-300 text-hover-white">My Profile</a>
+                <a href="{{ url('profile') }}" class="menu-link px-5 text-gray-300 text-hover-primary" style="transition: color 0.2s ease;">My Profile</a>
             </div>
-            <div class="separator my-2 border-slate-800"></div>
+            <div class="separator my-2" style="border-bottom: 1px solid rgba(255, 255, 255, 0.04);"></div>
             <div class="menu-item px-5">
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <a href="{{ route('logout') }}" class="menu-link px-5 text-danger" 
+                    <a href="{{ route('logout') }}" class="menu-link px-5 text-gray-400 text-hover-danger" style="transition: color 0.2s ease;"
                        onclick="event.preventDefault(); this.closest('form').submit();">
                         Sign Out
                     </a>

@@ -43,7 +43,21 @@ use Illuminate\Support\Str;
         }
         .app-sidebar {
             background-color: #090d16 !important;
-            border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+        @media (min-width: 992px) {
+            .app-sidebar {
+                height: calc(100vh - 120px) !important;
+                margin: 20px !important;
+                border-radius: 24px !important;
+                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+            }
+            body[data-kt-app-sidebar-fixed="true"] .app-main {
+                padding-left: 40px !important;
+            }
+            body[data-kt-app-sidebar-fixed="true"] .app-footer {
+                padding-left: 140px !important;
+            }
         }
         .btn-primary {
             background-color: #0284c7 !important;
@@ -131,7 +145,7 @@ use Illuminate\Support\Str;
 
 <body id="kt_app_body" data-kt-app-header-fixed-mobile="true" data-kt-app-sidebar-enabled="true"
     data-kt-app-sidebar-fixed="true" data-kt-app-sidebar-hoverable="true" data-kt-app-sidebar-push-header="true"
-    class="app-default">
+    data-kt-app-footer-fixed="true" class="app-default">
 
     <!--begin::App-->
     <div class="d-flex flex-column flex-root app-root" id="kt_app_root">
@@ -253,27 +267,29 @@ use Illuminate\Support\Str;
 
                     @yield('content')
                     
-                    <!--begin::Footer-->
-                    <div id="kt_app_footer" class="app-footer border-top mt-10 py-4">
-                        <div class="app-container container-fluid d-flex flex-column flex-md-row flex-center flex-md-stack">
-                            <div class="text-dark order-2 order-md-1 fs-7">
-                                <span class="text-muted fw-semibold me-1">&copy; {{ date('Y') }}</span>
-                                <a href="{{ config('app.url') }}" class="text-gray-800 text-hover-primary fw-bold">{{ config('app.name') }} Telephony Platform</a>
-                            </div>
-                            <div class="d-flex space-x-4 order-1 order-md-2 fs-7 mb-2 mb-md-0">
-                                <a href="{{ route('privacy') }}" class="text-muted text-hover-primary me-3">Privacy</a>
-                                <a href="{{ route('terms') }}" class="text-muted text-hover-primary me-3">Terms</a>
-                                <a href="{{ route('status') }}" class="text-muted text-hover-primary me-3">Status</a>
-                                <a href="{{ route('contact') }}" class="text-muted text-hover-primary me-3">Support</a>
-                                <a href="{{ route('api.docs') }}" class="text-muted text-hover-primary">API Docs</a>
-                            </div>
-                        </div>
-                    </div>
-                    <!--end::Footer-->
-                </div>
-                <!--end::Main-->
             </div>
-            <!--end::Wrapper-->
+            <!--end::Main-->
+        </div>
+        <!--end::Wrapper-->
+
+            <!--begin::Footer-->
+            <div id="kt_app_footer" class="app-footer border-top mt-10 py-4 bg-white" style="z-index: 105; position: relative;">
+                <div class="app-container container-fluid d-flex flex-column flex-md-row flex-center flex-md-stack">
+                    <div class="text-dark order-2 order-md-1 fs-7">
+                        <span class="text-muted fw-semibold me-1">&copy; {{ date('Y') }}</span>
+                        <a href="{{ config('app.url') }}" class="text-gray-800 text-hover-primary fw-bold">{{ config('app.name') }} Telephony Platform</a>
+                    </div>
+                    <div class="d-flex space-x-4 order-1 order-md-2 fs-7 mb-2 mb-md-0">
+                        <a href="{{ route('privacy') }}" class="text-muted text-hover-primary me-3">Privacy</a>
+                        <a href="{{ route('terms') }}" class="text-muted text-hover-primary me-3">Terms</a>
+                        <a href="{{ route('status') }}" class="text-muted text-hover-primary me-3">Status</a>
+                        <a href="{{ route('contact') }}" class="text-muted text-hover-primary me-3">Support</a>
+                        <a href="{{ route('api.docs') }}" class="text-muted text-hover-primary">API Docs</a>
+                    </div>
+                </div>
+            </div>
+            <!--end::Footer-->
+            
         </div>
         <!--end::Page-->
     </div>
